@@ -5,6 +5,11 @@ from torch.utils.data import DataLoader, random_split
 from models.c3d import C3D
 import numpy as np
 
+def collate_fn(data):
+    videos, labels = [video for video, audio, label in data], \
+                        [label for video, audio, label in data]
+    return torch.stack(videos, dim=0), torch.reshape(torch.tensor(labels), (-1, 1)).to(torch.float)
+
 def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, validation_step):
     best_val_accuracy = 0
 
@@ -16,12 +21,12 @@ def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, val
         totals = 0
 
         for i, data in enumerate(train_loader):
-            videos, audios, labels = data
+            videos, labels = data
+            videos = videos.permute(0, 2, 1, 3, 4) # From BTCHW to BCTHW 
 
             optimizer.zero_grad()
             logits = model(videos)
 
-            labels = torch.reshape(torch.tensor(labels), (-1, 1)).to(torch.float)
             labels = labels.to(device)
 
             loss = criterion(logits, labels)
@@ -54,11 +59,10 @@ def test(loader, model, epoch=None):
         model.eval()
 
         for i, data in enumerate(loader):
-            videos, audios, labels = data
-
+            videos, labels = data
+            videos = videos.permute(1, 0, 2, 3) # From TCHW to CTHW 
             logits = model(videos)
 
-            labels = torch.reshape(torch.tensor(labels), (-1, 1)).to(torch.float)
             y_true.append(labels)
 
             y_preds = torch.argmax(torch.softmax(logits), dim=1)
@@ -94,11 +98,12 @@ if __name__ == '__main__':
     print("Running on device {}".format(device))
 
     train_dataset, test_dataset, val_dataset = random_split(dataset, [0.7, 0.1, 0.2], generator=torch.Generator().manual_seed(42))
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
+    print('Size of Validation Set: {}'.format(len(val_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
 
     video, _, label = dataset[0]
@@ -111,7 +116,6 @@ if __name__ == '__main__':
     model.to(device)
     step = 1
     model_parameters = sum(p.numel() for p in model.parameters())
-    best_test_accuracy = 0.0
 
     print('Total number of parameters: {}'.format(model_parameters))
 
