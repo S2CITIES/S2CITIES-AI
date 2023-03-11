@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-
 '''
 Implementation of a 3D ConvNet from the paper https://arxiv.org/pdf/1412.0767.pdf.
 In a 3D ConvNet, convolutions are done spatio-temporally and not only spatially.
@@ -15,7 +14,7 @@ d is the kernel temporal depth
 k is the spatial size
 '''
 class C3D(nn.Module):
-    def __init__(self, channels, length, height, width, tempdepth):
+    def __init__(self, channels, length, height, width, tempdepth, outputs):
         super().__init__()
         self.c = channels
         self.l = length
@@ -29,8 +28,7 @@ class C3D(nn.Module):
         self.conv5 = nn.Conv3d(in_channels=256, out_channels=256, kernel_size=(self.d, 3, 3), padding=1, stride=1)
         self.pool1 = nn.MaxPool3d(kernel_size=(1,2,2))
         self.pool = nn.MaxPool3d(kernel_size=(2,2,2))
-        self.fc1 = nn.Linear(in_features=256*(self.l//16)*(self.h//32)*(self.w//32), out_features=64)
-        self.fc2 = nn.Linear(in_features=64, out_features=1)
+        self.fc = nn.Linear(in_features=256*(self.l//16)*(self.h//32)*(self.w//32), out_features=outputs)
 
     def forward(self, x):
         # input shape (N, c, l, h, w)
@@ -51,8 +49,7 @@ class C3D(nn.Module):
         else:
             out = torch.flatten(out5)
 
-        lin = torch.relu(self.fc1(out)) # Output of the first linear layer, after ReLU activation
-        return torch.sigmoid(self.fc2(lin)) # Output of the second linear layer (single output) after Sigmoid activation
+        return self.fc(out) # Output of linear layer before Softmax activation. The computation of the pdf (softmax) is embedded in PyTorch (nn.CrossEntropyLoss) 
 
         
 if __name__ == '__main__':

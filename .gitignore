@@ -130,3 +130,9 @@ dmypy.json
 
 *.DS_Store
 notebooks/dataset/*
+
+# Dataset Folder
+dataset/UCF101
+
+# Trained Models
+models/saves
