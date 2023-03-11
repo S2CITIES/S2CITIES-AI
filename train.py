@@ -8,7 +8,7 @@ import numpy as np
 def collate_fn(data):
     videos, labels = [video for video, audio, label in data], \
                         [label for video, audio, label in data]
-    return torch.stack(videos, dim=0).to(torch.float), torch.reshape(torch.tensor(labels), (-1, 1)).to(torch.float)
+    return torch.stack(videos, dim=0).to(torch.float), torch.tensor(labels)
 
 def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, validation_step):
     best_val_accuracy = 0
@@ -35,7 +35,7 @@ def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, val
             epoch_loss.append(loss.item())
             optimizer.step()
 
-            y_preds = torch.argmax(torch.softmax(logits), dim=1)
+            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
 
@@ -66,7 +66,7 @@ def test(loader, model, epoch=None):
 
             y_true.append(labels)
 
-            y_preds = torch.argmax(torch.softmax(logits), dim=1)
+            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
                                           frames_per_clip=16,
                                           output_format='TCHW')
     
-    batch_size=32
+    batch_size=4
     num_epochs=100
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
