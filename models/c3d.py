@@ -33,15 +33,20 @@ class C3D(nn.Module):
     def forward(self, x):
         # input shape (N, c, l, h, w)
         out1 = self.pool1(self.conv1(x))
+        # print(out1.shape)
         # out1 shape (N, 64, l, h//2, w//2)
         out2 = self.pool(self.conv2(out1))
+        # print(out2.shape)
         # out2 shape (N, 128, l//2, h//4, w//4)
         out3 = self.pool(self.conv3(out2))
+        # print(out3.shape)
         # out3 shape (N, 256, l//4, h//8, w//8)
         out4 = self.pool(self.conv4(out3))
+        # print(out4.shape)
         # out4 shape (N, 256, l//8, h//16, w//16)
         out5 = self.pool(self.conv4(out4))
-        # out5 shape (N, 256, l//16, h//32, w//32) -> should be (N, 256, 1, 8, 8) in the current setup
+        # print(out5.shape)
+        # out5 shape (N, 256, l//16, h//32, w//32)
 
         if len(x.shape) == 5:
             # Batched input, consider this when flattening
@@ -49,6 +54,7 @@ class C3D(nn.Module):
         else:
             out = torch.flatten(out5)
 
+        # print(out.shape)
         return self.fc(out) # Output of linear layer before Softmax activation. The computation of the pdf (softmax) is embedded in PyTorch (nn.CrossEntropyLoss) 
 
         
@@ -56,12 +62,12 @@ if __name__ == '__main__':
     # Testing the network
     # Simulating an input with batch size = 2, channels = 3 (RGB Video) and sequence length = 16 (number of frames)
     # Every video is reshaped with a frame shape (256, 256)
-    x = torch.randn((2, 3, 16, 256, 256))
-    model = C3D(channels=3, length=16, height=256, width=256, tempdepth=3)
+    x = torch.randn((2, 3, 16, 240, 320))
+    model = C3D(channels=3, length=16, height=240, width=320, tempdepth=3, outputs=101)
     out = model(x)
-    print(out.shape) # Expected torch.Size([2, 1])
+    print(out.shape) # Expected torch.Size([2, 101])
 
     # Test also with unbatched input
-    x = torch.randn((3, 16, 256, 256))
+    x = torch.randn((3, 16, 240, 320))
     out = model(x)
-    print(out.shape) # Expected torch.Size([1])
+    print(out.shape) # Expected torch.Size([101])

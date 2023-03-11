@@ -8,7 +8,7 @@ import numpy as np
 def collate_fn(data):
     videos, labels = [video for video, audio, label in data], \
                         [label for video, audio, label in data]
-    return torch.stack(videos, dim=0), torch.reshape(torch.tensor(labels), (-1, 1)).to(torch.float)
+    return torch.stack(videos, dim=0).to(torch.float), torch.reshape(torch.tensor(labels), (-1, 1)).to(torch.float)
 
 def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, validation_step):
     best_val_accuracy = 0
@@ -23,6 +23,7 @@ def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, val
         for i, data in enumerate(train_loader):
             videos, labels = data
             videos = videos.permute(0, 2, 1, 3, 4) # From BTCHW to BCTHW 
+            videos = videos.to(device) # Send inputs to CUDA
 
             optimizer.zero_grad()
             logits = model(videos)
