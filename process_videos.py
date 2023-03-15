@@ -95,12 +95,12 @@ def format_with_leading(number):
 def move_arrived_videos():
     # prendi i video da 0_videos_arrived e rinominali giusti mettendoli in 1
     files = get_file_list(VIDEOS_ARRIVED)
-    number = find_last_number(VIDEOS_RAW)+1
-    for f in files:
+    number = find_last_number(VIDEOS_RAW_PROCESSED)+1 # check that VIDEOS_RAW_PROCESSED is correct, the last may be on that or VIDEOS_RAW...
+    for file in files:
         destination_name = "vid_"+format_with_leading(number)
-        destination_extension = Path(f).suffix # it includes the "."
+        destination_extension = Path(file).suffix # it includes the "."
         destination_fullname = destination_name + destination_extension
-        move_file(Path(VIDEOS_ARRIVED) / f, Path(VIDEOS_RAW) / destination_fullname)
+        move_file(Path(VIDEOS_ARRIVED) / file, Path(VIDEOS_RAW) / destination_fullname)
         number = number + 1
 
 def append_id(filename, id):
@@ -110,12 +110,12 @@ def append_id(filename, id):
 def split_arrived_videos():
     # prendi i video in 1 e fai il taglio, mettendoli in 2 gli originali, e gli split in 3
     files = get_file_list(VIDEOS_RAW)
-    for f in files:
+    for file in files:
         # split the video and rename it with sub-index
-        cut_subclips(input_video = Path(VIDEOS_RAW) / f,
-                    output_folder = VIDEOS_SPLITTED, subclip_duration=3, shift_duration=2, fps=24)
+        cut_subclips(input_video=Path(VIDEOS_RAW) file,
+                     output_folder=VIDEOS_SPLITTED, subclip_duration=3, shift_duration=2, fps=24)
 
-        move_file(source=Path(VIDEOS_RAW) / f,destination=Path(VIDEOS_RAW_PROCESSED) / f)
+        move_file(source=Path(VIDEOS_RAW) / file, destination=Path(VIDEOS_RAW_PROCESSED) / file)
 
 
 
