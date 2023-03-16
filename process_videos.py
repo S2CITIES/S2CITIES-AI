@@ -212,8 +212,7 @@ def split_arrived_videos():
     """
     files = get_file_list(VIDEOS_RAW)
     for file in files:
-        cut_subclips(input_video=Path(VIDEOS_RAW) file,
-                     output_folder=VIDEOS_SPLITTED, subclip_duration=3, shift_duration=2, fps=24)
+        cut_subclips(input_video=Path(VIDEOS_RAW) / file, output_folder=VIDEOS_SPLITTED, subclip_duration=3, shift_duration=2, fps=24)
         move_file(source=Path(VIDEOS_RAW) / file, destination=Path(VIDEOS_RAW_PROCESSED) / file)
 
 
