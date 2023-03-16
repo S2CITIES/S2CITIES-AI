@@ -118,7 +118,19 @@ def split_arrived_videos():
         move_file(source=Path(VIDEOS_RAW) / file, destination=Path(VIDEOS_RAW_PROCESSED) / file)
 
 
+def cleanup_folder(ext=[".mp4",".avi",".mov",".wmv",".flv"]):
+    """
+    This function goes throught the files in the VIDEOS_ARRIVED folder
+    and, if their extension is not in the ones in ext, it removes it.
+    """
+    files = get_file_list(VIDEOS_ARRIVED)
+    for file in files:
+        extension = Path(file).suffix.lower() # it includes the "."
+        if extension not in ext:
+            (Path(VIDEOS_ARRIVED) / file).unlink()
 
+
+cleanup_folder()
 move_arrived_videos()
 # TODO forse c'è un problema per cui il video viene sottosopra
 split_arrived_videos()
