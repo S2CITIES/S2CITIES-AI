@@ -67,7 +67,22 @@ def cut_subclips(input_video: str, output_folder: str, subclip_duration=3, shift
 
 
 def count_files(path):
-    # quanti file ci sono nella cartella
+    """
+    This function counts the number of files in a given directory.
+
+    Args:
+        path (str or Path): The path to the directory to count files in.
+
+    Returns:
+        The number of files in the directory.
+
+    Example Usage:
+        count_files("/path/to/directory")
+        # Returns: 42
+
+    Explanation:
+        This function takes a path to a directory as input, counts the number of files in the directory, and returns the count. The input path can be either a string or a Path object. The function only counts the number of files in the directory, and does not perform any filtering or recursion.
+    """
     return len(get_file_list(path))
 
 def get_file_list(path:str):
@@ -86,14 +101,66 @@ def find_last_number(folder_name:str):
         basename = last_filename.split("_")[1][:-4]
         return int(basename)
 
-def move_file(source, destination):
+def move_file(source: str, destination: str) -> None:
+    """
+    This function moves a file from a source location to a destination location by renaming it.
+
+    Args:
+        source (str or Path): The path to the file to be moved.
+        destination (str or Path): The path to the location where the file should be moved.
+
+    Returns:
+        None
+
+    Raises:
+        OSError: If the file could not be moved for some reason.
+
+    Example Usage:
+        move_file("source/filename.txt", "destination/new_filename.txt")
+
+    Explanation:
+        This function moves a file from the source location to the destination location by renaming it. The source and destination arguments can be either a string or a Path object. If the file cannot be moved, an OSError is raised.
+    """
     os.rename(source, destination)
 
-def format_with_leading(number):
+
+def format_with_leading(number: int) -> str:
+    """
+    This function formats an integer with leading zeros to a string of length 5.
+
+    Args:
+        number (int): The integer to format.
+
+    Returns:
+        str: The formatted string.
+
+    Example Usage:
+        format_with_leading(9)
+        # Output: "00009"
+
+    Explanation:
+        This function takes an integer and formats it as a string with leading zeros to ensure that the string is of length 5. For example, if the input integer is 9, the output will be "00009".
+    """
     return "{:05d}".format(number)
 
 def move_arrived_videos():
-    # prendi i video da 0_videos_arrived e rinominali giusti mettendoli in 1
+    """
+    This function moves video files from the VIDEOS_ARRIVED directory to the VIDEOS_RAW directory, renaming them in the process. 
+
+    Args:
+        None.
+
+    Returns:
+        None.
+
+    Explanation:
+        This function gets a list of all video files in the VIDEOS_ARRIVED directory, and renames each file with a new name based on the next number in the sequence. The new name has a prefix "vid_" followed by a zero-padded number. For example, the first file would be renamed as "vid_001.mp4".
+
+        Then, each file is moved from VIDEOS_ARRIVED to VIDEOS_RAW directory, with the new name. If a file with the same name already exists in the VIDEOS_RAW directory, it will be overwritten.
+
+        If VIDEOS_ARRIVED or VIDEOS_RAW directories do not exist, a FileNotFoundError is raised.
+
+    """
     files = get_file_list(VIDEOS_ARRIVED)
     number = find_last_number(VIDEOS_RAW_PROCESSED)+1 # check that VIDEOS_RAW_PROCESSED is correct, the last may be on that or VIDEOS_RAW...
     for file in files:
@@ -103,18 +170,50 @@ def move_arrived_videos():
         move_file(Path(VIDEOS_ARRIVED) / file, Path(VIDEOS_RAW) / destination_fullname)
         number = number + 1
 
-def append_id(filename, id):
+def append_id(filename, id) -> str:
+    """
+    This function appends an ID to a filename, preserving the original extension.
+
+    Args:
+        filename (str or Path): The original filename.
+        id (str or int): The ID to append to the filename.
+
+    Returns:
+        A new string containing the original filename with the ID appended and the extension preserved.
+
+    Example Usage:
+        append_id("file.txt", 123)
+        # Returns: "file_123.txt"
+
+    Explanation:
+        This function takes an input filename and an ID, and returns a new string that is the original filename with the ID appended and the extension preserved. The input filename can be either a string or a Path object. The ID can be either a string or an integer. The function does not modify the original file, it only returns a new string with the modified filename.
+    """
     p = Path(filename)
     return "{0}_{2}{1}".format(p.stem, p.suffix, id)
 
 def split_arrived_videos():
-    # prendi i video in 1 e fai il taglio, mettendoli in 2 gli originali, e gli split in 3
+    """
+    This function splits the videos in the VIDEOS_RAW folder into subclips, and moves the original videos to
+    the VIDEOS_RAW_PROCESSED folder.
+
+    Args:
+        None.
+
+    Returns:
+        None.
+
+    Example Usage:
+        split_arrived_videos()
+
+    Explanation:
+        This function splits the videos in the VIDEOS_RAW folder into subclips with a duration of 3 seconds and a
+        shift of 2 seconds, and saves the subclips in the VIDEOS_SPLITTED folder. The original videos are then moved
+        to the VIDEOS_RAW_PROCESSED folder. The function does not return anything.
+    """
     files = get_file_list(VIDEOS_RAW)
     for file in files:
-        # split the video and rename it with sub-index
         cut_subclips(input_video=Path(VIDEOS_RAW) file,
                      output_folder=VIDEOS_SPLITTED, subclip_duration=3, shift_duration=2, fps=24)
-
         move_file(source=Path(VIDEOS_RAW) / file, destination=Path(VIDEOS_RAW_PROCESSED) / file)
 
 
