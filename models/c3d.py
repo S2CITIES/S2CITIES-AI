@@ -62,12 +62,12 @@ if __name__ == '__main__':
     # Testing the network
     # Simulating an input with batch size = 2, channels = 3 (RGB Video) and sequence length = 16 (number of frames)
     # Every video is reshaped with a frame shape (256, 256)
-    x = torch.randn((2, 3, 16, 240, 320))
-    model = C3D(channels=3, length=16, height=240, width=320, tempdepth=3, outputs=101)
+    x = torch.randn((2, 3, 16, 64, 64))
+    model = C3D(channels=3, length=16, height=64, width=64, tempdepth=3, outputs=2)
     out = model(x)
     print(out.shape) # Expected torch.Size([2, 101])
 
     # Test also with unbatched input
-    x = torch.randn((3, 16, 240, 320))
+    x = torch.randn((3, 16, 64, 64))
     out = model(x)
     print(out.shape) # Expected torch.Size([101])
