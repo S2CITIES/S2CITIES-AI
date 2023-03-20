@@ -11,7 +11,7 @@ def collate_fn(data):
                         [label for video, audio, label in data]
     return torch.stack(videos, dim=0).to(torch.float), torch.tensor(labels)
 
-def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, validation_step, pbar=None):
+def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, validation_step, device, pbar=None):
     
     best_val_accuracy = 0
 
@@ -24,6 +24,7 @@ def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, val
 
         if pbar:
             pbar.set_description("[Epoch {}]".format(epoch))
+            pbar.reset()
 
         for i, data in enumerate(train_loader):
             videos, labels = data
@@ -59,7 +60,7 @@ def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, val
                 best_val_accuracy = val_accuracy
      
 
-def test(loader, model, epoch=None):
+def test(loader, model, device, epoch=None):
     totals = 0
     corrects = 0
     y_pred = []
@@ -71,6 +72,7 @@ def test(loader, model, epoch=None):
         for i, data in enumerate(loader):
             videos, labels = data
             videos = videos.permute(0, 2, 1, 3, 4) # From BTCHW to BCTHW  
+            videos = videos.to(device)
             logits = model(videos)
 
             y_true.append(labels)
@@ -156,7 +158,10 @@ if __name__ == '__main__':
           train_loader=train_loader, 
           val_loader=val_loader, 
           num_epochs=num_epochs, 
-          validation_step=1, 
+          validation_step=1,
+          device=device, 
           pbar=pbar)
     
-    test(test_loader, model)
+    test(loader=test_loader, 
+         model=model,
+         device=device)
