@@ -47,13 +47,12 @@ def train(model, optimizer, criterion, train_loader, val_loader, num_epochs, val
             y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
-            
 
         if epoch % validation_step == 0:
             # Validate the model every <validation_step> epochs of training
             print("[Epoch {}] Avg Loss: {}".format(epoch, np.array(epoch_loss).mean()))
             print("[Epoch {}] Train Accuracy {:.2f}%".format(epoch, 100 * corrects / totals))
-            val_accuracy = test(val_loader, model, epoch)
+            val_accuracy = test(loader=val_loader, model=model, device=device, epoch=epoch)
             if val_accuracy > best_val_accuracy:
                 # Save the best model based on validation accuracy metric
                 torch.save(model.state_dict(), 'models/saves/c3d.h5')
