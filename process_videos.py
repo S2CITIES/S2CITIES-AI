@@ -223,29 +223,11 @@ def cleanup_folder(ext=[".mp4",".avi",".mov",".wmv",".flv"]):
     """
     files = get_file_list(VIDEOS_ARRIVED)
     for file in files:
-        extension = Path(file).suffix.lower() # it includes the "."
+        extension = Path(file).suffix.lower()
         if extension not in ext:
             (Path(VIDEOS_ARRIVED) / file).unlink()
 
 
 cleanup_folder()
 move_arrived_videos()
-# TODO forse c'è un problema per cui il video viene sottosopra
-split_arrived_videos()
-
-
-
-
-
-# dataframe stuff, ma ci serve? credo di no
-FILE_NAME = 'processed.csv'
-df = pd.DataFrame(columns=['video_name'])
-
-df.head()
-df.to_csv(FILE_NAME, index=False)
-
-df2 = pd.read_csv(FILE_NAME)
-
-
-for f in folders:
-    print(f'Folder {f} contains {count_files(f)} files')
+split_arrived_videos() # TODO forse c'è un problema per cui il video viene sottosopra
