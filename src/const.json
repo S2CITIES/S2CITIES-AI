@@ -1,0 +1,7 @@
+{
+    "VIDEOS_ARRIVED": "0_videos_arrived",
+    "VIDEOS_RAW": "1_videos_raw",
+    "VIDEOS_RAW_PROCESSED": "2_videos_raw_processed",
+    "VIDEOS_SPLITTED": "3_videos_splitted",
+    "VIDEOS_LABELED": "4_videos_labeled"
+}

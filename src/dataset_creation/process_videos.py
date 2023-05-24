@@ -2,14 +2,18 @@ from pathlib import Path
 import os
 from os import listdir
 from os.path import isfile, join
-import pandas as pd
 import cv2
+import json
+
+# Read from json file
+with open("../const.json", "r") as f:
+    const = json.load(f)
 
 # define paths
-VIDEOS_ARRIVED = "0_videos_arrived"
-VIDEOS_RAW = "1_videos_raw"
-VIDEOS_RAW_PROCESSED = "2_videos_raw_processed"
-VIDEOS_SPLITTED = "3_videos_splitted"
+VIDEOS_ARRIVED = const["VIDEOS_ARRIVED"]
+VIDEOS_RAW = const["VIDEOS_RAW"]
+VIDEOS_RAW_PROCESSED = const["VIDEOS_RAW_PROCESSED"]
+VIDEOS_SPLITTED = const["VIDEOS_SPLITTED"]
 
 # create them if necessary
 folders = [VIDEOS_SPLITTED, VIDEOS_ARRIVED, VIDEOS_RAW, VIDEOS_RAW_PROCESSED]
