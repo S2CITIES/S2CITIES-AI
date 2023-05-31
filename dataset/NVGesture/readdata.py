@@ -25,6 +25,7 @@ def load_split_nvgesture(file_with_split = './nvgesture_train_correct_cvpr2016.l
                     elif key in ('depth','color','duo_left'):
                         #othrwise only sensors format: <sensor name>:<folder>:<start frame>:<end frame>
                         sensor_name = key
+
                         #first store path
                         params_dictionary[key] = path + '/' + parsed[1]
                         #store start frame
@@ -39,7 +40,7 @@ def load_split_nvgesture(file_with_split = './nvgesture_train_correct_cvpr2016.l
             params_dictionary['duo_disparity'] = params_dictionary['duo_left'].replace('duo_left', 'duo_disparity')
             params_dictionary['duo_disparity_start'] = params_dictionary['duo_left_start']
             params_dictionary['duo_disparity_end'] = params_dictionary['duo_left_end']                  
-
+            
             list_split.append(params_dictionary)
  
     return list_split
@@ -78,7 +79,8 @@ def load_data_from_file(example_config, sensor,image_width, image_height):
     return video_container, label
 
 if __name__ == "__main__":
-    sensors = ["color", "depth", "duo_left", "duo_right", "duo_disparity"]
+    # sensors = ["color", "depth", "duo_left", "duo_right", "duo_disparity"]
+    sensors = ["color"] # Only one sensor needed in our code (color/RGB)
     file_lists = dict()
     file_lists["test"] = "./nvgesture_test_correct_cvpr2016.lst"
     file_lists["train"] = "./nvgesture_train_correct_cvpr2016.lst"
