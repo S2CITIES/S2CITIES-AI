@@ -52,7 +52,6 @@ def load_data_from_file(example_config, sensor,image_width, image_height, starti
     start_frame = example_config[sensor+'_start']
     end_frame = example_config[sensor+'_end']
     label = example_config['label']
-
     frames_to_load = range(start_frame, end_frame)
 
     chnum = 3 if sensor == "color" else 1

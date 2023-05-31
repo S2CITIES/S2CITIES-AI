@@ -5,11 +5,12 @@ from torch.utils.data import DataLoader
 import os.path
 
 class NVGestureColorDataset(Dataset):
-    def __init__(self, annotations_file, path_prefix):
+    def __init__(self, annotations_file, path_prefix, transforms=None):
         self.data = list()
         # Fill self.data with annotations from annotations_file
         load_split_nvgesture(file_with_split = annotations_file, list_split = self.data)
         self.path_prefix = path_prefix
+        self.transforms = transforms
 
     def __len__(self):
         return len(self.data)
@@ -20,6 +21,11 @@ class NVGestureColorDataset(Dataset):
                                           image_width = 320, 
                                           image_height = 240, 
                                           starting_path=self.path_prefix)
+        
+        data = torch.tensor(data).permute(2, 3, 0, 1) # (H, W, C, T) -> (C, T, H, W)
+        if self.transforms: 
+            data = self.transforms(data)
+
         return data, label
     
 if __name__ == '__main__':
