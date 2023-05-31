@@ -134,6 +134,7 @@ notebooks/dataset/*
 # Dataset Folder
 dataset/UCF101
 reduced_dataset/UCF101
+dataset/NVGesture/Video_data
 
 # Trained Models
 models/saves

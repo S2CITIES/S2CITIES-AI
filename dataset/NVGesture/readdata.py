@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import pdb
 
-def load_split_nvgesture(file_with_split = './nvgesture_train_correct.lst',list_split = list()):
+def load_split_nvgesture(file_with_split = './nvgesture_train_correct_cvpr2016.lst', list_split = list()):
     params_dictionary = dict()
-    with open(file_with_split,'rb') as f:
+    with open(file_with_split,'r') as f:
           dict_name  = file_with_split[file_with_split.rfind('/')+1 :]
           dict_name  = dict_name[:dict_name.find('_')]
 
@@ -61,7 +61,7 @@ def load_data_from_file(example_config, sensor,image_width, image_height):
 
     ret = 1
     frNum = 0
-    cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, start_frame);
+    cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
     for indx, frameIndx in enumerate(frames_to_load):    
         ret, frame = cap.read()
         if ret:
@@ -80,13 +80,16 @@ def load_data_from_file(example_config, sensor,image_width, image_height):
 if __name__ == "__main__":
     sensors = ["color", "depth", "duo_left", "duo_right", "duo_disparity"]
     file_lists = dict()
-    file_lists["test"] = "./nvgesture_test_correct.lst"
-    file_lists["train"] = "./nvgesture_train_correct.lst"
+    file_lists["test"] = "./nvgesture_test_correct_cvpr2016.lst"
+    file_lists["train"] = "./nvgesture_train_correct_cvpr2016.lst"
     train_list = list()
     test_list = list()
 
     load_split_nvgesture(file_with_split = file_lists["train"],list_split = train_list)
     load_split_nvgesture(file_with_split = file_lists["test"],list_split = test_list)
 
-    data, label = load_data_from_file(example_config = train_list[0], sensor = sensors[0], image_width = 320, image_height = 240)
-    pdb.set_trace()
+    data, label = load_data_from_file(example_config = train_list[200], sensor = sensors[0], image_width = 320, image_height = 240)
+    print(data.shape) # Sensor0:Color - (240, 320, 3, 80) -> 80 RGB frames with shape (240, 320)
+    print(label)
+    print("Everything working fine...")
+    #pdb.set_trace()
