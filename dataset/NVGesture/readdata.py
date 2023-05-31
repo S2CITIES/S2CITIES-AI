@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
-import pdb
+import os.path as osp
 
 def load_split_nvgesture(file_with_split = './nvgesture_train_correct_cvpr2016.lst', list_split = list()):
     params_dictionary = dict()
+
     with open(file_with_split,'r') as f:
           dict_name  = file_with_split[file_with_split.rfind('/')+1 :]
           dict_name  = dict_name[:dict_name.find('_')]
@@ -45,9 +46,9 @@ def load_split_nvgesture(file_with_split = './nvgesture_train_correct_cvpr2016.l
  
     return list_split
 
-def load_data_from_file(example_config, sensor,image_width, image_height):
+def load_data_from_file(example_config, sensor,image_width, image_height, starting_path):
 
-    path = example_config[sensor] + ".avi"
+    path = osp.join(starting_path, example_config[sensor][2:]) + ".avi"
     start_frame = example_config[sensor+'_start']
     end_frame = example_config[sensor+'_end']
     label = example_config['label']
