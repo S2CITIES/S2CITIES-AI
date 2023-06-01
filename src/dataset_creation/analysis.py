@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
+import os
 import cv2
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
 
 # Import utils.py
-from src.dataset_creation.utils import get_video_files
+from utils import get_video_files
 
 # Set resolution of the plots to retina
 plt.rcParams['figure.dpi'] = 300
+
+# Set working directory to this file's directory using pathlib
+os.chdir(Path(__file__).parent)
 
 # Read from json file
 with open("../const.json", "r", encoding="utf-8") as f:
@@ -62,14 +66,11 @@ for video_file in video_files:
 # Create a dataframe from the video information
 df = pd.DataFrame(video_info)
 
-# Print the dataframe
-print(df)
-
 # Print average duration seconds
-print(df["duration_seconds"].mean())
+print("Mean duration in seconds:", df["duration_seconds"].mean())
 
 # Print average frame rate
-print(df["frame_rate"].mean())
+print("Mean framerate in seconds:", df["frame_rate"].mean())
 
 # Print frame rate histogram
 fig, ax = plt.subplots()
@@ -78,7 +79,6 @@ ax.set_xlabel("Frame rate")
 ax.set_ylabel("Number of videos")
 ax.set_title("Frame rate histogram")
 plt.savefig('frame_rate.png')
-plt.show()
 
 # Add a column to the dataframe with the orientation of the video
 # If the aspect ratio is greater than 1, the video is landscape
@@ -92,4 +92,3 @@ ax.set_xlabel("Orientation")
 ax.set_ylabel("Number of videos")
 ax.set_title("Number of videos per orientation")
 plt.savefig('orientation.png')
-plt.show()
