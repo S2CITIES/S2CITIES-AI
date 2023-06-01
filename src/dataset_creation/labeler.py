@@ -1,15 +1,22 @@
 import shutil
+import time
+from pathlib import Path
 import os
 import cv2
-import time
+from src.dataset_creation.utils import get_video_files
 
+# Set working directory to this file's directory using pathlib
+os.chdir(Path(__file__).parent)
+
+# This function moves a video file from the source folder
 def move_video(file_path, destination_folder):
     filename = os.path.basename(file_path)
     destination_path = os.path.join(destination_folder, filename)
     shutil.move(file_path, destination_path)
 
+# This function processes the videos in the source folder
 def process_videos(source_folder, folder_0, folder_1):
-    video_files = [file for file in os.listdir(source_folder) if file.endswith('.mp4')]
+    video_files = get_video_files(source_folder)
 
     for video_file in video_files:
         file_path = os.path.join(source_folder, video_file)
@@ -47,3 +54,4 @@ folder_1 = '1'
 
 # Call the function to process the videos
 process_videos(source_folder, folder_0, folder_1)
+
