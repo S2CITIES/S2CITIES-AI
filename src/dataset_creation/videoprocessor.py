@@ -42,9 +42,9 @@ class VideoProcessor:
     def split_raw_videos(self):
         files = get_video_files(self.VIDEOS_RAW)
         for file in files:
+            print(f"Processing video {file}")
             self.cut_subclips(input_video=str(Path(self.VIDEOS_RAW) / file), output_folder=str(self.VIDEOS_SPLITTED), subclip_duration=3, shift_duration=2)
             move_file(source=str(Path(self.VIDEOS_RAW) / file), destination=str(Path(self.VIDEOS_RAW_PROCESSED) / file))
-            print(f"Processed video {file}")
 
     def cleanup_folder(self, valid_extensions=[".mp4",".avi",".mov",".wmv",".flv"]):
         """
