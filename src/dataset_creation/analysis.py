@@ -21,7 +21,8 @@ with open("../const.json", "r", encoding="utf-8") as f:
     const = json.load(f)
 
 # Set the path to the dataset folder
-DATASET_FOLDER = Path(const["DATASET_FOLDER"])
+#DATASET_FOLDER = Path(const["DATASET_FOLDER"])
+DATASET_FOLDER = Path("./3_videos_splitted")
 
 # Get video files
 video_files = get_video_files(DATASET_FOLDER)
@@ -31,8 +32,9 @@ video_info = []
 
 # Loop through each video file
 for video_file in video_files:
+
     # Open the video file
-    cap = cv2.VideoCapture(str(video_file))
+    cap = cv2.VideoCapture(str(DATASET_FOLDER / video_file))
 
     # Get the frame rate of the video
     frame_rate = cap.get(cv2.CAP_PROP_FPS)
@@ -51,7 +53,7 @@ for video_file in video_files:
 
     # Add the video information to the list
     video_info.append({
-        "file": str(video_file.name),
+        "file": str(video_file),
         "duration_frames": duration_frames,
         "duration_seconds": duration_seconds,
         "frame_rate": frame_rate,
@@ -92,3 +94,6 @@ ax.set_xlabel("Orientation")
 ax.set_ylabel("Number of videos")
 ax.set_title("Number of videos per orientation")
 plt.savefig('orientation.png')
+
+# Sort by duration in seconds
+df = df.sort_values(by="duration_seconds")
