@@ -27,13 +27,15 @@ class VideoProcessor:
         self.VIDEOS_SPLITTED = const["VIDEOS_SPLITTED"]
         self.VIDEOS_LABELED = const["VIDEOS_LABELED"]
 
+        self.VIDEO_EXTENSIONS = const["VIDEO_EXTENSIONS"]
+
         # Create folders if necessary
         folders = [self.VIDEOS_SPLITTED, self.VIDEOS_ARRIVED, self.VIDEOS_RAW, self.VIDEOS_RAW_PROCESSED, self.VIDEOS_LABELED]
         for folder in folders:
             os.makedirs(folder, exist_ok=True)
 
     def move_arrived_videos(self):
-        files = get_video_files(self.VIDEOS_ARRIVED)
+        files = get_video_files(self.VIDEOS_ARRIVED, self.VIDEO_EXTENSIONS)
         number = self.find_last_number(self.VIDEOS_RAW) + 1
         for file in files:
             destination_name = "vid_" + self.format_with_leading(number)
@@ -44,22 +46,11 @@ class VideoProcessor:
             number += 1
 
     def split_raw_videos(self):
-        files = get_video_files(self.VIDEOS_RAW)
+        files = get_video_files(self.VIDEOS_RAW, self.VIDEO_EXTENSIONS)
         for file in files:
             print(f"Processing video {file}")
             self.cut_subclips(input_video=str(Path(self.VIDEOS_RAW) / file), output_folder=str(self.VIDEOS_SPLITTED))
             move_file(source=str(Path(self.VIDEOS_RAW) / file), destination=str(Path(self.VIDEOS_RAW_PROCESSED) / file))
-
-    def cleanup_folder(self, valid_extensions=[".mp4",".avi",".mov",".wmv",".flv"]):
-        """
-        This function goes through the files in the VIDEOS_ARRIVED folder
-        and, if their extension is not in the ones in ext, it removes it.
-        """
-        files = get_video_files(self.VIDEOS_ARRIVED)
-        for file in files:
-            extension = Path(file).suffix.lower()
-            if extension not in valid_extensions:
-                (Path(self.VIDEOS_ARRIVED) / file).unlink()
 
     def cut_subclips(self, input_video: str, output_folder: str) -> None:
         # Set video file path
@@ -117,7 +108,7 @@ class VideoProcessor:
 
     @staticmethod
     def find_last_number(folder_name: str) -> int:
-        files = get_video_files(folder_name)
+        files = get_video_files(folder_name, )
         if len(files) == 0:
             return 0
         else:

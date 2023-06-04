@@ -14,7 +14,6 @@ os.chdir(Path(__file__).parent)
 # The following is for being used when creating the dataset clips form the collected videos
 
 processor = VideoProcessor("../const.json", subclip_duration=2.5, shift_duration=1)
-processor.cleanup_folder()
 processor.move_arrived_videos()
 processor.split_raw_videos()
 
