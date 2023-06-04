@@ -11,7 +11,7 @@ os.chdir(Path(__file__).parent)
 from videoprocessor import VideoProcessor
 
 # Create VideoProcessor instance
-#processor = VideoProcessor("../const.json")
+processor = VideoProcessor("../const.json", subclip_duration=2.5, shift_duration=1)
 #processor.cleanup_folder()
 #processor.move_arrived_videos()
 #processor.split_raw_videos()

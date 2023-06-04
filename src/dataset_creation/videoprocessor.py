@@ -11,7 +11,11 @@ import cv2
 from utils import get_video_files, move_file
 
 class VideoProcessor:
-    def __init__(self, const_file_path):
+    def __init__(self, const_file_path, subclip_duration, shift_duration):
+
+        self.subclip_duration = subclip_duration
+        self.shift_duration = shift_duration
+
         # Read from json file
         with open(const_file_path, "r", encoding="utf-8") as f:
             const = json.load(f)
@@ -43,7 +47,7 @@ class VideoProcessor:
         files = get_video_files(self.VIDEOS_RAW)
         for file in files:
             print(f"Processing video {file}")
-            self.cut_subclips(input_video=str(Path(self.VIDEOS_RAW) / file), output_folder=str(self.VIDEOS_SPLITTED), subclip_duration=3, shift_duration=2)
+            self.cut_subclips(input_video=str(Path(self.VIDEOS_RAW) / file), output_folder=str(self.VIDEOS_SPLITTED))
             move_file(source=str(Path(self.VIDEOS_RAW) / file), destination=str(Path(self.VIDEOS_RAW_PROCESSED) / file))
 
     def cleanup_folder(self, valid_extensions=[".mp4",".avi",".mov",".wmv",".flv"]):
@@ -57,7 +61,7 @@ class VideoProcessor:
             if extension not in valid_extensions:
                 (Path(self.VIDEOS_ARRIVED) / file).unlink()
 
-    def cut_subclips(self, input_video: str, output_folder: str, subclip_duration=3, shift_duration=2) -> None:
+    def cut_subclips(self, input_video: str, output_folder: str) -> None:
         # Set video file path
         video_path = Path(input_video)
 
@@ -78,8 +82,8 @@ class VideoProcessor:
         # Loop through each subclip and extract frames
         for i in range(total_subclips):
             # Calculate start and end frame indexes for current subclip
-            start_frame = int(i * shift_duration * fps)
-            end_frame = int(start_frame + subclip_duration * fps)
+            start_frame = int(i * self.shift_duration * fps)
+            end_frame = int(start_frame + self.subclip_duration * fps)
 
             # Set output file name and path for current subclip
             sub_id = self.format_with_leading(i+1)
