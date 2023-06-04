@@ -120,9 +120,15 @@ class VideoProcessor:
 
     @staticmethod
     def format_with_leading(number: int) -> str:
+        """
+        Format a number with leading zeros.
+        """
         return "{:05d}".format(number)
 
     @staticmethod
     def append_id(filename, id) -> str:
+        """
+        Append an id to the filename.
+        """
         p = Path(filename)
         return f"{p.stem}_{id}{p.suffix}"
