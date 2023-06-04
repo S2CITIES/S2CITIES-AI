@@ -73,11 +73,13 @@ class VideoProcessor:
         # Get total number of frames in video
         num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-        # Calculate total number of subclips
-        total_subclips = int((num_frames / fps - subclip_duration) / shift_duration) + 1
-
-        # Set output folder name and create folder
-        os.makedirs(output_folder, exist_ok=True)
+        # Check that at least one window fits in the video
+        if num_frames / fps < self.subclip_duration:
+            print(f"Video {input_video} is too short to be splitted")
+            total_subclips = 0
+        else:
+            # Calculate total number of subclips
+            total_subclips = int((num_frames / fps - self.subclip_duration) / self.shift_duration)
 
         # Loop through each subclip and extract frames
         for i in range(total_subclips):
