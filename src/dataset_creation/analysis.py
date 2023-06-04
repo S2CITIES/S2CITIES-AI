@@ -2,10 +2,10 @@
 
 from pathlib import Path
 import os
+import json
 import cv2
 import pandas as pd
 import matplotlib.pyplot as plt
-import json
 
 # Import utils.py
 from utils import get_video_files
