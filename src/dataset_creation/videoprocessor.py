@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import json
 import cv2
+from tqdm import tqdm
 
 from utils import get_video_files, move_file
 
@@ -47,8 +48,7 @@ class VideoProcessor:
 
     def split_raw_videos(self):
         files = get_video_files(self.VIDEOS_RAW, self.VIDEO_EXTENSIONS)
-        for file in files:
-            print(f"Processing video {file}")
+        for file in tqdm(files, desc="Processing videos", unit="video", position=0):
             self.cut_subclips(input_video=str(Path(self.VIDEOS_RAW) / file), output_folder=str(self.VIDEOS_SPLITTED))
             move_file(source=str(Path(self.VIDEOS_RAW) / file), destination=str(Path(self.VIDEOS_RAW_PROCESSED) / file))
 
@@ -73,7 +73,7 @@ class VideoProcessor:
             total_subclips = int((num_frames / fps - self.subclip_duration) / self.shift_duration)
 
         # Loop through each subclip and extract frames
-        for i in range(total_subclips):
+        for i in tqdm(range(total_subclips), desc="Processing subclips", unit="subclip", leave=False, position=1):
             # Calculate start and end frame indexes for current subclip
             start_frame = int(i * self.shift_duration * fps)
             end_frame = int(start_frame + self.subclip_duration * fps)
@@ -99,9 +99,6 @@ class VideoProcessor:
 
             # Release video writer object for current subclip
             out.release()
-
-            # Print progress
-            print(f"Processed subclip {i+1}/{total_subclips}")
 
         # Release video capture object
         cap.release()
