@@ -27,7 +27,7 @@ class VideoProcessor:
         self.VIDEOS_SPLITTED = const["VIDEOS_SPLITTED"]
         self.VIDEOS_LABELED = const["VIDEOS_LABELED"]
 
-        self.VIDEO_EXTENSIONS = const["VIDEO_EXTENSIONS"]
+        self.VIDEO_EXTENSIONS = tuple(const["VIDEO_EXTENSIONS"])
 
         # Create folders if necessary
         folders = [self.VIDEOS_SPLITTED, self.VIDEOS_ARRIVED, self.VIDEOS_RAW, self.VIDEOS_RAW_PROCESSED, self.VIDEOS_LABELED]
@@ -106,9 +106,11 @@ class VideoProcessor:
         # Release video capture object
         cap.release()
 
-    @staticmethod
-    def find_last_number(folder_name: str) -> int:
-        files = get_video_files(folder_name, )
+    def find_last_number(self, folder_name: str) -> int:
+        """
+        Find the last number in the filenames of the videos in the folder.
+        """
+        files = get_video_files(folder_name, self.VIDEO_EXTENSIONS)
         if len(files) == 0:
             return 0
         else:
