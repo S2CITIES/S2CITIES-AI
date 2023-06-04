@@ -138,3 +138,4 @@ dataset/NVGesture/Video_data
 
 # Trained Models
 models/saves
+.vscode/settings.json
