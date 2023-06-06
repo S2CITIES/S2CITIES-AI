@@ -13,6 +13,8 @@ class VideoLabeler:
         with open(const_file_path, "r", encoding="utf-8") as f:
             const = json.load(f)
 
+        self.VIDEO_EXTENSIONS = tuple(const["VIDEO_EXTENSIONS"])
+
         self.VIDEOS_LABEL_0_FOLDER = Path(const["VIDEOS_LABELED"]) / "0"
         self.VIDEOS_LABEL_1_FOLDER = Path(const["VIDEOS_LABELED"]) / "1"
     
@@ -27,7 +29,8 @@ class VideoLabeler:
         for index, video in self.dataframe.iterrows():
             
             # Skip if video is already processed
-            if video["processed"] == 1:
+            # i.e. if the label has already been set to either 0 or 1
+            if not video["label"] == -1:
                 continue
 
             file_path = os.path.join(source_folder, video["file"])
@@ -64,10 +67,9 @@ class VideoLabeler:
     def update_csv(self, csv_filename):
         self.dataframe.to_csv(csv_filename, index=False)
 
-    @staticmethod
-    def create_starter_csv(folder, csv_filename):
-        video_files = get_video_files(folder)
-        video_info = [{"file": file, "processed": 0, "label": -1} for file in video_files]
+    def create_starter_csv(self, folder, csv_filename):
+        video_files = get_video_files(folder, self.VIDEO_EXTENSIONS)
+        video_info = [{"file": file, "label": -1} for file in video_files]
         df = pd.DataFrame(video_info)
         # Sort by file name
         #df = df.sort_values(by=["file"])
