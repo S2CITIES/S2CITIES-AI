@@ -15,10 +15,6 @@ class VideoLabeler:
 
         self.VIDEOS_LABEL_0_FOLDER = Path(const["VIDEOS_LABELED"]) / "0"
         self.VIDEOS_LABEL_1_FOLDER = Path(const["VIDEOS_LABELED"]) / "1"
-
-        # Create folders if they don't exist
-        self.VIDEOS_LABEL_0_FOLDER.mkdir(parents=True, exist_ok=True)
-        self.VIDEOS_LABEL_1_FOLDER.mkdir(parents=True, exist_ok=True)
     
     def read_dataframe(self, csv_filename):
         # Read from csv file
@@ -79,6 +75,9 @@ class VideoLabeler:
     
     # Read the csv and move files to the corresponding folder based on the label
     def move_files(self, source_folder):
+        # Create folders if they don't exist
+        self.VIDEOS_LABEL_0_FOLDER.mkdir(parents=True, exist_ok=True)
+        self.VIDEOS_LABEL_1_FOLDER.mkdir(parents=True, exist_ok=True)
         for index, video in self.dataframe.iterrows():
             if video["label"] == 1:
                 move_file(str(Path(source_folder) / video['file']), str(self.VIDEOS_LABEL_1_FOLDER / video['file']))
