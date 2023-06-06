@@ -2,21 +2,16 @@ import time
 from pathlib import Path
 import os
 import cv2
-import json
 import pandas as pd
 
 from utils import get_video_files, move_file
 
 class VideoLabeler:
-    def __init__(self, const_file_path):
-        # Read from json file
-        with open(const_file_path, "r", encoding="utf-8") as f:
-            const = json.load(f)
-
-        self.VIDEO_EXTENSIONS = tuple(const["VIDEO_EXTENSIONS"])
-
-        self.VIDEOS_LABEL_0_FOLDER = Path(const["VIDEOS_LABELED"]) / "0"
-        self.VIDEOS_LABEL_1_FOLDER = Path(const["VIDEOS_LABELED"]) / "1"
+    def __init__(self, video_extensions, videos_labeled_folder):
+        
+        self.VIDEO_EXTENSIONS = tuple(video_extensions)
+        self.VIDEOS_LABEL_0_FOLDER = Path(videos_labeled_folder) / "0"
+        self.VIDEOS_LABEL_1_FOLDER = Path(videos_labeled_folder) / "1"
     
     def read_dataframe(self, csv_filename):
         # Read from csv file

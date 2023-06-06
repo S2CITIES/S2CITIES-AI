@@ -5,30 +5,33 @@ in the dataset folder.
 
 from pathlib import Path
 import os
-import json
 import cv2
 from tqdm import tqdm
 
 from utils import get_video_files, move_file
 
 class VideoProcessor:
-    def __init__(self, const_file_path, subclip_duration, shift_duration):
+    def __init__(self,
+                 videos_arrived_folder,
+                 videos_raw_folder,
+                 videos_raw_processed_folder,
+                 videos_splitted_folder,
+                 videos_labeled_folder,
+                 video_extensions,
+                 subclip_duration,
+                 shift_duration):
 
         self.subclip_duration = subclip_duration
         self.shift_duration = shift_duration
 
-        # Read from json file
-        with open(const_file_path, "r", encoding="utf-8") as f:
-            const = json.load(f)
-
         # Define paths
-        self.VIDEOS_ARRIVED = const["VIDEOS_ARRIVED"]
-        self.VIDEOS_RAW = const["VIDEOS_RAW"]
-        self.VIDEOS_RAW_PROCESSED = const["VIDEOS_RAW_PROCESSED"]
-        self.VIDEOS_SPLITTED = const["VIDEOS_SPLITTED"]
-        self.VIDEOS_LABELED = const["VIDEOS_LABELED"]
+        self.VIDEOS_ARRIVED = videos_arrived_folder
+        self.VIDEOS_RAW = videos_raw_folder
+        self.VIDEOS_RAW_PROCESSED = videos_raw_processed_folder
+        self.VIDEOS_SPLITTED = videos_splitted_folder
+        self.VIDEOS_LABELED = videos_labeled_folder
 
-        self.VIDEO_EXTENSIONS = tuple(const["VIDEO_EXTENSIONS"])
+        self.VIDEO_EXTENSIONS = tuple(video_extensions)
 
         # Create folders if necessary
         folders = [self.VIDEOS_SPLITTED, self.VIDEOS_ARRIVED, self.VIDEOS_RAW, self.VIDEOS_RAW_PROCESSED, self.VIDEOS_LABELED]
