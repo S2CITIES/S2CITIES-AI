@@ -7,11 +7,10 @@ import pandas as pd
 from utils import get_video_files, move_file
 
 class VideoLabeler:
-    def __init__(self, video_extensions, videos_labeled_folder):
+    def __init__(self, video_extensions):
         
         self.VIDEO_EXTENSIONS = tuple(video_extensions)
-        self.VIDEOS_LABEL_0_FOLDER = Path(videos_labeled_folder) / "0"
-        self.VIDEOS_LABEL_1_FOLDER = Path(videos_labeled_folder) / "1"
+        self.dataframe = None
     
     def read_dataframe(self, csv_filename):
         # Read from csv file
@@ -67,18 +66,24 @@ class VideoLabeler:
         video_info = [{"file": file, "label": -1} for file in video_files]
         df = pd.DataFrame(video_info)
         # Sort by file name
-        #df = df.sort_values(by=["file"])
+        df = df.sort_values(by=["file"])
         df.to_csv(csv_filename, index=False)
     
     # Read the csv and move files to the corresponding folder based on the label
-    def move_files(self, source_folder):
+    def move_files(self, source_folder, destination_folder):
+
+        # Define the destination folders
+        VIDEOS_LABEL_0_FOLDER = Path(destination_folder) / "0"
+        VIDEOS_LABEL_1_FOLDER = Path(destination_folder) / "1"
+        
         # Create folders if they don't exist
-        self.VIDEOS_LABEL_0_FOLDER.mkdir(parents=True, exist_ok=True)
-        self.VIDEOS_LABEL_1_FOLDER.mkdir(parents=True, exist_ok=True)
+        VIDEOS_LABEL_0_FOLDER.mkdir(parents=True, exist_ok=True)
+        VIDEOS_LABEL_1_FOLDER.mkdir(parents=True, exist_ok=True)
+
         for index, video in self.dataframe.iterrows():
             if video["label"] == 1:
-                move_file(str(Path(source_folder) / video['file']), str(self.VIDEOS_LABEL_1_FOLDER / video['file']))
+                move_file(str(Path(source_folder) / video['file']), str(VIDEOS_LABEL_1_FOLDER / video['file']))
             elif video["label"] == 0:
-                move_file(str(Path(source_folder) / video['file']), str(self.VIDEOS_LABEL_0_FOLDER / video['file']))
+                move_file(str(Path(source_folder) / video['file']), str(VIDEOS_LABEL_0_FOLDER / video['file']))
             else:
                 print("File {} has no label".format(video["file"]))

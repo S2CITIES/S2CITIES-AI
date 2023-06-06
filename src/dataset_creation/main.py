@@ -35,19 +35,19 @@ with open("../const.json", "r", encoding="utf-8") as f:
 
 # The following is for being used when creating the labeling csv file
 
-# labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"], videos_labeled_folder=const["VIDEOS_LABELED"])
-# labeler.create_starter_csv("3_videos_splitted/batch_split_2", "labeling2.csv")
+#labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
+# labeler.create_starter_csv("test", "test.csv")
 
 # The following is for being used when actually performing the labeling
 
-labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"], videos_labeled_folder=const["VIDEOS_LABELED"])
-labeler.read_dataframe("labeling.csv")
-labeler.label_videos("3_videos_splitted")
-labeler.update_csv("labeling.csv")
+# labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
+# labeler.read_dataframe("labeling.csv")
+# labeler.label_videos("3_videos_splitted")
+# labeler.update_csv("labeling.csv")
 
 # The following is for being used when the labeling is already done
 # and we want to move the files to the corresponding folders
 
-# labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"], videos_labeled_folder=const["VIDEOS_LABELED"])
+# labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
 # labeler.read_dataframe("labeling.csv")
-# labeler.move_files("3_videos_splitted")
+# labeler.move_files(source_folder="3_videos_splitted", destination_folder="4_videos_labeled")
