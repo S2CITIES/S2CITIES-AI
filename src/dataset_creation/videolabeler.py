@@ -2,23 +2,15 @@ import time
 from pathlib import Path
 import os
 import cv2
-import json
 import pandas as pd
 
 from utils import get_video_files, move_file
 
 class VideoLabeler:
-    def __init__(self, const_file_path):
-        # Read from json file
-        with open(const_file_path, "r", encoding="utf-8") as f:
-            const = json.load(f)
-
-        self.VIDEOS_LABEL_0_FOLDER = Path(const["VIDEOS_LABELED"]) / "0"
-        self.VIDEOS_LABEL_1_FOLDER = Path(const["VIDEOS_LABELED"]) / "1"
-
-        # Create folders if they don't exist
-        self.VIDEOS_LABEL_0_FOLDER.mkdir(parents=True, exist_ok=True)
-        self.VIDEOS_LABEL_1_FOLDER.mkdir(parents=True, exist_ok=True)
+    def __init__(self, video_extensions):
+        
+        self.VIDEO_EXTENSIONS = tuple(video_extensions)
+        self.dataframe = None
     
     def read_dataframe(self, csv_filename):
         # Read from csv file
@@ -31,7 +23,8 @@ class VideoLabeler:
         for index, video in self.dataframe.iterrows():
             
             # Skip if video is already processed
-            if video["processed"] == 1:
+            # i.e. if the label has already been set to either 0 or 1
+            if not video["label"] == -1:
                 continue
 
             file_path = os.path.join(source_folder, video["file"])
@@ -68,21 +61,29 @@ class VideoLabeler:
     def update_csv(self, csv_filename):
         self.dataframe.to_csv(csv_filename, index=False)
 
-    @staticmethod
-    def create_starter_csv(folder, csv_filename):
-        video_files = get_video_files(folder)
-        video_info = [{"file": file, "processed": 0, "label": -1} for file in video_files]
+    def create_starter_csv(self, folder, csv_filename):
+        video_files = get_video_files(folder, self.VIDEO_EXTENSIONS)
+        video_info = [{"file": file, "label": -1} for file in video_files]
         df = pd.DataFrame(video_info)
         # Sort by file name
-        #df = df.sort_values(by=["file"])
+        df = df.sort_values(by=["file"])
         df.to_csv(csv_filename, index=False)
     
     # Read the csv and move files to the corresponding folder based on the label
-    def move_files(self, source_folder):
+    def move_files(self, source_folder, destination_folder):
+
+        # Define the destination folders
+        VIDEOS_LABEL_0_FOLDER = Path(destination_folder) / "0"
+        VIDEOS_LABEL_1_FOLDER = Path(destination_folder) / "1"
+        
+        # Create folders if they don't exist
+        VIDEOS_LABEL_0_FOLDER.mkdir(parents=True, exist_ok=True)
+        VIDEOS_LABEL_1_FOLDER.mkdir(parents=True, exist_ok=True)
+
         for index, video in self.dataframe.iterrows():
             if video["label"] == 1:
-                move_file(str(Path(source_folder) / video['file']), str(self.VIDEOS_LABEL_1_FOLDER / video['file']))
+                move_file(str(Path(source_folder) / video['file']), str(VIDEOS_LABEL_1_FOLDER / video['file']))
             elif video["label"] == 0:
-                move_file(str(Path(source_folder) / video['file']), str(self.VIDEOS_LABEL_0_FOLDER / video['file']))
+                move_file(str(Path(source_folder) / video['file']), str(VIDEOS_LABEL_0_FOLDER / video['file']))
             else:
                 print("File {} has no label".format(video["file"]))

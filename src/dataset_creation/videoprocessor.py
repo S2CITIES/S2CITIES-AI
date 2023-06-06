@@ -5,27 +5,33 @@ in the dataset folder.
 
 from pathlib import Path
 import os
-import json
 import cv2
+from tqdm import tqdm
 
 from utils import get_video_files, move_file
 
 class VideoProcessor:
-    def __init__(self, const_file_path, subclip_duration, shift_duration):
+    def __init__(self,
+                 videos_arrived_folder,
+                 videos_raw_folder,
+                 videos_raw_processed_folder,
+                 videos_splitted_folder,
+                 videos_labeled_folder,
+                 video_extensions,
+                 subclip_duration,
+                 shift_duration):
 
         self.subclip_duration = subclip_duration
         self.shift_duration = shift_duration
 
-        # Read from json file
-        with open(const_file_path, "r", encoding="utf-8") as f:
-            const = json.load(f)
-
         # Define paths
-        self.VIDEOS_ARRIVED = const["VIDEOS_ARRIVED"]
-        self.VIDEOS_RAW = const["VIDEOS_RAW"]
-        self.VIDEOS_RAW_PROCESSED = const["VIDEOS_RAW_PROCESSED"]
-        self.VIDEOS_SPLITTED = const["VIDEOS_SPLITTED"]
-        self.VIDEOS_LABELED = const["VIDEOS_LABELED"]
+        self.VIDEOS_ARRIVED = videos_arrived_folder
+        self.VIDEOS_RAW = videos_raw_folder
+        self.VIDEOS_RAW_PROCESSED = videos_raw_processed_folder
+        self.VIDEOS_SPLITTED = videos_splitted_folder
+        self.VIDEOS_LABELED = videos_labeled_folder
+
+        self.VIDEO_EXTENSIONS = tuple(video_extensions)
 
         # Create folders if necessary
         folders = [self.VIDEOS_SPLITTED, self.VIDEOS_ARRIVED, self.VIDEOS_RAW, self.VIDEOS_RAW_PROCESSED, self.VIDEOS_LABELED]
@@ -33,7 +39,7 @@ class VideoProcessor:
             os.makedirs(folder, exist_ok=True)
 
     def move_arrived_videos(self):
-        files = get_video_files(self.VIDEOS_ARRIVED)
+        files = get_video_files(self.VIDEOS_ARRIVED, self.VIDEO_EXTENSIONS)
         number = self.find_last_number(self.VIDEOS_RAW) + 1
         for file in files:
             destination_name = "vid_" + self.format_with_leading(number)
@@ -44,22 +50,10 @@ class VideoProcessor:
             number += 1
 
     def split_raw_videos(self):
-        files = get_video_files(self.VIDEOS_RAW)
-        for file in files:
-            print(f"Processing video {file}")
+        files = get_video_files(self.VIDEOS_RAW, self.VIDEO_EXTENSIONS)
+        for file in tqdm(files, desc="Processing videos", unit="video", position=0):
             self.cut_subclips(input_video=str(Path(self.VIDEOS_RAW) / file), output_folder=str(self.VIDEOS_SPLITTED))
             move_file(source=str(Path(self.VIDEOS_RAW) / file), destination=str(Path(self.VIDEOS_RAW_PROCESSED) / file))
-
-    def cleanup_folder(self, valid_extensions=[".mp4",".avi",".mov",".wmv",".flv"]):
-        """
-        This function goes through the files in the VIDEOS_ARRIVED folder
-        and, if their extension is not in the ones in ext, it removes it.
-        """
-        files = get_video_files(self.VIDEOS_ARRIVED)
-        for file in files:
-            extension = Path(file).suffix.lower()
-            if extension not in valid_extensions:
-                (Path(self.VIDEOS_ARRIVED) / file).unlink()
 
     def cut_subclips(self, input_video: str, output_folder: str) -> None:
         # Set video file path
@@ -82,7 +76,7 @@ class VideoProcessor:
             total_subclips = int((num_frames / fps - self.subclip_duration) / self.shift_duration)
 
         # Loop through each subclip and extract frames
-        for i in range(total_subclips):
+        for i in tqdm(range(total_subclips), desc="Processing subclips", unit="subclip", leave=False, position=1):
             # Calculate start and end frame indexes for current subclip
             start_frame = int(i * self.shift_duration * fps)
             end_frame = int(start_frame + self.subclip_duration * fps)
@@ -109,15 +103,14 @@ class VideoProcessor:
             # Release video writer object for current subclip
             out.release()
 
-            # Print progress
-            print(f"Processed subclip {i+1}/{total_subclips}")
-
         # Release video capture object
         cap.release()
 
-    @staticmethod
-    def find_last_number(folder_name: str) -> int:
-        files = get_video_files(folder_name)
+    def find_last_number(self, folder_name: str) -> int:
+        """
+        Find the last number in the filenames of the videos in the folder.
+        """
+        files = get_video_files(folder_name, self.VIDEO_EXTENSIONS)
         if len(files) == 0:
             return 0
         else:
@@ -127,9 +120,15 @@ class VideoProcessor:
 
     @staticmethod
     def format_with_leading(number: int) -> str:
+        """
+        Format a number with leading zeros.
+        """
         return "{:05d}".format(number)
 
     @staticmethod
     def append_id(filename, id) -> str:
+        """
+        Append an id to the filename.
+        """
         p = Path(filename)
         return f"{p.stem}_{id}{p.suffix}"
