@@ -139,3 +139,4 @@ dataset/SFHDataset
 
 # Trained Models
 models/saves
+.vscode/settings.json

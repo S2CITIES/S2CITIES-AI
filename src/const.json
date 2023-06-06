@@ -1,0 +1,8 @@
+{
+    "VIDEOS_ARRIVED": "0_videos_arrived",
+    "VIDEOS_RAW": "1_videos_raw",
+    "VIDEOS_RAW_PROCESSED": "2_videos_raw_processed",
+    "VIDEOS_SPLITTED": "3_videos_splitted",
+    "VIDEOS_LABELED": "4_videos_labeled",
+    "DATASET_FOLDER": "/Users/teo/Library/CloudStorage/OneDrive-PolitecnicodiMilano/ASP/S2Cities/S2C - Machine Learning/Dataset/S2Cities_Dataset_Collection"
+}
