@@ -63,13 +63,13 @@ if __name__ == '__main__':
     # Testing the network
     # Simulating an input with batch size = 2, channels = 3 (RGB Video) and sequence length = 80 (number of frames)
     # Every video is reshaped with a frame shape (60, 80) (initial resolution is downscaled by a factor of 4)
-    x = torch.randn((2, 3, 80, 60, 80))
-    model = C3D(channels=3, length=80, height=60, width=80, tempdepth=3, outputs=25)
+    x = torch.randn((2, 3, 80, 112, 112))
+    model = C3D(channels=3, length=80, height=112, width=112, tempdepth=3, outputs=25)
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     out = model(x)
     print(out.shape) # Expected torch.Size([2, 25])
 
     # Test also with unbatched input
-    x = torch.randn((3, 80, 60, 80))
+    x = torch.randn((3, 80, 112, 112))
     out = model(x)
     print(out.shape) # Expected torch.Size([25])

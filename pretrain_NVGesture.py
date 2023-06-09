@@ -1,4 +1,5 @@
-import torchvision
+from torchvision import transforms
+from torchvideotransforms import video_transforms, volume_transforms
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
@@ -94,8 +95,28 @@ def test(loader, model, device, epoch=None):
 if __name__ == '__main__':
     torch.manual_seed(42) # Reproducibility Purposes
 
-    transform = torchvision.transforms.Compose([
-        torchvision.transforms.Resize((60, 80), antialias=True)
+    # Define the crop size
+    crop_size = (112, 112)  # Size of the crop
+
+    ################ Details for Data Augmentation ###################
+    # random spatial rotation (±15◦) and scaling (±20%), temporal scaling (±20%), and jittering (±3 frames)
+    # Define the data augmentation transforms
+    spatial_rotation_angle = 15  # Maximum spatial rotation angle in degrees
+    spatial_scale = 0.2  # Maximum spatial scaling factor
+    temporal_scale = 0.2  # Maximum temporal scaling factor
+    frame_jitter = 3  # Maximum number of frames to jitter
+
+    train_transform = transforms.Compose([
+        transforms.Resize((120, 160), antialias=True),
+        transforms.RandomCrop(crop_size),    
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip(),
+        transforms.RandomRotation(spatial_rotation_angle),
+        transforms.RandomResizedCrop(crop_size, scale=(1 - spatial_scale, 1 + spatial_scale))
+    ])
+    test_transform = transforms.Compose([
+        transforms.Resize((120, 160), antialias=True),
+        transforms.CenterCrop(crop_size)
     ])
 
     batch_size=4
@@ -106,10 +127,10 @@ if __name__ == '__main__':
 
     train_dataset = NVGestureColorDataset(annotations_file='dataset/NVGesture/nvgesture_train_correct_cvpr2016.lst', 
                                           path_prefix='dataset/NVGesture',
-                                          transforms=transform)
+                                          transforms=train_transform)
     test_dataset = NVGestureColorDataset(annotations_file='dataset/NVGesture/nvgesture_test_correct_cvpr2016.lst',
                                          path_prefix='dataset/NVGesture',
-                                         transforms=transform)
+                                         transforms=test_transform)
 
     train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False)
@@ -128,7 +149,7 @@ if __name__ == '__main__':
     model = C3D(channels=C, length=T, height=H, width=W, tempdepth=3, outputs=25)
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
 
-    optimizer = torch.optim.Adam(list(model.parameters()))
+    optimizer = torch.optim.SGD(list(model.parameters()), lr=3e-3, momentum=0.9, weight_decay=5e-3)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     step = 1
