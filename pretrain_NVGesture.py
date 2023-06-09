@@ -106,20 +106,20 @@ if __name__ == '__main__':
     temporal_scale = 0.2  # Maximum temporal scaling factor
     frame_jitter = 3  # Maximum number of frames to jitter
 
-    train_transform = transforms.Compose([
-        transforms.Resize((120, 160), antialias=True),
-        transforms.RandomCrop(crop_size),    
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomVerticalFlip(),
-        transforms.RandomRotation(spatial_rotation_angle),
-        transforms.RandomResizedCrop(crop_size, scale=(1 - spatial_scale, 1 + spatial_scale))
-    ])
-    test_transform = transforms.Compose([
-        transforms.Resize((120, 160), antialias=True),
-        transforms.CenterCrop(crop_size)
-    ])
-
-    batch_size=4
+    train_transforms = video_transforms.Compose([
+                            video_transforms.Resize((120, 160)),
+                            video_transforms.RandomRotation((-spatial_rotation_angle, +spatial_rotation_angle)),
+                            video_transforms.RandomCrop(crop_size),
+                            volume_transforms.ClipToTensor()
+                        ])
+    test_transforms = video_transforms.Compose([
+                            video_transforms.Resize((120, 160)),
+                            video_transforms.RandomRotation((-spatial_rotation_angle, +spatial_rotation_angle)),
+                            video_transforms.CenterCrop(crop_size),
+                            volume_transforms.ClipToTensor()
+                        ])
+    
+    batch_size=32
     num_epochs=100
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -127,13 +127,15 @@ if __name__ == '__main__':
 
     train_dataset = NVGestureColorDataset(annotations_file='dataset/NVGesture/nvgesture_train_correct_cvpr2016.lst', 
                                           path_prefix='dataset/NVGesture',
-                                          transforms=train_transform)
+                                          transforms=train_transforms,
+                                          tensor=False) # Conversion to torch tensor is made through ClipToTensor()
     test_dataset = NVGestureColorDataset(annotations_file='dataset/NVGesture/nvgesture_test_correct_cvpr2016.lst',
                                          path_prefix='dataset/NVGesture',
-                                         transforms=test_transform)
+                                         transforms=test_transforms,
+                                         tensor=False)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     
     # Testing if it works correctly
     train_features, train_labels = next(iter(train_dataloader))
@@ -153,9 +155,6 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     step = 1
-    model_parameters = sum(p.numel() for p in model.parameters())
-
-    print('Total number of parameters: {}'.format(model_parameters))
 
     pbar = tqdm(total=len(train_dataset))
 

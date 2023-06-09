@@ -30,7 +30,7 @@ class VideoLabeler:
             file_path = os.path.join(source_folder, video["file"])
             
             cap = cv2.VideoCapture(file_path)
-
+            
             while cap.isOpened():
                 ret, frame = cap.read()
 
