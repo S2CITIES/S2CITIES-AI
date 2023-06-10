@@ -52,11 +52,12 @@ def load_data_from_file(example_config, sensor,image_width, image_height, starti
     start_frame = example_config[sensor+'_start']
     end_frame = example_config[sensor+'_end']
     label = example_config['label']
+    # Idea 1: "Quantize" the input video sampling one frame every 5 from the "nucleus", represented as (start_frame, end_frame)
+    # In this way, 80//5 = 16 frames can be obtained. 
     frames_to_load = range(start_frame, end_frame)
-
     chnum = 3 if sensor == "color" else 1
 
-    video_container = np.zeros((image_height, image_width, chnum, 80), dtype = np.uint8)
+    video_container = np.zeros((image_height, image_width, chnum, len(frames_to_load)), dtype = np.uint8)
 
     cap = cv2.VideoCapture(path)
 
@@ -90,7 +91,7 @@ if __name__ == "__main__":
     load_split_nvgesture(file_with_split = file_lists["train"],list_split = train_list)
     load_split_nvgesture(file_with_split = file_lists["test"],list_split = test_list)
 
-    data, label = load_data_from_file(example_config = train_list[200], sensor = sensors[0], image_width = 320, image_height = 240)
+    data, label = load_data_from_file(example_config = train_list[200], sensor = sensors[0], image_width = 160, image_height = 120, starting_path='.', quant_step=5)
     print(data.shape) # Sensor0:Color - (240, 320, 3, 80) -> 80 RGB frames with shape (240, 320)
     print(label)
     print("Everything working fine...")

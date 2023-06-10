@@ -1,7 +1,16 @@
-from torchvision import transforms
-from torchvideotransforms import video_transforms, volume_transforms
 import torch
 import torch.nn as nn
+from torchvision.transforms import Compose, Lambda
+from torchvision.transforms._transforms_video import (
+    CenterCropVideo,
+    NormalizeVideo,
+    RandomCropVideo,
+    RandomHorizontalFlipVideo
+)
+from pytorchvideo.data.encoded_video import EncodedVideo
+from pytorchvideo.transforms import (
+    UniformTemporalSubsample
+) 
 from torch.utils.data import DataLoader, random_split
 from dataset.NVGesture.loader import NVGestureColorDataset 
 from models.c3d import C3D
@@ -105,20 +114,20 @@ if __name__ == '__main__':
     spatial_scale = 0.2  # Maximum spatial scaling factor
     temporal_scale = 0.2  # Maximum temporal scaling factor
     frame_jitter = 3  # Maximum number of frames to jitter
+    n_frames = 16
 
-    train_transforms = video_transforms.Compose([
-                            video_transforms.Resize((120, 160)),
-                            video_transforms.RandomRotation((-spatial_rotation_angle, +spatial_rotation_angle)),
-                            video_transforms.RandomCrop(crop_size),
-                            volume_transforms.ClipToTensor()
-                        ])
-    test_transforms = video_transforms.Compose([
-                            video_transforms.Resize((120, 160)),
-                            video_transforms.RandomRotation((-spatial_rotation_angle, +spatial_rotation_angle)),
-                            video_transforms.CenterCrop(crop_size),
-                            volume_transforms.ClipToTensor()
-                        ])
-    
+    train_transforms = Compose([
+        UniformTemporalSubsample(n_frames),
+        Lambda(lambda x: x/255.0),
+        RandomCropVideo(crop_size)
+    ])
+
+    test_transforms = Compose([
+        UniformTemporalSubsample(n_frames),
+        Lambda(lambda x: x/255.0),
+        CenterCropVideo(crop_size)
+    ])
+
     batch_size=32
     num_epochs=100
 
@@ -128,11 +137,14 @@ if __name__ == '__main__':
     train_dataset = NVGestureColorDataset(annotations_file='dataset/NVGesture/nvgesture_train_correct_cvpr2016.lst', 
                                           path_prefix='dataset/NVGesture',
                                           transforms=train_transforms,
-                                          tensor=False) # Conversion to torch tensor is made through ClipToTensor()
+                                          image_height=120,
+                                          image_width=160)
+    
     test_dataset = NVGestureColorDataset(annotations_file='dataset/NVGesture/nvgesture_test_correct_cvpr2016.lst',
                                          path_prefix='dataset/NVGesture',
                                          transforms=test_transforms,
-                                         tensor=False)
+                                         image_height=120,
+                                         image_width=160)
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
@@ -147,11 +159,12 @@ if __name__ == '__main__':
 
     video, label = train_dataset[0]
     C, T, H, W = video.shape
-
+    print(f"Video shape = {(C, T, H, W)}")
     model = C3D(channels=C, length=T, height=H, width=W, tempdepth=3, outputs=25)
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
 
-    optimizer = torch.optim.SGD(list(model.parameters()), lr=3e-3, momentum=0.9, weight_decay=5e-3)
+    # optimizer = torch.optim.SGD(list(model.parameters()), lr=3e-3, momentum=0.9, weight_decay=5e-3)
+    optimizer = torch.optim.Adam(list(model.parameters()), lr=1e-2)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     step = 1
