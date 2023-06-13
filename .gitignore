@@ -138,3 +138,7 @@ reduced_dataset/UCF101
 # Trained Models
 models/saves
 .vscode/settings.json
+*.mp4
+*.mov
+*.npy
+src/logs*
