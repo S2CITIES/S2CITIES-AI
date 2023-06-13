@@ -4,9 +4,9 @@ This class evaluates a generic binary classification model.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
 from mlxtend.plotting import plot_confusion_matrix
-from sklearn.metrics import roc_curve
+from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
+from sklearn.metrics import roc_curve, precision_recall_curve
 
 class ModelEvaluator:
 
@@ -59,4 +59,19 @@ class ModelEvaluator:
 
         ax.set_xlabel('Predicted label')
         ax.set_ylabel('True label')
+        plt.show()
+    
+    def plot_precision_recall_curve(self):
+        
+        # Calculate precision-recall curve
+        precision, recall, thresholds = precision_recall_curve(self.y_true, self.y_proba)
+        
+        # Plot precision-recall curve
+        fig, ax = plt.subplots(figsize=(10, 10))
+        
+        ax.plot(recall, precision, label=f"{self.model_name}")
+        ax.set_xlabel('Recall')
+        ax.set_ylabel('Precision')
+        ax.set_title(f"{self.model_name} Precision-Recall Curve")
+        ax.legend(loc='lower right')
         plt.show()
