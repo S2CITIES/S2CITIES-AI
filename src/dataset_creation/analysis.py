@@ -25,7 +25,7 @@ with open("../const.json", "r", encoding="utf-8") as f:
 DATASET_FOLDER = Path("./3_videos_splitted")
 
 # Get video files
-video_files = get_video_files(DATASET_FOLDER)
+video_files = get_video_files(DATASET_FOLDER, tuple(const["VIDEO_EXTENSIONS"]))
 
 # Create an empty list to store the video information
 video_info = []
