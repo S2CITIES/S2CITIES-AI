@@ -40,7 +40,7 @@ class VideoProcessor:
 
     def move_arrived_videos(self):
         files = get_video_files(self.VIDEOS_ARRIVED, self.VIDEO_EXTENSIONS)
-        number = self.find_last_number(self.VIDEOS_RAW) + 1
+        number = self.find_last_number(self.VIDEOS_RAW_PROCESSED) + 1
         for file in files:
             destination_name = "vid_" + self.format_with_leading(number)
             destination_extension = Path(file).suffix
