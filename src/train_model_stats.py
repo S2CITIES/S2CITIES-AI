@@ -36,43 +36,69 @@ X_test = pd.DataFrame(scaler.transform(X_test), columns=X.columns)
 
 # Train logistic regression model on training data with strong L1 regularization
 # to select most important features
-lr = LogisticRegression(penalty='l1', C=0.1, solver='liblinear')
-lr.fit(X_train, y_train)
-selector = SelectFromModel(lr, prefit=True)
+selector = SelectFromModel(
+    LogisticRegression(
+        C=0.1,
+        penalty='l1',
+        solver='liblinear',
+        max_iter=1000,
+        random_state=42,
+        #class_weight=class_weights
+    )
+).fit(X_train, y_train)
+
 X_train_selected = pd.DataFrame(selector.transform(X_train))
 X_train_selected.columns = X_train.columns[selector.get_support()]
+
+X_test_selected = pd.DataFrame(selector.transform(X_test))
+X_test_selected.columns = X_test.columns[selector.get_support()]
 
 # Show selected features names and length
 print("Selected features:", X_train.columns[selector.get_support()])
 print("Number of selected features:", len(X_train.columns[selector.get_support()]))
 
+y_proba_dict = {}
+
+# -----------------------------------------------------------------------------
+
 # Train a random forest classifier on the selected features
 # and tune hyperparameters using grid search
-# param_grid = {
-#     'n_estimators': [100, 200, 300, 400, 500],
-#     'max_depth': [None, 5, 10, 15, 20],
-#     'min_samples_split': [2, 5, 10, 15, 20],
-#     'min_samples_leaf': [1, 2, 5, 10, 15, 20],
-#     'random_state': [42]
-# }
-# rf = RandomForestClassifier()
-# grid_search = GridSearchCV(estimator=rf,
-#                            param_grid=param_grid,
-#                            cv=StratifiedKFold(),
-#                            n_jobs=-1,
-#                            verbose=2,
-#                            scoring='accuracy')
-# grid_search.fit(X_train_selected, y_train)
+param_grid = {
+    #'n_estimators': [100, 200, 300, 400, 500],
+    'n_estimators': [400],
+    #'max_depth': [None, 5, 10, 15, 20],
+    'max_depth': [None],
+    #'min_samples_split': [2, 5, 10, 15, 20],
+    'min_samples_split': [5],
+    #'min_samples_leaf': [1, 2, 5, 10, 15, 20],
+    'min_samples_leaf': [2],
+    'random_state': [42]
+}
+rf = RandomForestClassifier()
+grid_search = GridSearchCV(estimator=rf,
+                           param_grid=param_grid,
+                           cv=StratifiedKFold(),
+                           n_jobs=-1,
+                           verbose=2,
+                           scoring='accuracy')
+grid_search.fit(X_train_selected, y_train)
 
-# # Show best parameters
-# print("Best parameters RF:", grid_search.best_params_)
+# Show best parameters
+print("Best parameters RF:", grid_search.best_params_)
 
-# Tune a svm classifier on the selected features
+y_proba_dict['RF'] = grid_search.best_estimator_.predict_proba(X_test_selected)[:,1]
+
+# -----------------------------------------------------------------------------
+
+# Tune a SVM classifier on the selected features
 # and tune hyperparameters using grid search
 param_grid = {
-    'C': [0.1, 1, 10, 100, 1000],
-    'gamma': ['scale', 'auto'],
-    'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+    #'C': [0.1, 1, 10, 100, 1000],
+    'C': [1],
+    #'gamma': ['scale', 'auto'],
+    'gamma': ['scale'],
+    #'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+    'kernel': ['sigmoid'],
     'random_state': [42]
 }
 svc = SVC(probability=True)
@@ -87,12 +113,38 @@ grid_search.fit(X_train_selected, y_train)
 # Show best parameters
 print("Best parameters SVM:", grid_search.best_params_)
 
+y_proba_dict['SVM'] = grid_search.best_estimator_.predict_proba(X_test_selected)[:,1]
+
+# -----------------------------------------------------------------------------
+
+# Train a logistic regression
+# and tune hyperparameters using grid search
+param_grid = {
+    #'C': [0.1, 1, 10, 100, 1000],
+    'C': [10],
+    #'penalty': ['l1', 'l2'],
+    'penalty': ['l2'],
+    'solver': ['liblinear'],
+    'max_iter': [1000],
+    'random_state': [42],
+}
+lr = LogisticRegression()
+grid_search = GridSearchCV(estimator=lr,
+                           param_grid=param_grid,
+                           cv=StratifiedKFold(),
+                           n_jobs=-1,
+                           verbose=2,
+                           scoring='accuracy')
+grid_search.fit(X_train_selected, y_train)
+
+# Show best parameters
+print("Best parameters LR:", grid_search.best_params_)
+
+y_proba_dict['LR'] = grid_search.best_estimator_.predict_proba(X_test_selected)[:,1]
+
+# -----------------------------------------------------------------------------
 
 # Evaluate performance on testing data
-X_test_selected = pd.DataFrame(selector.transform(X_test))
-X_test_selected.columns = X_test.columns[selector.get_support()]
-y_test_proba = grid_search.best_estimator_.predict_proba(X_test_selected)[:,1]
-
 evaluator = ModelEvaluator(y_true=y_test, y_proba_dict=y_proba_dict, threshold=0.5)
 evaluator.get_metrics(export="all", filename="../report/stats")
 evaluator.plot_roc_curve(export="save", filename='../report/roc')
