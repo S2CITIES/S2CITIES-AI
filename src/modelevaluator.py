@@ -134,8 +134,8 @@ class ModelEvaluator:
         ax.set_title("ROC Curve")
         ax.legend(loc="lower right")
 
-    @exportable
-    def plot_confusion_matrix(self):
+
+    def plot_confusion_matrix(self, export, filename):
 
         for model_name, y_pred in self.y_pred_dict.items():
             fig, ax = plt.subplots(figsize=(10, 10))
@@ -152,6 +152,13 @@ class ModelEvaluator:
 
             ax.set_xlabel("Predicted label")
             ax.set_ylabel("True label")
+
+            if export is not None and export not in ["save", "show", "both"]:
+                raise ValueError("Invalid export option")
+            if export in ["save", "both"]:
+                plt.savefig(f"{filename}_{model_name}.pdf", bbox_inches='tight')
+            if export in ["show", "both"]:
+                plt.show()
     
     @exportable
     def plot_precision_recall_curve(self):
