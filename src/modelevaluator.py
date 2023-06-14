@@ -60,6 +60,14 @@ def exportable_dataframe(func):
 class ModelEvaluator:
 
     def __init__(self, y_true, y_proba_dict, threshold=0.5):
+        """
+        Initializes the ModelEvaluator class.
+
+        Args:
+            y_true (array-like): True labels.
+            y_proba_dict (dict): Dictionary of model names and their predicted probabilities.
+            threshold (float): Threshold for binary classification. Defaults to 0.5.
+        """
         self.y_true = y_true
         self.y_proba_dict = y_proba_dict
         self.threshold = threshold
@@ -111,10 +119,24 @@ class ModelEvaluator:
 
     @exportable_dataframe
     def get_metrics(self):
+        """
+        Returns a pandas DataFrame with evaluation metrics for each model.
+
+        Args:
+            export (str): Export option. Can be "csv", "latex", "print", or "all".
+            filename (str): Filename for exported file.
+        """
         return self.metrics_df
 
     @exportable
     def plot_roc_curve(self):
+        """
+        Plots the ROC curve for each model.
+
+        Args:
+            export (str): Export option. Can be "save", "show", or "both".
+            filename (str): Filename for exported file.
+        """
         fig, ax = plt.subplots(figsize=(10, 10))
         for model_name, y_proba in self.y_proba_dict.items():
             # Calculate ROC curve
@@ -138,6 +160,13 @@ class ModelEvaluator:
 
 
     def plot_confusion_matrix(self, export, filename):
+        """
+        Plots the confusion matrix for each model.
+
+        Args:
+            export (str): Export option. Can be "save", "show", or "both".
+            filename (str): Filename for exported file.
+        """
 
         for model_name, y_pred in self.y_pred_dict.items():
             fig, ax = plt.subplots(figsize=(10, 10))
@@ -164,6 +193,13 @@ class ModelEvaluator:
     
     @exportable
     def plot_precision_recall_curve(self):
+        """
+        Plots the precision-recall curve for each model.
+
+        Args:
+            export (str): Export option. Can be "save", "show", or "both".
+            filename (str): Filename for exported file.
+        """
         
         fig, ax = plt.subplots(figsize=(10, 10))
         for model_name, y_proba in self.y_proba_dict.items():
