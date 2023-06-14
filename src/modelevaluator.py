@@ -17,6 +17,44 @@ from sklearn.metrics import (
     recall_score,
 )
 
+import functools
+
+def exportable(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        export = kwargs.pop("export", None)
+        filename = kwargs.pop("filename", "plot.pdf")
+        result = func(*args, **kwargs)
+        if export is not None and export not in ["save", "show", "both"]:
+            raise ValueError("Invalid export option")
+        if export in ["save", "both"]:
+            plt.savefig(filename, bbox_inches='tight')
+        if export in ["show", "both"]:
+            plt.show()
+        return result
+    return wrapper
+
+def exportable_dataframe(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        export = kwargs.pop("export", None)
+        filename = kwargs.pop("filename", "data")
+        result = func(*args, **kwargs)
+        if not isinstance(result, pd.DataFrame):
+            raise ValueError("Result must be a pandas DataFrame")
+        if export is not None and export not in ["csv", "latex", "both"]:
+            raise ValueError("Invalid export option")
+        if export in ["csv", "both"]:
+            csv_filename = f"{filename}.csv"
+            result.to_csv(csv_filename, index=False)
+        if export in ["latex", "both"]:
+            latex_filename = f"{filename}.tex"
+            with open(latex_filename, "w") as f:
+                # .hide(axis="index") to hide the index after .style
+                f.write(result.set_index("Model").style.highlight_max(axis=0, props="textbf:--rwrap;").to_latex(hrules=True))
+        return result
+    return wrapper
+
 class ModelEvaluator:
 
     def __init__(self, model_name, y_true, y_proba, threshold=0.5):
