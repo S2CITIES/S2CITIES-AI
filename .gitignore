@@ -144,3 +144,4 @@ models/saves
 *.mov
 *.npy
 src/logs*
+report*
