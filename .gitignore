@@ -145,3 +145,6 @@ models/saves
 *.npy
 src/logs*
 report*
+
+# Pre-trained Models
+*.pickle
