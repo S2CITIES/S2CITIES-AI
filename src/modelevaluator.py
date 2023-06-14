@@ -57,84 +57,132 @@ def exportable_dataframe(func):
 
 class ModelEvaluator:
 
-    def __init__(self, model_name, y_true, y_proba, threshold=0.5):
-        self.model_name = model_name
+    def __init__(self, y_true, y_proba_dict, threshold=0.5):
         self.y_true = y_true
-        self.y_proba = y_proba
+        self.y_proba_dict = y_proba_dict
         self.threshold = threshold
-        self.y_pred = np.where(y_proba > self.threshold, 1, 0)
+        self.y_pred_dict = {
+            model_name: np.where(y_proba > self.threshold, 1, 0)
+            for model_name, y_proba in y_proba_dict.items()
+        }
+        self.metrics_df = pd.DataFrame(
+            columns=[
+                "Model",
+                "Accuracy",
+                "AUC",
+                "Precision",
+                "Recall",
+                "F1 score",
+            ]
+        )
+        for model_name, y_pred in self.y_pred_dict.items():
+            # Calculate accuracy
+            accuracy = accuracy_score(self.y_true, y_pred)
 
-    def evaluate_metrics(self):
+            # Calculate AUC
+            auc = roc_auc_score(self.y_true, self.y_proba_dict[model_name])
 
-        # Calculate accuracy
-        accuracy = accuracy_score(self.y_true, self.y_pred)
-        print("Accuracy: ", accuracy)
+            # Calculate precision
+            precision = precision_score(self.y_true, y_pred)
 
-        # Calculate AUC
-        auc = roc_auc_score(self.y_true, self.y_proba)
-        print("AUC: ", auc)
+            # Calculate recall
+            recall = recall_score(self.y_true, y_pred)
 
-        # Calculate precision
-        precision = precision_score(self.y_true, self.y_pred)
-        print("Precision: ", precision)
+            # Calculate F1 score
+            f1 = f1_score(self.y_true, y_pred)
 
-        # Calculate recall
-        recall = recall_score(self.y_true, self.y_pred)
-        print("Recall: ", recall)
+            # Add metrics to dataframe
+            self.metrics_df = pd.concat(
+                [
+                    self.metrics_df,
+                    pd.DataFrame({
+                        "Model": [model_name],
+                        "Accuracy": [accuracy],
+                        "AUC": [auc],
+                        "Precision": [precision],
+                        "Recall": [recall],
+                        "F1 score": [f1],
+                        })
+                ],
+                ignore_index=True,
+            )
 
-        # Calculate F1 score
-        f1 = f1_score(self.y_true, self.y_pred)
-        print("F1 score: ", f1)
+    @exportable_dataframe
+    def get_metrics(self):
+        return self.metrics_df
 
-        # Calculate specificity
-        specificity = specificity_score(self.y_true, self.y_pred)
-        print("Specificity: ", specificity)
-
+    @exportable
     def plot_roc_curve(self):
-
-        # Calculate ROC curve
-        fpr, tpr, thresholds = roc_curve(self.y_true, self.y_proba)
-
-        # Calculate AUC
-        auc = roc_auc_score(self.y_true, self.y_proba)
-
-        # Plot ROC curve
         fig, ax = plt.subplots(figsize=(10, 10))
+        for model_name, y_proba in self.y_proba_dict.items():
+            # Calculate ROC curve
+            fpr, tpr, thresholds = roc_curve(self.y_true, y_proba)
 
-        ax.plot(fpr, tpr, label=f"{self.model_name} (AUC = {auc:.2f})")
-        ax.plot([0, 1], [0, 1], linestyle='--', label='Random Classifier')
-        ax.set_xlabel('False Positive Rate')
-        ax.set_ylabel('True Positive Rate')
-        ax.set_title(f"{self.model_name} ROC Curve")
-        ax.legend(loc='lower right')
-        plt.show()
+            # Calculate AUC
+            auc = roc_auc_score(self.y_true, y_proba)
 
+            # Plot ROC curve
+            ax.plot(
+                fpr,
+                tpr,
+                label=f"{model_name} (AUC = {auc:.2f})",
+            )
+
+        ax.plot([0, 1], [0, 1], linestyle="--", label="Random Classifier")
+        ax.set_xlabel("False Positive Rate")
+        ax.set_ylabel("True Positive Rate")
+        ax.set_title("ROC Curve")
+        ax.legend(loc="lower right")
+
+    @exportable
     def plot_confusion_matrix(self):
 
-        # Calculate confusion matrix
-        fig, ax = plt.subplots(figsize=(10, 10))
-        cm = confusion_matrix(self.y_true, self.y_pred)
-        ax.set_title(f"{self.model_name} Confusion Matrix")
-        plot_confusion_matrix(conf_mat=cm,
-                              show_absolute=True,
-                              show_normed=True,
-                              colorbar=True, figure=fig, axis=ax)
+        for model_name, y_pred in self.y_pred_dict.items():
+            fig, ax = plt.subplots(figsize=(10, 10))
+            cm = confusion_matrix(self.y_true, y_pred)
+            ax.set_title(f"{model_name} Confusion Matrix")
+            plot_confusion_matrix(
+                conf_mat=cm,
+                show_absolute=True,
+                show_normed=True,
+                colorbar=True,
+                figure=fig,
+                axis=ax,
+            )
 
-        ax.set_xlabel('Predicted label')
-        ax.set_ylabel('True label')
-        plt.show()
+            ax.set_xlabel("Predicted label")
+            ax.set_ylabel("True label")
     
+    @exportable
     def plot_precision_recall_curve(self):
         
-        # Calculate precision-recall curve
-        precision, recall, thresholds = precision_recall_curve(self.y_true, self.y_proba)
-        
-        # Plot precision-recall curve
         fig, ax = plt.subplots(figsize=(10, 10))
-        
-        ax.plot(recall, precision, label=f"{self.model_name}")
-        ax.set_xlabel('Recall')
-        ax.set_ylabel('Precision')
-        ax.set_title(f"{self.model_name} Precision-Recall Curve")
-        ax.legend(loc='lower right')
-        plt.show()
+        for model_name, y_proba in self.y_proba_dict.items():
+            # Calculate precision-recall curve
+            precision, recall, thresholds = precision_recall_curve(
+                self.y_true, y_proba
+            )
+
+            # Plot precision-recall curve
+            ax.plot(
+                recall,
+                precision,
+                label=f"{model_name}",
+            )
+
+        # Compute the zero skill model line
+        # It will depend on the fraction of observations belonging to the positive class
+        zero_skill = len(self.y_true[self.y_true==1]) / len(self.y_true)
+
+        # Compute the perfect model line
+        perfect_precision = np.ones_like(self.y_true)
+        perfect_recall = np.linspace(0, 1, num=len(perfect_precision))
+
+        # Plot zero skill and perfect model lines
+        plt.plot([0, 1], [zero_skill, zero_skill], 'b--', label='Zero skill')
+        plt.plot(perfect_recall, perfect_precision, 'g--', linewidth=2, label='Perfect model')
+
+        ax.set_xlabel("Recall")
+        ax.set_ylabel("Precision")
+        ax.set_title("Precision-Recall Curve")
+        ax.legend(loc="lower right")
