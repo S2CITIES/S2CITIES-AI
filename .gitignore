@@ -140,3 +140,6 @@ dataset/SFHDataset
 # Trained Models
 models/saves
 .vscode/settings.json
+
+# Pre-trained Models
+*.pickle

@@ -1,19 +1,23 @@
 import torch
 import torch.nn as nn
-from torchvision.transforms import Compose, Lambda
+from torchvision.transforms import (
+    Compose,
+    Lambda,
+    RandomHorizontalFlip
+)
 from torchvision.transforms._transforms_video import (
     CenterCropVideo,
-    NormalizeVideo,
-    RandomCropVideo,
-    RandomHorizontalFlipVideo
+    RandomCropVideo
 )
-from pytorchvideo.data.encoded_video import EncodedVideo
 from pytorchvideo.transforms import (
-    UniformTemporalSubsample
+    UniformTemporalSubsample,
+    Normalize,
+    RandomShortSideScale
 ) 
 from torch.utils.data import DataLoader, random_split
 from dataset.NVGesture.loader import NVGestureColorDataset 
 from models.c3d import C3D
+from models.c3d_v2 import FineTunedC3D as C3Dv2
 import numpy as np
 from tqdm import tqdm
 
@@ -110,21 +114,25 @@ if __name__ == '__main__':
     ################ Details for Data Augmentation ###################
     # random spatial rotation (±15◦) and scaling (±20%), temporal scaling (±20%), and jittering (±3 frames)
     # Define the data augmentation transforms
-    spatial_rotation_angle = 15  # Maximum spatial rotation angle in degrees
-    spatial_scale = 0.2  # Maximum spatial scaling factor
-    temporal_scale = 0.2  # Maximum temporal scaling factor
-    frame_jitter = 3  # Maximum number of frames to jitter
-    n_frames = 16
+    spatial_rotation_angle = 15         # Maximum spatial rotation angle in degrees
+    spatial_scale = 0.2                 # Maximum spatial scaling factor
+    temporal_scale = 0.2                # Maximum temporal scaling factor
+    frame_jitter = 3                    # Maximum number of frames to jitter
+    n_frames = 16                       # Temporal stride of 80//16 = 5 
+    mean_vector = [0.45, 0.45, 0.45]    # Compute these values over NVGesture dataset
+    std_vector = [0.225, 0.225, 0.225]  # Same as above
 
     train_transforms = Compose([
         UniformTemporalSubsample(n_frames),
         Lambda(lambda x: x/255.0),
+        Normalize(mean_vector, std_vector),
         RandomCropVideo(crop_size)
     ])
 
     test_transforms = Compose([
         UniformTemporalSubsample(n_frames),
         Lambda(lambda x: x/255.0),
+        Normalize(mean_vector, std_vector),
         CenterCropVideo(crop_size)
     ])
 
@@ -160,11 +168,14 @@ if __name__ == '__main__':
     video, label = train_dataset[0]
     C, T, H, W = video.shape
     print(f"Video shape = {(C, T, H, W)}")
-    model = C3D(channels=C, length=T, height=H, width=W, tempdepth=3, outputs=25)
+    # model = C3D(channels=C, length=T, height=H, width=W, tempdepth=3, outputs=25)
+    model = C3Dv2(pretrained_model_path='./models/pretrained/c3d.pickle', outputs=25)
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print("Trainable parameters:", trainable_params)
 
     # optimizer = torch.optim.SGD(list(model.parameters()), lr=3e-3, momentum=0.9, weight_decay=5e-3)
-    optimizer = torch.optim.Adam(list(model.parameters()), lr=1e-2)
+    optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-2)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     step = 1

@@ -20,23 +20,24 @@ class C3D(nn.Module):
         self.l = length     # number of frames per input video
         self.h = height
         self.w = width
-        self.d = tempdepth  # temporal depth of kernels
-        self.conv1 = nn.Conv3d(in_channels=self.c, out_channels=16, kernel_size=(self.d, 3, 3), padding=1)
-        self.bn1 = nn.BatchNorm3d(num_features=16)
-        self.conv2 = nn.Conv3d(in_channels=16, out_channels=32, kernel_size=(self.d, 3, 3), padding=1)
-        self.bn2 = nn.BatchNorm3d(num_features=32)
-        self.conv3 = nn.Conv3d(in_channels=32, out_channels=64, kernel_size=(self.d, 3, 3), padding=1)
-        self.bn345 = nn.BatchNorm3d(num_features=64)
-        self.conv4 = nn.Conv3d(in_channels=64, out_channels=64, kernel_size=(self.d, 3, 3), padding=1)
-        self.conv5 = nn.Conv3d(in_channels=64, out_channels=64, kernel_size=(self.d, 3, 3), padding=1)
+        self.d = tempdepth  # temporal depth of kernels 
+        self.conv1 = nn.Conv3d(in_channels=self.c, out_channels=32, kernel_size=(1, 3, 3), padding=1)
+        self.bn1 = nn.BatchNorm3d(num_features=32)
+        self.conv2 = nn.Conv3d(in_channels=32, out_channels=64, kernel_size=(1, 3, 3), padding=1)
+        self.bn2 = nn.BatchNorm3d(num_features=64)
+        self.conv3 = nn.Conv3d(in_channels=64, out_channels=128, kernel_size=(1, 3, 3), padding=1)
+        self.bn345 = nn.BatchNorm3d(num_features=128)
+        self.conv4 = nn.Conv3d(in_channels=128, out_channels=128, kernel_size=(self.d, 3, 3), padding=1)
+        self.conv5 = nn.Conv3d(in_channels=128, out_channels=128, kernel_size=(self.d, 3, 3), padding=1)
         self.pool1 = nn.MaxPool3d(kernel_size=(1,2,2))
         self.pool = nn.MaxPool3d(kernel_size=(2,2,2))
-        self.fc = nn.Linear(in_features=64*(self.l//16)*(self.h//32)*(self.w//32), out_features=outputs)
-        self.dropout = nn.Dropout3d(p=0.5)
+        self.fc = nn.Linear(in_features=128*(self.l//16)*(self.h//32)*(self.w//32), out_features=outputs)
+        self.dropout = nn.Dropout3d(p=0.25)
 
     def forward(self, x):
         # input shape (N, c, l, h, w)
         out1 = self.dropout(torch.relu(self.pool1(self.bn1(self.conv1(x)))))
+        # TODO: Test skip-connections with this architecture
         # print(out1.shape)
         # out1 shape (N, 64, l, h//2, w//2)
         out2 = self.dropout(torch.relu(self.pool(self.bn2(self.conv2(out1)))))
