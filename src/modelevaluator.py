@@ -6,7 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
 from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
-from sklearn.metrics import roc_curve, precision_recall_curve
+from sklearn.metrics import roc_curve, precision_recall_curve,
+from sklearn.metrics import f1_score, precision_score, recall_score, specificity_score
 
 class ModelEvaluator:
 
@@ -26,6 +27,22 @@ class ModelEvaluator:
         # Calculate AUC
         auc = roc_auc_score(self.y_true, self.y_proba)
         print("AUC: ", auc)
+
+        # Calculate precision
+        precision = precision_score(self.y_true, self.y_pred)
+        print("Precision: ", precision)
+
+        # Calculate recall
+        recall = recall_score(self.y_true, self.y_pred)
+        print("Recall: ", recall)
+
+        # Calculate F1 score
+        f1 = f1_score(self.y_true, self.y_pred)
+        print("F1 score: ", f1)
+
+        # Calculate specificity
+        specificity = specificity_score(self.y_true, self.y_pred)
+        print("Specificity: ", specificity)
 
     def plot_roc_curve(self):
 
