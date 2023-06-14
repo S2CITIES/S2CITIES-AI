@@ -125,7 +125,7 @@ class ModelEvaluator:
             ax.plot(
                 fpr,
                 tpr,
-                label=f"{model_name} (AUC = {auc:.2f})",
+                label=f"{model_name} (AUC = {auc:.4f})",
             )
 
         ax.plot([0, 1], [0, 1], linestyle="--", label="Random Classifier")
