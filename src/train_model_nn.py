@@ -122,9 +122,13 @@ model.save(MODELS_DIR / 'baseline.h5')
 model = keras.models.load_model(MODELS_DIR / 'baseline.h5')
 
 # Evaluate model
-y_test_proba = model.predict(X_test)[:,1]
+y_proba_dict = {
+    'LSTM NN': model.predict(X_test)[:,1]
+}
 
-evaluator = ModelEvaluator(model_name='LSTM NN', y_true=y_test[:,1], y_proba=y_test_proba, threshold=0.5)
-evaluator.evaluate_metrics()
-evaluator.plot_roc_curve()
-evaluator.plot_confusion_matrix()
+evaluator = ModelEvaluator(y_true=y_test, y_proba_dict=y_proba_dict, threshold=0.5)
+evaluator.get_metrics(export="all", filename="../report/NN")
+evaluator.plot_roc_curve(export="save", filename='../report/roc_NN')
+evaluator.plot_precision_recall_curve(export="save", filename='../report/precision_recall_NN')
+evaluator.plot_confusion_matrix(export="save", filename='../report/confusion_matrix_NN')
+
