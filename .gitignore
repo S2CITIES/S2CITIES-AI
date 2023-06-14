@@ -140,6 +140,11 @@ dataset/SFHDataset
 # Trained Models
 models/saves
 .vscode/settings.json
+*.mp4
+*.mov
+*.npy
+src/logs*
+report*
 
 # Pre-trained Models
 *.pickle

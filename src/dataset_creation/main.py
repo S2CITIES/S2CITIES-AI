@@ -35,8 +35,8 @@ with open("../const.json", "r", encoding="utf-8") as f:
 
 # The following is for being used when creating the labeling csv file
 
-#labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
-# labeler.create_starter_csv("test", "test.csv")
+# labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
+# labeler.create_starter_csv("3_videos_splitted", "labeling.csv")
 
 # The following is for being used when actually performing the labeling
 
