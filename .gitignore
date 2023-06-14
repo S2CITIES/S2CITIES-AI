@@ -143,6 +143,7 @@ models/saves
 *.mp4
 *.mov
 *.npy
+*.avi
 src/logs*
 report*
 
