@@ -93,7 +93,8 @@ X_test_selected = pd.DataFrame(selector.transform(X_test))
 X_test_selected.columns = X_test.columns[selector.get_support()]
 y_test_proba = grid_search.best_estimator_.predict_proba(X_test_selected)[:,1]
 
-evaluator = ModelEvaluator(model_name='SVM', y_true=y_test, y_proba=y_test_proba, threshold=0.5)
-evaluator.evaluate_metrics()
-evaluator.plot_roc_curve()
-evaluator.plot_confusion_matrix()
+evaluator = ModelEvaluator(y_true=y_test, y_proba_dict=y_proba_dict, threshold=0.5)
+evaluator.get_metrics(export="all", filename="../report/stats")
+evaluator.plot_roc_curve(export="save", filename='../report/roc')
+evaluator.plot_precision_recall_curve(export="save", filename='../report/precision_recall')
+evaluator.plot_confusion_matrix(export="save", filename='../report/confusion_matrix')
