@@ -3,11 +3,19 @@ This class evaluates a generic binary classification model.
 """
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
-from sklearn.metrics import accuracy_score, roc_auc_score, confusion_matrix
-from sklearn.metrics import roc_curve, precision_recall_curve,
-from sklearn.metrics import f1_score, precision_score, recall_score, specificity_score
+from sklearn.metrics import (
+    accuracy_score,
+    roc_auc_score,
+    confusion_matrix,
+    roc_curve,
+    precision_recall_curve,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 
 class ModelEvaluator:
 
