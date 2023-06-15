@@ -27,7 +27,14 @@ X = pd.read_csv('dataset_creation/6_features_filtered.csv', index_col=0)
 y = pd.read_pickle('dataset_creation/6_y.pkl')
 
 # Split data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=True, stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    shuffle=True,
+    stratify=y
+    )
 
 # Normalize data
 scaler = StandardScaler()

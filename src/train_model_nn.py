@@ -52,7 +52,7 @@ for file in os.listdir('dataset_creation/5_features_extracted/0'):
         data = np.load(os.path.join('dataset_creation/5_features_extracted/0', file))
         list_0.append(data)
         y.append(0)
-        
+
 for file in os.listdir('dataset_creation/5_features_extracted/1'):
     if file.endswith('.npy'):
         data = np.load(os.path.join('dataset_creation/5_features_extracted/1', file))
@@ -66,14 +66,31 @@ y_data = np.array(y)
 y_data = to_categorical(y_data).astype(int)
 
 print(f'{X_data.shape=}')
+print(f'Num samples {X_data.shape[0]}')
+print(f'Num time steps {X_data.shape[1]}')
+print(f'Num features {X_data.shape[2]}')
 print(f'{y_data.shape=}')
-print(f'We have {X_data.shape[0]} samples, each of which is a time series with {X_data.shape[1]} time steps and {X_data.shape[2]} features. We have to classify {y_data.shape[1]} classes.')
+print(f'Num classes {y_data.shape[1]}')
 
 # Split data into train and test sets
-X_train, X_test, y_train, y_test = train_test_split(X_data, y_data, test_size=0.2, shuffle=True, random_state=42, stratify=y_data)
+X_train, X_test, y_train, y_test = train_test_split(
+    X_data,
+    y_data,
+    test_size=0.2,
+    shuffle=True,
+    random_state=42,
+    stratify=y_data
+    )
 
 # Create validation set from train set
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, shuffle=True, random_state=42, stratify=y_train)
+X_train, X_val, y_train, y_val = train_test_split(
+    X_train,
+    y_train,
+    test_size=0.2,
+    shuffle=True,
+    random_state=42,
+    stratify=y_train
+    )
 
 # Create `logs` directory for TensorBoard
 LOG_DIR = Path() / 'logs'
@@ -103,7 +120,12 @@ print(model.summary())
 # Create callbacks
 callbacks=[
     TensorBoard(log_dir=LOG_DIR),
-    EarlyStopping(monitor='val_categorical_accuracy', mode='max', patience=15, restore_best_weights=True)
+    EarlyStopping(
+        monitor='val_categorical_accuracy',
+        mode='max',
+        patience=15,
+        restore_best_weights=True
+        )
 ]
 
 # Train model
