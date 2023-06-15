@@ -19,9 +19,8 @@ from modelevaluator import ModelEvaluator
 # Set working directory to this file's directory using pathlib
 os.chdir(Path(__file__).parent)
 
-# Read setting the first column as index
-X = pd.read_csv('dataset_creation/6_features_filtered.csv', index_col=0)
-#X = pd.read_pickle('dataset_creation/6_X.pkl')
+# Read X from pickle
+X = pd.read_pickle('dataset_creation/6_X.pkl')
 
 # Read y from pickle
 y = pd.read_pickle('dataset_creation/6_y.pkl')
