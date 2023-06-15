@@ -4,6 +4,7 @@ This file trains a model on the extracted features using neural networks.
 
 import os
 from pathlib import Path
+import sys
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -31,7 +32,7 @@ print(f'GPU available: {gpus}')
 # If not, exit
 if not gpus:
     print('No GPU available, exiting.')
-    exit()
+    sys.exit()
 
 # Get the number of samples ignoring hidden files
 num_samples = len([f for f in os.listdir('dataset_creation/5_features_extracted/0') if not f.startswith('.')]) + len([f for f in os.listdir('dataset_creation/5_features_extracted/1') if not f.startswith('.')])
