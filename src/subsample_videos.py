@@ -35,7 +35,7 @@ for target_dir in ["0", "1"]:
     # Loop through the files in the target directory
     for input_file in sorted((input_dir / target_dir).glob("*")):
 
-        if input_file.is_file() and input_file.suffix in video_extensions:
+        if input_file.is_file() and input_file.suffix.lower() in video_extensions:
 
             output_file = output_dir / input_file.relative_to(input_dir)
 
