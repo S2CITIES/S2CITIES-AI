@@ -37,10 +37,15 @@ for target_dir in ["0", "1"]:
 
         if input_file.is_file() and input_file.suffix in video_extensions:
 
+            output_file = output_dir / input_file.relative_to(input_dir)
+
+            # If the output file already exists, skip it
+            if output_file.is_file():
+                print(f"Skipping {input_file}")
+                continue
+
             # Print the current file
             print(f"Processing {input_file}")
-
-            output_file = output_dir / input_file.relative_to(input_dir)
 
             # Load the video clip
             clip = VideoFileClip(str(input_file))
