@@ -39,15 +39,24 @@ for label in ["0", "1"]:
         # Skip if not a video file
         if not video_file.suffix.lower() in allowed_extensions:
             continue
+        
+        keypoints_file = video_file.stem + ".npy"
+        keypoints_path = label_output_folder / keypoints_file
 
+        # If the keypoints file already exists, skip it
+        if keypoints_path.is_file():
+            print(f"Skipping {video_file}")
+            continue
+
+        # Print the current file
+        print(f"Processing {video_file}")
+        
         # Extract keypoints from the video
         feature_extractor = FeatureExtractor(str(video_file), show_image=True)
         keypoints = feature_extractor.extract_keypoints_from_video()
 
         # Save keypoints as npy file if keypoints is not None
         if keypoints is not None:
-            keypoints_file = video_file.stem + ".npy"
-            keypoints_path = label_output_folder / keypoints_file
             np.save(keypoints_path, keypoints)
         else:
             print("No hand detected for the whole video, or multiple hands detected.")
