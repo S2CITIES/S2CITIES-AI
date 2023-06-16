@@ -8,9 +8,6 @@ import json
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-# Set the target fps
-TARGET_FPS = 12
-
 # Set working directory to this file's directory using pathlib
 os.chdir(Path(__file__).parent)
 
@@ -18,11 +15,15 @@ os.chdir(Path(__file__).parent)
 with open("const.json", "r", encoding="utf-8") as f:
     const = json.load(f)
 
+# Set the target fps
+TARGET_FPS = const["SUBSAMPLE_FPS"]
+
+# Define the allowed video extensions
 video_extensions = const["VIDEO_EXTENSIONS"]
 
 # Define the input and output directories
-input_dir = Path("dataset_creation/4_videos_labeled")
-output_dir = Path("dataset_creation/4_videos_labeled_subsampled")
+input_dir = Path("dataset_creation") / const["VIDEOS_LABELED"]
+output_dir = Path("dataset_creation") / const["VIDEOS_LABELED_SUBSAMPLED"]
 
 # Create the output directory if it doesn't exist
 output_dir.mkdir(parents=True, exist_ok=True)

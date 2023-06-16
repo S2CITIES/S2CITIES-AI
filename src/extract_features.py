@@ -21,8 +21,8 @@ with open("const.json", "r", encoding="utf-8") as f:
 allowed_extensions = const["VIDEO_EXTENSIONS"]
 
 # Define paths
-input_folder = Path("dataset_creation/4_videos_labeled_subsampled")
-output_folder = Path("dataset_creation/5_features_extracted")
+input_folder = Path("dataset_creation") / const["VIDEOS_LABELED_SUBSAMPLED"]
+output_folder = Path("dataset_creation") / const["FEATURES_EXTRACTED"]
 
 # Create output folder if it doesn't exist
 output_folder.mkdir(parents=True, exist_ok=True)
