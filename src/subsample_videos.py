@@ -53,11 +53,16 @@ for target_dir in ["0", "1"]:
             # Resample the video clip to the target fps
             clip_resampled = clip.set_fps(TARGET_FPS)
 
+            # Define a dictionary of codecs
+            codes_dict = {
+                ".mp4": "libx264",
+                ".mov": "libx264",
+                ".avi": "mpeg4",
+            }
+            # Get the codec from the dictionary, check if it exists
+            codec = codes_dict.get(input_file.suffix.lower())
             # Write the resampled video clip to the output file
-            if input_file.suffix.lower() == ".mov":
-                clip_resampled.write_videofile(str(output_file), codec="libx264")
-            else:
-                clip_resampled.write_videofile(str(output_file))
+            clip_resampled.write_videofile(str(output_file), codec=codec)
 
             # Close the video clips
             clip.close()
