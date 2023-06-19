@@ -12,68 +12,51 @@ See also:
 https://stackoverflow.com/questions/19790570/using-a-global-variable-with-a-thread
 """
 
-
-
+import threading
+import time
+import joblib
 import cv2
 import mediapipe as mp
 import numpy as np
-import time
 from featureextractor import FeatureExtractor
-import joblib
-from multiprocessing import Process, Queue
-import threading
-
-import multiprocessing
-
-from threading import Thread
-
-
-# Load the random forest model
-#model = joblib.load('random_forest_model.joblib')
 
 
 # Set up the feature extractor
 #feature_extractor = FeatureExtractor()
 
-
-
-# limitazioni: sto considerando una sola mano e che sia continua
-
+# TODO
+# limitazioni:
+# - sto considerando una sola mano
+# - e che sia continua (ma ok)
 def thread_extract_keypoints():
 
+    # Set up the global variables
     global timeseries
 
-    
-
-    # Set up the video capture from a video file
-    #cap = cv2.VideoCapture('/Users/teo/Documents/GitHub/S2CITIES-AI/src/dataset_creation/4_videos_labeled/1/vid_00001_00001.MOV')
+    # Set up the video capture from the webcam
     cap = cv2.VideoCapture(0)
-    frame_rate = 12
 
     # Set up Mediapipe
     mp_drawing = mp.solutions.drawing_utils
     mp_hands = mp.solutions.hands
 
-
     # Set up the hyperparameters
-    interval = 1  # in seconds
-    window = 2.5  # in seconds
+    interval = 1                   # in seconds
+    window = 2.5                   # in seconds
+    prev = 0                       # in seconds
+    frames_to_next_prediction = 0  # in frames
+    frame_rate = 12                # in frames per second
 
-    frames_to_next_prediction = 0
-
-    prev = 0
     while True:
 
         # Read a frame from the video capture
         ret, frame = cap.read()
 
-
-        # Implement logit to limit the frame rate
+        # Implement logit to limit the frame rate to frame_rate
         time_elapsed = time.time() - prev
         if not time_elapsed > 1./frame_rate:
             continue
         prev = time.time()
-
 
         # Flip the frame horizontally for a mirror effect
         frame = cv2.flip(frame, 1)
@@ -87,38 +70,44 @@ def thread_extract_keypoints():
 
             # If there is exactly one hand
             if results.multi_hand_landmarks and len(results.multi_hand_landmarks) == 1:
-                keypoints = np.array([[res.x, res.y, res.z] for res in results.multi_hand_landmarks[0].landmark]).flatten() # se non trovi la mano, mettici tutti 0, 3 coordinate per 21 joints
+
+                # Extract the keypoints from the hand landmarks
+                # TODO: implement the custom extractor
+                keypoints = np.array([[res.x, res.y, res.z] for res in results.multi_hand_landmarks[0].landmark]).flatten()
                 # If the timeseries is not full, add the keypoints to it
                 if len(timeseries) < frame_rate * window:
                     timeseries.append(keypoints)
                 else:
-                    # If the timeseries is full, remove the first element and add the new keypoints to the end
+                    # If the timeseries is full, remove the first element
+                    # and add the new keypoints to the end (i.e shift the timeseries)
                     timeseries[:-1] = timeseries[1:]
                     timeseries[-1] = keypoints
             elif results.multi_hand_landmarks and len(results.multi_hand_landmarks) > 1:
                 print("Multiple hands detected. Fuck you")
             elif not results.multi_hand_landmarks:
-                #print("NO RESULT")
-           #    # if there are not regognized keypoints, reset the timeseries
+                # if there are not regognized keypoints, reset the timeseries
                 timeseries = []
 
                 # Set the frames_to_next_prediction to zero so that when
-                # the timeseries gets full, it can immediately perform prediction
+                # the timeseries gets full again, it can immediately perform prediction
                 frames_to_next_prediction = 0
-            
+        
+        # Flag if the timeseries is full
         timeseries_full = len(timeseries) == frame_rate * window
 
+        # Check whether to trigger prediction
         if timeseries_full and frames_to_next_prediction == 0:
             predict_event.set()
             frames_to_next_prediction = interval * frame_rate
         elif timeseries_full and frames_to_next_prediction > 0:
             frames_to_next_prediction -= 1
 
+        # TODO
+        # si può implementare un sistema per non dover aspettare
+        # per forza che la timeseries sia full, ma consentendo anche
+        # lunghezze minori da riempire con zeri o NAN
 
-        # TODO si può implementare un sistema per non dover aspettare per forza che la timeseries sia full, ma
-        # consentendo anche lunghezze minori da riempire con zeri o NAN
-
-        # Print the length of the timeseries to the console
+        # Print the length of the timeseries to the console for debugging
         print("Timeseries length:", len(timeseries))
 
         # Draw the hand landmarks on the frame
@@ -133,62 +122,48 @@ def thread_extract_keypoints():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             predict_event.set() # perform the last prediction so that the thread can stop
             stop_event.set()
-            break
 
+            # Release the video capture
+            cap.release()
+            break
 
 
 def thread_predict(stop_event, predict_event):
 
-    frame_rate = 12
-
-    # Set up the hyperparameters
-    interval = 1  # in seconds
-    window = 2.5  # in seconds
-
     # Load the random forest model
-    #model = joblib.load('random_forest_model.joblib')
-    frames_to_next_prediction = interval * frame_rate
+    # model = joblib.load('random_forest_model.joblib')
 
     while not stop_event.is_set():
         
         predict_event.wait()
-        print('predict event set')
-        print('running prediction')
         
+        print('running prediction')
+
+        # TODO: implement the prediction
+        
+        # Extract features from the timeseries
+        # features = feature_extractor.extract_features(timeseries_2_5s)
+
+        # Predict the output using the random forest model
+        # output = model.predict(features.reshape(1, -1))[0]
+
         # Reset the predict event
         predict_event.clear()
-
-        #timeseries_full = len(timeseries) == frame_rate * window
-
-        #if predict_event: # the timeseries is full
-            # TODO
-            # fai estrazione e prediction qui
-            # Extract features from the timeseries
-            #features = feature_extractor.extract_features(timeseries_2_5s)
-
-            # Predict the output using the random forest model
-            #output = model.predict(features.reshape(1, -1))[0]
-
-            # Print the output to the console
-            #print(output)
-            #print('prediction')
-
-            # dopo aver estratto, resetta frames_to_next_prediction
-            #frames_to_next_prediction = interval * frame_rate
-
-        # Sleep for 1 second
-        #time.sleep(1)
 
 if __name__ == '__main__':
 
     # Set up the timeseries
     timeseries = []
 
-    # create the stop event
+    # Create the stop event
     stop_event = threading.Event()
+
+    # Create the predict event
     predict_event = threading.Event()
 
-    predict_process = Thread(name='predict', target=thread_predict, args=(stop_event,predict_event))
+    # Start the predict thread
+    predict_process = threading.Thread(name='predict', target=thread_predict, args=(stop_event,predict_event))
     predict_process.start()
 
+    # Start the extract keypoints thread which is the main thread
     thread_extract_keypoints()
