@@ -7,6 +7,9 @@ under the issue https://github.com/opencv/opencv/issues/22602
 they say:
 - Use UI interaction functions from the "main" thread only.
 - This is limitation of the platform, not OpenCV.
+
+See also:
+https://stackoverflow.com/questions/19790570/using-a-global-variable-with-a-thread
 """
 
 
