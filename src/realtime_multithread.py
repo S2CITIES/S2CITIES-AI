@@ -1,7 +1,7 @@
 """
 This file runs the realtime classification of hand gestures using the trained model.
 
-Note: if you're getting an error 
+Note: if you're getting an error
 cv2.imshow() throwing "Unknown C++ exception from OpenCV code" only when threaded
 under the issue https://github.com/opencv/opencv/issues/22602
 they say:
@@ -91,7 +91,7 @@ def thread_extract_keypoints():
                 # Set the frames_to_next_prediction to zero so that when
                 # the timeseries gets full again, it can immediately perform prediction
                 frames_to_next_prediction = 0
-        
+
         # Flag if the timeseries is full
         timeseries_full = len(timeseries) == frame_rate * window
 
@@ -134,13 +134,13 @@ def thread_predict(stop_event, predict_event):
     # model = joblib.load('random_forest_model.joblib')
 
     while not stop_event.is_set():
-        
+
         predict_event.wait()
-        
+
         print('running prediction')
 
         # TODO: implement the prediction
-        
+
         # Extract features from the timeseries
         # features = feature_extractor.extract_features(timeseries_2_5s)
 
