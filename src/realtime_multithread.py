@@ -1,3 +1,16 @@
+"""
+This file runs the realtime classification of hand gestures using the trained model.
+
+Note: if you're getting an error 
+cv2.imshow() throwing "Unknown C++ exception from OpenCV code" only when threaded
+under the issue https://github.com/opencv/opencv/issues/22602
+they say:
+- Use UI interaction functions from the "main" thread only.
+- This is limitation of the platform, not OpenCV.
+"""
+
+
+
 import cv2
 import mediapipe as mp
 import numpy as np
