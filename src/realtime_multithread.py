@@ -59,6 +59,8 @@ def thread_extract_keypoints():
     interval = 1  # in seconds
     window = 2.5  # in seconds
 
+    frames_to_next_prediction = 0
+
     prev = 0
     while True:
 
@@ -100,6 +102,19 @@ def thread_extract_keypoints():
            #    # if there are not regognized keypoints, reset the timeseries
                 timeseries = []
 
+                # Set the frames_to_next_prediction to zero so that when
+                # the timeseries gets full, it can immediately perform prediction
+                frames_to_next_prediction = 0
+            
+        timeseries_full = len(timeseries) == frame_rate * window
+
+        if timeseries_full and frames_to_next_prediction == 0:
+            predict_event.set()
+            frames_to_next_prediction = interval * frame_rate
+        elif timeseries_full and frames_to_next_prediction > 0:
+            frames_to_next_prediction -= 1
+
+
         # TODO si può implementare un sistema per non dover aspettare per forza che la timeseries sia full, ma
         # consentendo anche lunghezze minori da riempire con zeri o NAN
 
@@ -116,10 +131,13 @@ def thread_extract_keypoints():
 
         # Check if the user has pressed the 'q' key to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            predict_event.set() # perform the last prediction so that the thread can stop
             stop_event.set()
             break
 
-def thread_predict(stop_event):
+
+
+def thread_predict(stop_event, predict_event):
 
     frame_rate = 12
 
@@ -133,10 +151,16 @@ def thread_predict(stop_event):
 
     while not stop_event.is_set():
         
+        predict_event.wait()
+        print('predict event set')
+        print('running prediction')
+        
+        # Reset the predict event
+        predict_event.clear()
 
-        timeseries_full = len(timeseries) == frame_rate * window
+        #timeseries_full = len(timeseries) == frame_rate * window
 
-        if timeseries_full: # the timeseries is full
+        #if predict_event: # the timeseries is full
             # TODO
             # fai estrazione e prediction qui
             # Extract features from the timeseries
@@ -147,13 +171,13 @@ def thread_predict(stop_event):
 
             # Print the output to the console
             #print(output)
-            print('prediction')
+            #print('prediction')
 
             # dopo aver estratto, resetta frames_to_next_prediction
             #frames_to_next_prediction = interval * frame_rate
 
         # Sleep for 1 second
-        time.sleep(1)
+        #time.sleep(1)
 
 if __name__ == '__main__':
 
@@ -162,15 +186,9 @@ if __name__ == '__main__':
 
     # create the stop event
     stop_event = threading.Event()
+    predict_event = threading.Event()
 
-    #extract_process = Thread(name='extract', target=thread_extract_keypoints)
-    predict_process = Thread(name='predict', target=thread_predict, args=(stop_event,))
+    predict_process = Thread(name='predict', target=thread_predict, args=(stop_event,predict_event))
     predict_process.start()
 
     thread_extract_keypoints()
-
-    # execute both processes at the same time
-    # without waiting that each of their While loops ends
-    #extract_process.start()
-
-    #extract_process.join()
