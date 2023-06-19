@@ -9,34 +9,15 @@ import threading
 
 import multiprocessing
 
+from threading import Thread
 
 
 # Load the random forest model
 #model = joblib.load('random_forest_model.joblib')
 
-# Set up Mediapipe
-mp_drawing = mp.solutions.drawing_utils
-mp_hands = mp.solutions.hands
 
 # Set up the feature extractor
 #feature_extractor = FeatureExtractor()
-
-# Set up the video capture
-cap = cv2.VideoCapture(0)
-#cap.set(cv2.CAP_PROP_FPS, 12)
-print(cap.get(cv2.CAP_PROP_FPS))
-
-# Set up the hyperparameters
-interval = 1  # in seconds
-window = 2.5  # in seconds
-
-# Set up the time variables
-start_time = time.time()
-last_second = -1
-
-
-frame_rate = 12
-#prev = 0
 
 
 
@@ -44,11 +25,30 @@ frame_rate = 12
 
 def thread_extract_keypoints():
 
+    global timeseries
+
+    
+
+    # Set up the video capture from a video file
+    #cap = cv2.VideoCapture('/Users/teo/Documents/GitHub/S2CITIES-AI/src/dataset_creation/4_videos_labeled/1/vid_00001_00001.MOV')
+    cap = cv2.VideoCapture(0)
+    frame_rate = 12
+
+    # Set up Mediapipe
+    mp_drawing = mp.solutions.drawing_utils
+    mp_hands = mp.solutions.hands
+
+
+    # Set up the hyperparameters
+    interval = 1  # in seconds
+    window = 2.5  # in seconds
+
     prev = 0
     while True:
 
         # Read a frame from the video capture
         ret, frame = cap.read()
+
 
         # Implement logit to limit the frame rate
         time_elapsed = time.time() - prev
@@ -100,21 +100,27 @@ def thread_extract_keypoints():
 
         # Check if the user has pressed the 'q' key to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            stop_event.set()
             break
 
-def thread_predict():
+def thread_predict(stop_event):
+
+    frame_rate = 12
+
+    # Set up the hyperparameters
+    interval = 1  # in seconds
+    window = 2.5  # in seconds
+
     # Load the random forest model
     #model = joblib.load('random_forest_model.joblib')
     frames_to_next_prediction = interval * frame_rate
 
-    while True:
-        # Sleep for 1 second
-        time.sleep(1)
+    while not stop_event.is_set():
+        
 
-        print('PORCO DIO')
         timeseries_full = len(timeseries) == frame_rate * window
 
-        if timeseries_full and frames_to_next_prediction == 0: # the timeseries is full
+        if timeseries_full: # the timeseries is full
             # TODO
             # fai estrazione e prediction qui
             # Extract features from the timeseries
@@ -128,27 +134,27 @@ def thread_predict():
             print('prediction')
 
             # dopo aver estratto, resetta frames_to_next_prediction
-            frames_to_next_prediction = interval * frame_rate
-        elif timeseries_full and frames_to_next_prediction > 0:
-            frames_to_next_prediction -= 1
+            #frames_to_next_prediction = interval * frame_rate
+
+        # Sleep for 1 second
+        time.sleep(1)
 
 if __name__ == '__main__':
 
-    from multiprocessing import shared_memory
-    timeseries= []
-    A = shared_memory.ShareableList(["timeseries"])
+    # Set up the timeseries
+    timeseries = []
 
-    extract_process = Process(name='extract', target=thread_extract_keypoints)
-    predict_process = Process(name='predict', target=thread_predict)
+    # create the stop event
+    stop_event = threading.Event()
+
+    #extract_process = Thread(name='extract', target=thread_extract_keypoints)
+    predict_process = Thread(name='predict', target=thread_predict, args=(stop_event,))
+    predict_process.start()
+
+    thread_extract_keypoints()
 
     # execute both processes at the same time
     # without waiting that each of their While loops ends
-    extract_process.start()
-    predict_process.start()
+    #extract_process.start()
 
-    # you must always close and unlink shared_memory
-    A.shm.close()
-    A.shm.unlink()
-
-    # Release the video capture
-    cap.release()
+    #extract_process.join()
