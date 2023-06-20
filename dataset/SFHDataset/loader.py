@@ -5,7 +5,7 @@ import os
 import cv2
 from pytorchvideo.transforms import UniformTemporalSubsample
 
-class VideoDataset(Dataset):
+class Signal4HelpDataset(Dataset):
     def __init__(self, video_path, image_width, image_height, transform=None):
         self.video_path = video_path
         self.transform = transform
@@ -53,14 +53,14 @@ if __name__ == '__main__':
     ])
 
     # Create the VideoDataset and DataLoader
-    dataset = VideoDataset(video_path, image_width=112, image_height=112, transform=transform)
+    dataset = Signal4HelpDataset(video_path, image_width=112, image_height=112, transform=transform)
     print(len(dataset))
     dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
 
     # Iterate over the dataloader to get batches of videos and labels
     for batch_videos, batch_labels in dataloader:
         # Do something with the batch of videos and labels
-        print(batch_videos.shape)
+        print(batch_videos.shape) #(B, T, C, H, W)
         print(batch_labels)
         # break
 
