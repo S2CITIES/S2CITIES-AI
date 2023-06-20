@@ -135,7 +135,7 @@ notebooks/dataset/*
 dataset/UCF101
 reduced_dataset/UCF101
 dataset/NVGesture/Video_data
-dataset/SFHDataset
+dataset/SFHDataset/SFH
 
 # Trained Models
 models/saves
