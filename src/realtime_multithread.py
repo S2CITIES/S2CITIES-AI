@@ -137,7 +137,12 @@ def thread_predict(stop_event, predict_event):
 
         predict_event.wait()
 
-        print('running prediction')
+        print('START PREDICTING-------')
+        
+        # Sleep 0.5 seconds
+        time.sleep(0.5)
+
+        print("END PREDICTION-------")
 
         # TODO: implement the prediction
 

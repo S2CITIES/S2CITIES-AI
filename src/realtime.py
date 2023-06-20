@@ -1,3 +1,7 @@
+"""
+This real time is one threaded.
+"""
+
 import cv2
 import mediapipe as mp
 import numpy as np
