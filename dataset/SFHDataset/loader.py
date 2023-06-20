@@ -19,26 +19,24 @@ class VideoDataset(Dataset):
             label_path = os.path.join(self.video_path, label)
             for video_file in os.listdir(label_path):
                 video_path = os.path.join(label_path, video_file)
-                cap = cv2.VideoCapture(video_path)
-                frames = []
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-                    frame = cv2.resize(frame, (self.image_width, self.image_height))
-                    frames.append(frame)
-                cap.release()
-                video = torch.stack([transforms.ToTensor()(frame) for frame in frames])
-                videos.append((video, int(label)))
-
+                videos.append((video_path, int(label)))
         return videos
 
     def __len__(self):
         return len(self.videos)
 
     def __getitem__(self, index):
-        video, label = self.videos[index]
-
+        video_path, label = self.videos[index]
+        cap = cv2.VideoCapture(video_path)
+        frames = []
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frame = cv2.resize(frame, (self.image_width, self.image_height))
+            frames.append(frame)
+        cap.release()
+        video = torch.stack([transforms.ToTensor()(frame) for frame in frames])
         if self.transform:
             video = self.transform(video)
 
@@ -57,7 +55,7 @@ if __name__ == '__main__':
     # Create the VideoDataset and DataLoader
     dataset = VideoDataset(video_path, image_width=112, image_height=112, transform=transform)
     print(len(dataset))
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
 
     # Iterate over the dataloader to get batches of videos and labels
     for batch_videos, batch_labels in dataloader:
