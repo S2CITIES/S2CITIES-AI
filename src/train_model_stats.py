@@ -4,6 +4,8 @@ This file trains a model on the extracted features using statistical methods.
 
 import os
 from pathlib import Path
+import sys
+import joblib
 
 import pandas as pd
 
@@ -13,6 +15,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.svm import SVC
+from sklearn.pipeline import Pipeline
 
 from modelevaluator import ModelEvaluator
 
@@ -24,6 +27,36 @@ X = pd.read_pickle('dataset_creation/6_X.pkl')
 
 # Read y from pickle
 y = pd.read_pickle('dataset_creation/6_y.pkl')
+
+# Create the pipeline
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('selector', SelectFromModel(
+        estimator=LogisticRegression(
+            C=0.1,
+            penalty='l1',
+            solver='liblinear',
+            max_iter=1000,
+            random_state=42
+        )
+    )),
+    ('classifier', RandomForestClassifier(
+        n_estimators=400,
+        max_depth=None,
+        min_samples_split=5,
+        min_samples_leaf=2,
+        random_state=42
+    ))
+])
+
+# Fit the pipeline to the data
+pipeline.fit(X, y)
+
+# Save the pipeline to a pickle
+joblib.dump(pipeline, 'model.pkl')
+
+sys.exit(0)
+# -----------------------------------------------------------------------------
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(

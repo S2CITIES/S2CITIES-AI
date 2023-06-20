@@ -19,6 +19,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from featureextractor import FeatureExtractor
+from model import Model
 
 
 # Set up the feature extractor
@@ -108,7 +109,7 @@ def thread_extract_keypoints():
         # lunghezze minori da riempire con zeri o NAN
 
         # Print the length of the timeseries to the console for debugging
-        print("Timeseries length:", len(timeseries))
+        #print("Timeseries length:", len(timeseries))
 
         # Draw the hand landmarks on the frame
         if results.multi_hand_landmarks:
@@ -120,7 +121,10 @@ def thread_extract_keypoints():
 
         # Check if the user has pressed the 'q' key to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
-            predict_event.set() # perform the last prediction so that the thread can stop
+            # Perform the last prediction so that the thread can stop
+            predict_event.set()
+
+            # Trigger the stop event that will stop the predict thread
             stop_event.set()
 
             # Release the video capture
@@ -131,26 +135,16 @@ def thread_extract_keypoints():
 def thread_predict(stop_event, predict_event):
 
     # Load the random forest model
-    # model = joblib.load('random_forest_model.joblib')
+    model = Model(threshold=0.5)
 
     while not stop_event.is_set():
 
         predict_event.wait()
 
-        print('START PREDICTING-------')
-        
-        # Sleep 0.5 seconds
-        time.sleep(0.5)
+        # Predict the output using the model
+        output = model.predict(timeseries)
 
-        print("END PREDICTION-------")
-
-        # TODO: implement the prediction
-
-        # Extract features from the timeseries
-        # features = feature_extractor.extract_features(timeseries_2_5s)
-
-        # Predict the output using the random forest model
-        # output = model.predict(features.reshape(1, -1))[0]
+        print(f"Predicted output: {output}")
 
         # Reset the predict event
         predict_event.clear()
