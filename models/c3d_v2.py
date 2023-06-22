@@ -87,13 +87,7 @@ class FineTunedC3D(nn.Module):
         for param in self.c3d.parameters():
             param.requires_grad = False
 
-        # Fine-tuning the weights of the final MLP for predictions.
-        for param in self.c3d.fc6.parameters():
-            param.requires_grad = True
-        for param in self.c3d.fc7.parameters():
-            param.requires_grad = True
-
-        # Substituting the last "logits" layer with a new FC layer having 25 output neurons.
+        # Substituting the last "logits" layer with a new FC layer having <output> output neurons.
         self.c3d.fc8 = nn.Linear(in_features=4096, out_features=outputs)
         for param in self.c3d.fc8.parameters():
             param.requires_grad = True
@@ -114,8 +108,8 @@ if __name__ == '__main__':
     print(out.shape) # Expected torch.Size([2, 487])
 
     finetuned_model = FineTunedC3D(pretrained_model_path='./pretrained/c3d.pickle',
-                                   outputs=25)
+                                   outputs=2)
     finetuned_model.cuda()
     out = finetuned_model(x)
-    print(out.shape) # Expected torch.Size([2, 25])
+    print(out.shape) # Expected torch.Size([2, 2])
                                    
