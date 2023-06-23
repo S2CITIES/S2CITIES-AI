@@ -149,3 +149,4 @@ report*
 
 # Pre-trained Models
 *.pickle
+models/pretrained
