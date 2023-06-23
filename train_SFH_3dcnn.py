@@ -3,9 +3,8 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from pytorchvideo.transforms import UniformTemporalSubsample
 from torch.utils.data import DataLoader, random_split
-from dataset.SFHDataset.loader import Signal4HelpDataset
-from models.c3d import C3D
-from models.c3d_v2 import FineTunedC3D as C3Dv2
+from dataset.SFHDataset.dataset import Signal4HelpDataset
+from build_models import build_model
 import numpy as np
 from tqdm import tqdm
 
@@ -97,7 +96,7 @@ def test(loader, model, device, epoch=None):
 
 if __name__ == '__main__':
 
-    batch_size=8
+    batch_size=16
     num_epochs=100
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -112,7 +111,12 @@ if __name__ == '__main__':
     ])
 
     # Create the VideoDataset and DataLoader
-    dataset = Signal4HelpDataset(video_path, image_width=112, image_height=112, transform=transform)
+    dataset = Signal4HelpDataset(video_path, 
+                                 image_width=112, 
+                                 image_height=112,
+                                 preprocessing_on=False,
+                                 load_on_demand=True, 
+                                 transform=transform)
 
     train_size = int(0.8*len(dataset))
     test_size = len(dataset) - train_size
@@ -134,15 +138,17 @@ if __name__ == '__main__':
     print(video.shape)
     T, C, H, W = video.shape
     print(f"Video shape = {(T, C, H, W)}")
-    model = C3Dv2(pretrained_model_path='./models/pretrained/c3d.pickle', outputs=2)
+
+    model = build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth', 
+                        type='mobilenet')
+    
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-3)
+    #optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-3)
+    optimizer = torch.optim.SGD(list(model.parameters()), lr=0.01, dampening=0.9, weight_decay=0.01)
     criterion = nn.CrossEntropyLoss()
-    model.to(device)
-    step = 1
 
     pbar = tqdm(total=len(train_dataset))
 
@@ -151,7 +157,7 @@ if __name__ == '__main__':
           criterion=criterion, 
           train_loader=train_dataloader,
           val_loader=test_dataloader,
-          val_step=5,  
+          val_step=1,  
           num_epochs=num_epochs, 
           device=device, 
           pbar=pbar)

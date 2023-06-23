@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from torch.utils.data import Dataset, random_split
+from torch.utils.data import Dataset, DataLoader, random_split
 import torchvision.transforms as transforms
 import os
 import sys
@@ -11,71 +11,111 @@ import mediapipe as mp
 from pytorchvideo.transforms import UniformTemporalSubsample
 
 class Signal4HelpDataset(Dataset):
-    def __init__(self, video_path, image_width, image_height, transform=None):
+    def __init__(self, video_path, image_width, image_height, preprocessing_on=True, load_on_demand=False, transform=None):
         self.video_path = video_path
         self.transform = transform
         self.image_width = image_width
         self.image_height = image_height
+        self.preprocessing_on = preprocessing_on
+        self.load_on_demand = load_on_demand
         self.hands_model = mp.solutions.hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
-        if os.path.exists('./SFH/preprocessed_data/dataset.pkl'): # Load it if already generated
+        if preprocessing_on and os.path.exists('./SFH/preprocessed_data/dataset.pkl'): # Load it if already generated
             with open('./SFH/preprocessed_data/dataset.pkl', 'rb') as dataset_file:
                 self.videos = pickle.load(dataset_file)
         else:
-            self.videos = self.load_videos()
-            if not os.path.exists('./SFH/preprocessed_data'):
-                os.makedirs('./SFH/preprocessed_data')
-            with open('./SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
-                pickle.dump(self.videos, dataset_file)
+            if load_on_demand:
+                self.videos = []
+                for label in os.listdir(self.video_path):
+                    label_path = os.path.join(self.video_path, label)
+                    for video_file in os.listdir(label_path):
+                        video_path = os.path.join(label_path, video_file)
+                        self.videos.append((video_path, int(label)))
+            else:           
+                self.videos = self.load_videos()
+                if preprocessing_on:
+                    if not os.path.exists('./SFH/preprocessed_data'):
+                        os.makedirs('./SFH/preprocessed_data')
+                    with open('./SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
+                        pickle.dump(self.videos, dataset_file)
 
-    def load_videos(self):
-        videos = []
+    def load_videos(self, load_video_path = None):
 
-        label_path_0 = os.path.join(self.video_path, '0')
-        label_path_1 = os.path.join(self.video_path, '1')
+        # If load_video_path is not None, then process a single video (for the on-demand option)
+        if load_video_path is not None:
+            # print("Processing video on-demand")
+            cap = cv2.VideoCapture(load_video_path)
 
-        total_videos = len(os.listdir(label_path_0)) + len(os.listdir(label_path_1))
+            print(cap)
+            frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        pbar = tqdm(total=total_videos, desc="Preprocessing videos...", unit="item")
+            regions = []
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        for label in os.listdir(self.video_path):
+                hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
+                if hand_region is None:
+                    hand_region = np.zeros((self.image_height, self.image_width, 3))
+                regions.append(hand_region)
 
-            label_path = os.path.join(self.video_path, label)
+            cap.release()
+            video = torch.stack([transforms.ToTensor()(region) for region in regions])
+            if self.transform:
+                video = self.transform(video)
 
-            for video_file in os.listdir(label_path):
+            return video
+        
+        else: # otherwise, load all the videos (no-on-demand option)
+            videos = []
 
-                video_path = os.path.join(label_path, video_file)
+            label_path_0 = os.path.join(self.video_path, '0')
+            label_path_1 = os.path.join(self.video_path, '1')
 
-                cap = cv2.VideoCapture(video_path)
+            total_videos = len(os.listdir(label_path_0)) + len(os.listdir(label_path_1))
 
-                frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            pbar = tqdm(total=total_videos, desc="Preprocessing videos...", unit="item")
 
-                regions = []
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            for label in os.listdir(self.video_path):
 
-                    hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
-                    if hand_region is None:
-                        hand_region = np.zeros((self.image_height, self.image_width, 3))
-                    regions.append(hand_region)
+                label_path = os.path.join(self.video_path, label)
 
-                cap.release()
-                video = torch.stack([transforms.ToTensor()(region) for region in regions])
-                if self.transform:
-                    video = self.transform(video)
+                for video_file in os.listdir(label_path):
 
-                videos.append((video, int(label)))
-                pbar.update(1)
-                # print("Debugging on the cluster...", file=sys.stderr)
-                # print("Debugging on the cluster...")
-                
-        return videos
+                    video_path = os.path.join(label_path, video_file)
+
+                    cap = cv2.VideoCapture(video_path)
+
+                    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+                    regions = []
+                    while cap.isOpened():
+                        ret, frame = cap.read()
+                        if not ret:
+                            break
+                        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                        hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
+                        if hand_region is None:
+                            hand_region = np.zeros((self.image_height, self.image_width, 3))
+                        regions.append(hand_region)
+
+                    cap.release()
+                    video = torch.stack([transforms.ToTensor()(region) for region in regions])
+                    if self.transform:
+                        video = self.transform(video)
+
+                    videos.append((video, int(label)))
+                    pbar.update(1)
+            return videos
 
     def extract_hand_bb(self, frame, frame_width, frame_height, first_only=True):
+        # Apparently the process() function is not thread-safe. With multiple workers, the code gets stuck here.
         results = self.hands_model.process(frame)
+        #print("Hands Detector Model is ending processing for this frame.")
         ROIs = []
 
         if results.multi_hand_landmarks:
@@ -154,13 +194,15 @@ class Signal4HelpDataset(Dataset):
         return len(self.videos)
 
     def __getitem__(self, index):
-        video, label = self.videos[index]
-        return video, label
+        if self.load_on_demand:
+            video_path, label = self.videos[index]
+            video = self.load_videos(load_video_path=video_path)
+            return video, label
+        else:
+            video, label = self.videos[index]
+            return video, label
 
-# Generate dataset (extracting hand bounding boxes from videos) and save preprocessed data
-# This avoid to repeat a lot of expensive work each time a batch is loaded for training
-def save_preprocessed_data(video_path, dest_path):
-    # Set the video path
+if __name__ == '__main__':
     video_path = "./SFH/SFH_Dataset_S2CITIES"
 
     # Define any transforms you want to apply to the videos
@@ -170,14 +212,16 @@ def save_preprocessed_data(video_path, dest_path):
     ])
 
     # Create the VideoDataset and DataLoader
-    dataset = Signal4HelpDataset(video_path, image_width=112, image_height=112, transform=transform)
+    dataset = Signal4HelpDataset(video_path, 
+                                 image_width=112, 
+                                 image_height=112, 
+                                 preprocessing_on=False, 
+                                 load_on_demand=True, 
+                                 transform=transform)
     # Check that the dataset has correctly been created
     print(len(dataset))
-
-if __name__ == '__main__':
-    # Set the video path
-    video_path = "./SFH/SFH_Dataset_S2CITIES"
-    dest_path = "./SFH/preprocessed_data"
-    save_preprocessed_data(video_path, dest_path)
-
+    dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
+    for idx, batch in enumerate(dataloader):
+        print(batch) 
+        break
 
