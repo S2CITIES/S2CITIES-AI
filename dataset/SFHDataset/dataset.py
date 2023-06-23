@@ -3,6 +3,8 @@ import numpy as np
 from torch.utils.data import Dataset, random_split
 import torchvision.transforms as transforms
 import os
+import sys
+from tqdm import tqdm
 import pickle
 import cv2
 import mediapipe as mp
@@ -19,6 +21,13 @@ class Signal4HelpDataset(Dataset):
 
     def load_videos(self):
         videos = []
+
+        label_path_0 = os.path.join(self.video_path, '0')
+        label_path_1 = os.path.join(self.video_path, '1')
+
+        total_videos = len(os.listdir(label_path_0)) + len(os.listdir(label_path_1))
+
+        pbar = tqdm(total=total_videos, desc="Preprocessing videos...", unit="item")
 
         for label in os.listdir(self.video_path):
 
@@ -51,7 +60,10 @@ class Signal4HelpDataset(Dataset):
                     video = self.transform(video)
 
                 videos.append((video, int(label)))
-
+                pbar.update(1)
+                print("Debugging on the cluster...", file=sys.stderr)
+                print("Debugging on the cluster...")
+                
         return videos
 
     def extract_hand_bb(self, frame, frame_width, frame_height, first_only=True):
