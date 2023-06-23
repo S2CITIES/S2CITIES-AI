@@ -61,8 +61,8 @@ class Signal4HelpDataset(Dataset):
 
                 videos.append((video, int(label)))
                 pbar.update(1)
-                print("Debugging on the cluster...", file=sys.stderr)
-                print("Debugging on the cluster...")
+                # print("Debugging on the cluster...", file=sys.stderr)
+                # print("Debugging on the cluster...")
                 
         return videos
 
