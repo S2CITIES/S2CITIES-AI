@@ -32,11 +32,10 @@ class Signal4HelpDataset(Dataset):
                         self.videos.append((video_path, int(label)))
             else:           
                 self.videos = self.load_videos()
-                if preprocessing_on:
-                    if not os.path.exists('./SFH/preprocessed_data'):
-                        os.makedirs('./SFH/preprocessed_data')
-                    with open('./SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
-                        pickle.dump(self.videos, dataset_file)
+                if not os.path.exists('./SFH/preprocessed_data'):
+                    os.makedirs('./SFH/reprocessed_data')
+                with open('./SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
+                    pickle.dump(self.videos, dataset_file)
 
     def load_videos(self, load_video_path = None):
 
@@ -110,8 +109,7 @@ class Signal4HelpDataset(Dataset):
 
                     videos.append((video, int(label)))
                     pbar.update(1)
-                    break
-                break
+
             return videos
 
     def extract_hand_bb(self, frame, frame_width, frame_height, first_only=True):
@@ -217,8 +215,8 @@ if __name__ == '__main__':
     dataset = Signal4HelpDataset(video_path, 
                                  image_width=112, 
                                  image_height=112, 
-                                 preprocessing_on=True, 
-                                 load_on_demand=False, 
+                                 preprocessing_on=False,  # Do not load from already existing file
+                                 load_on_demand=False,    # Do not load on-demand (preprocess all the videos)
                                  transform=transform)
     # Check that the dataset has correctly been created
     print(len(dataset))
