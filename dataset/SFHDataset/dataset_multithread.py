@@ -3,12 +3,13 @@ import numpy as np
 from torch.utils.data import Dataset, random_split
 import torchvision.transforms as transforms
 import os
-import sys
-from tqdm import tqdm
 import pickle
 import cv2
 import mediapipe as mp
 from pytorchvideo.transforms import UniformTemporalSubsample
+import multiprocessing
+
+# NOTE: To be fixed. Currently, it doesn't work because of Pickling Errors due to multiprocessing + mediapipe
 
 class Signal4HelpDataset(Dataset):
     def __init__(self, video_path, image_width, image_height, transform=None):
@@ -17,62 +18,60 @@ class Signal4HelpDataset(Dataset):
         self.image_width = image_width
         self.image_height = image_height
         self.hands_model = mp.solutions.hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
-        if os.path.exists('./SFH/preprocessed_data/dataset.pkl'): # Load it if already generated
-            with open('./SFH/preprocessed_data/dataset.pkl', 'rb') as dataset_file:
-                self.videos = pickle.load(dataset_file)
-        else:
-            self.videos = self.load_videos()
-            if not os.path.exists('./SFH/preprocessed_data'):
-                os.makedirs('./SFH/preprocessed_data')
-            with open('./SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
-                pickle.dump(self.videos, dataset_file)
+        self.videos = self.load_videos()
 
-    def load_videos(self):
-        videos = []
+    def process_videos(self, paths):
+        print("Starting a process")
+        videos = [] # Local memory to each process
+        for video_path, label in paths:
 
-        label_path_0 = os.path.join(self.video_path, '0')
-        label_path_1 = os.path.join(self.video_path, '1')
+            cap = cv2.VideoCapture(video_path)
 
-        total_videos = len(os.listdir(label_path_0)) + len(os.listdir(label_path_1))
+            frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        pbar = tqdm(total=total_videos, desc="Preprocessing videos...", unit="item")
+            regions = []
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        for label in os.listdir(self.video_path):
+                hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True)
+                if hand_region is None:
+                    hand_region = np.zeros((self.image_height, self.image_width, 3))
+                regions.append(hand_region)
 
-            label_path = os.path.join(self.video_path, label)
+            cap.release()
+            video = torch.stack([transforms.ToTensor()(region) for region in regions])
+            if self.transform:
+                video = self.transform(video)
 
-            for video_file in os.listdir(label_path):
+            videos.append((video, label))
+            print("Ending processing of video")
 
-                video_path = os.path.join(label_path, video_file)
-
-                cap = cv2.VideoCapture(video_path)
-
-                frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-                regions = []
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-                    hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
-                    if hand_region is None:
-                        hand_region = np.zeros((self.image_height, self.image_width, 3))
-                    regions.append(hand_region)
-
-                cap.release()
-                video = torch.stack([transforms.ToTensor()(region) for region in regions])
-                if self.transform:
-                    video = self.transform(video)
-
-                videos.append((video, int(label)))
-                pbar.update(1)
-                # print("Debugging on the cluster...", file=sys.stderr)
-                # print("Debugging on the cluster...")
-                
         return videos
+    
+    def load_videos(self):
+        
+        path_list = []
+        # First Step: Build a list of video paths to process
+        for label in os.listdir(self.video_path):
+            label_path = os.path.join(self.video_path, label)
+            for video_file in os.listdir(label_path):
+                video_path = os.path.join(label_path, video_file)
+                path_list.append((video_path, int(label)))
+
+        num_processes = 8
+        chunk_size = len(path_list) // num_processes
+        chunks = [path_list[i:i+chunk_size] for i in range(0, len(path_list), chunk_size)]
+
+        pool = multiprocessing.Pool(processes=num_processes)
+        processed_chunks = pool.map(self.process_videos, chunks)
+
+        processed_videos = [video for chunk in processed_chunks for video in chunk]
+
+        return processed_videos
 
     def extract_hand_bb(self, frame, frame_width, frame_height, first_only=True):
         results = self.hands_model.process(frame)
@@ -171,8 +170,18 @@ def save_preprocessed_data(video_path, dest_path):
 
     # Create the VideoDataset and DataLoader
     dataset = Signal4HelpDataset(video_path, image_width=112, image_height=112, transform=transform)
-    # Check that the dataset has correctly been created
-    print(len(dataset))
+
+    # Make a Train-Test Split
+    train_size = int(0.8*len(dataset))
+    test_size = len(dataset) - train_size
+
+    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+    train_path = os.path.join(dest_path, 'train_set.pkl')
+    test_path = os.path.join(dest_path, 'test_set.pkl')
+    with open(train_path, "wb") as file:
+        pickle.dump(train_dataset, file)
+    with open(test_path, "wb") as file:
+        pickle.dump(test_dataset, file)
 
 if __name__ == '__main__':
     # Set the video path
