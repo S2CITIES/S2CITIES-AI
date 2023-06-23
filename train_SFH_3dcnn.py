@@ -127,9 +127,9 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
     
     # Testing if it works correctly
-    train_features, train_labels = next(iter(train_dataloader))
-    print(f"Feature batch shape: {train_features.size()}")
-    print(f"Labels batch shape: {train_labels.size()}")
+    # train_features, train_labels = next(iter(train_dataloader))
+    # print(f"Feature batch shape: {train_features.size()}")
+    # print(f"Labels batch shape: {train_labels.size()}")
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))

@@ -45,7 +45,7 @@ class Signal4HelpDataset(Dataset):
             # print("Processing video on-demand")
             cap = cv2.VideoCapture(load_video_path)
 
-            print(cap)
+            # print(cap)
             frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -110,6 +110,8 @@ class Signal4HelpDataset(Dataset):
 
                     videos.append((video, int(label)))
                     pbar.update(1)
+                    break
+                break
             return videos
 
     def extract_hand_bb(self, frame, frame_width, frame_height, first_only=True):
@@ -215,8 +217,8 @@ if __name__ == '__main__':
     dataset = Signal4HelpDataset(video_path, 
                                  image_width=112, 
                                  image_height=112, 
-                                 preprocessing_on=False, 
-                                 load_on_demand=True, 
+                                 preprocessing_on=True, 
+                                 load_on_demand=False, 
                                  transform=transform)
     # Check that the dataset has correctly been created
     print(len(dataset))
