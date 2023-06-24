@@ -104,6 +104,7 @@ def test(loader, model, criterion, device, epoch=None):
             videos = videos.to(device)
             logits = model(videos)
             
+            labels = labels.to(device)
             val_loss_batch = criterion(logits, labels)
 
             val_loss.append(val_loss_batch.item())
@@ -111,11 +112,11 @@ def test(loader, model, criterion, device, epoch=None):
             y_true.append(labels)
 
             y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
-            y_preds = y_preds.detach().cpu()
-            y_pred.append(y_preds)
-
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
+
+            y_preds = y_preds.detach().cpu()
+            y_pred.append(y_preds)
 
     y_true = torch.cat(y_true, dim=0)
     y_pred = torch.cat(y_pred, dim=0)
