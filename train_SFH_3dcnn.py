@@ -159,7 +159,7 @@ if __name__ == '__main__':
                                  image_width=112, 
                                  image_height=112,
                                  dataset_source='dataset_noBB.pkl',
-                                 preprocessing_on=False,
+                                 preprocessing_on=True,
                                  load_on_demand=False,
                                  extract_bb_region=False, 
                                  transform=transform)
