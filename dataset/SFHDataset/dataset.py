@@ -27,10 +27,11 @@ class Signal4HelpDataset(Dataset):
         preprocessed_path = './dataset/SFHDataset/SFH/preprocessed_data'
         dataset_path = os.path.join(preprocessed_path, dataset_source)
 
-        if preprocessing_on and os.path.exists(dataset_path): # Load it if already generated
+        if preprocessing_on and os.path.exists(dataset_path): # Load it if already generated and flag preprocessing_on is set to True
             with open(dataset_path, 'rb') as dataset_file:
                 self.videos = pickle.load(dataset_file)
         else:
+            # Hands model will be used only if extact_bb_region is set to True
             self.hands_model = mp.solutions.hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
             if load_on_demand:
                 self.videos = []
@@ -45,6 +46,25 @@ class Signal4HelpDataset(Dataset):
                     os.makedirs(preprocessed_path)
                 with open(dataset_path, 'wb') as dataset_file:
                     pickle.dump(self.videos, dataset_file)
+        
+        self.norm_mean = [0, 0, 0]
+        self.norm_std = [1, 1, 1]
+
+        # Other transformations to be applied when each single batch is built
+        self.on_demand_transform = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
+        ])
+
+    def set_mean_std(self, mean, std):
+        # Set mean and std computed for the training set
+        self.norm_mean = mean
+        self.norm_std = std
+        # Set again transforms
+        self.on_demand_transform = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
+        ])
 
     def load_videos(self, load_video_path = None):
 
@@ -216,10 +236,10 @@ class Signal4HelpDataset(Dataset):
         if self.load_on_demand:
             video_path, label = self.videos[index]
             video = self.load_videos(load_video_path=video_path)
-            return video, label
+            return self.on_demand_transform(video), label
         else:
             video, label = self.videos[index]
-            return video, label
+            return self.on_demand_transform(video), label
 
 if __name__ == '__main__':
     video_path = "./SFH/SFH_Dataset_S2CITIES"
@@ -228,7 +248,7 @@ if __name__ == '__main__':
     # Define any transforms you want to apply to the videos
     transform = transforms.Compose([
         UniformTemporalSubsample(num_samples=16, temporal_dim=0),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
 
     # Create the VideoDataset and DataLoader
