@@ -139,7 +139,7 @@ if __name__ == '__main__':
     T, C, H, W = video.shape
     print(f"Video shape = {(T, C, H, W)}")
 
-    num_gpus = min(torch.cuda.device_count())
+    num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
     model = build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth', 
                         type='mobilenet', 
