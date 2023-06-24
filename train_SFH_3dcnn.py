@@ -114,8 +114,8 @@ if __name__ == '__main__':
     dataset = Signal4HelpDataset(video_path, 
                                  image_width=112, 
                                  image_height=112,
-                                 preprocessing_on=False,
-                                 load_on_demand=True, 
+                                 preprocessing_on=True,
+                                 load_on_demand=False, 
                                  transform=transform)
 
     train_size = int(0.8*len(dataset))

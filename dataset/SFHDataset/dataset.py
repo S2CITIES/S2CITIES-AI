@@ -19,8 +19,8 @@ class Signal4HelpDataset(Dataset):
         self.preprocessing_on = preprocessing_on
         self.load_on_demand = load_on_demand
         self.hands_model = mp.solutions.hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
-        if preprocessing_on and os.path.exists('./SFH/preprocessed_data/dataset.pkl'): # Load it if already generated
-            with open('./SFH/preprocessed_data/dataset.pkl', 'rb') as dataset_file:
+        if preprocessing_on and os.path.exists('./dataset/SFHDataset/SFH/preprocessed_data/dataset.pkl'): # Load it if already generated
+            with open('./dataset/SFHDataset/SFH/preprocessed_data/dataset.pkl', 'rb') as dataset_file:
                 self.videos = pickle.load(dataset_file)
         else:
             if load_on_demand:
@@ -32,9 +32,9 @@ class Signal4HelpDataset(Dataset):
                         self.videos.append((video_path, int(label)))
             else:           
                 self.videos = self.load_videos()
-                if not os.path.exists('./SFH/preprocessed_data'):
-                    os.makedirs('./SFH/reprocessed_data')
-                with open('./SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
+                if not os.path.exists('./dataset/SFHDataset/SFH/preprocessed_data'):
+                    os.makedirs('./dataset/SFHDataset/SFH/reprocessed_data')
+                with open('./dataset/SFHDataset/SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
                     pickle.dump(self.videos, dataset_file)
 
     def load_videos(self, load_video_path = None):
