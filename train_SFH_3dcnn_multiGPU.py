@@ -8,6 +8,68 @@ from build_models import build_model
 import numpy as np
 from tqdm import tqdm
 
+import torch.distributed as dist
+import torch.multiprocessing as multip
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data.distributed import DistributedSampler
+
+from torch.utils.tensorboard import SummaryWriter
+
+def setup(rank, world_size):
+    # world_size = N of available GPUs
+    torch.cuda.set_device(rank)
+    dist.init_process_group(backend="nccl",
+                            rank=rank,
+                            world_size=world_size,
+                            init_method='env://')
+
+def cleanup():
+    dist.destroy_process_group()
+
+def get_distributed_loader(world_size, data, batch_size):
+    sampler = DistributedSampler(data)
+    dataloader = DataLoader(
+        dataset=data,
+        batch_size=batch_size,
+        shuffle=False, ## Set to False because already done internally by the DistributedSampler
+        num_workers=4*world_size,
+        pin_memory=True,
+        sampler=sampler
+    )
+    return dataloader
+
+def gpu_instance(rank, world_size, num_node_features, args):
+    print(f"Running Training Instance of GPU {rank}")
+    setup(rank, world_size)
+    batch_size = args.batch_size
+    exp_name = args.exp
+    num_epochs = args.epochs
+
+    # Create the VideoDataset and DataLoader
+    dataset = Signal4HelpDataset(video_path, 
+                                 image_width=112, 
+                                 image_height=112,
+                                 preprocessing_on=True,
+                                 load_on_demand=False, 
+                                 transform=transform)
+
+    train_size = int(0.8*len(dataset))
+    test_size = len(dataset) - train_size
+
+    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+
+    train_dataloader = get_distributed_loader(world_size=world_size,
+                                              data=train_dataset,
+                                              batch_size=batch_size)
+    test_dataloader = get_distributed_loader(world_size=world_size,
+                                             data=test_dataset,
+                                             batch_size=batch_size)
+    
+    writer = SummaryWriter(f'experiments/{args.exp}')
+    model = build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth', 
+                        type='mobilenet')
+    
+
 def train(model, optimizer, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
     
     best_val_accuracy = 0
@@ -96,7 +158,7 @@ def test(loader, model, device, epoch=None):
 
 if __name__ == '__main__':
 
-    batch_size=40
+    batch_size=16
     num_epochs=100
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -139,18 +201,15 @@ if __name__ == '__main__':
     T, C, H, W = video.shape
     print(f"Video shape = {(T, C, H, W)}")
 
-    num_gpus = torch.cuda.device_count()
-    print(f"Available GPUs: {num_gpus}")
     model = build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth', 
-                        type='mobilenet', 
-                        gpus=list(range(0, num_gpus)))
+                        type='mobilenet')
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-3)
-    # optimizer = torch.optim.SGD(list(model.parameters()), lr=0.01, dampening=0.9, weight_decay=0.01)
+    #optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-3)
+    optimizer = torch.optim.SGD(list(model.parameters()), lr=0.01, dampening=0.9, weight_decay=0.01)
     criterion = nn.CrossEntropyLoss()
 
     pbar = tqdm(total=len(train_dataset))
