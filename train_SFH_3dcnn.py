@@ -79,7 +79,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
         # Validate/Test (if no val/dev set) the model every <validation_step> epochs of training
         if epoch % val_step == 0:
             # NOTE: test function validates the model, when it takes in input the loader for the validation set
-            val_accuracy, val_loss = test(loader=val_loader, model=model, device=device, epoch=epoch)
+            val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
             scheduler.step(val_loss)
             if val_accuracy > best_val_accuracy:
                 # Save the best model based on validation accuracy metric
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     # print(f"Labels batch shape: {train_labels.size()}")
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
-    print('Size of Validation Set: {}'.format(len(train_dataset)))
+    print('Size of Validation Set: {}'.format(len(val_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
 
     video, label = train_dataset[0] 
