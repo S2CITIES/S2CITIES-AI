@@ -11,15 +11,24 @@ import mediapipe as mp
 from pytorchvideo.transforms import UniformTemporalSubsample
 
 class Signal4HelpDataset(Dataset):
-    def __init__(self, video_path, image_width, image_height, preprocessing_on=True, load_on_demand=False, transform=None):
+    def __init__(self, video_path, image_width, image_height,
+                 dataset_source, 
+                 extract_bb_region=True, preprocessing_on=True, load_on_demand=False, 
+                 transform=None):
+        
         self.video_path = video_path
         self.transform = transform
         self.image_width = image_width
         self.image_height = image_height
         self.preprocessing_on = preprocessing_on
         self.load_on_demand = load_on_demand
-        if preprocessing_on and os.path.exists('./dataset/SFHDataset/SFH/preprocessed_data/dataset.pkl'): # Load it if already generated
-            with open('./dataset/SFHDataset/SFH/preprocessed_data/dataset.pkl', 'rb') as dataset_file:
+        self.extract_bb_region = extract_bb_region
+
+        preprocessed_path = './dataset/SFHDataset/SFH/preprocessed_data'
+        dataset_path = os.path.join(preprocessed_path, dataset_source)
+
+        if preprocessing_on and os.path.exists(dataset_path): # Load it if already generated
+            with open(dataset_path, 'rb') as dataset_file:
                 self.videos = pickle.load(dataset_file)
         else:
             self.hands_model = mp.solutions.hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -32,9 +41,9 @@ class Signal4HelpDataset(Dataset):
                         self.videos.append((video_path, int(label)))
             else:           
                 self.videos = self.load_videos()
-                if not os.path.exists('./dataset/SFHDataset/SFH/preprocessed_data'):
-                    os.makedirs('./dataset/SFHDataset/SFH/reprocessed_data')
-                with open('./dataset/SFHDataset/SFH/preprocessed_data/dataset.pkl', 'wb') as dataset_file:
+                if not os.path.exists(preprocessed_path):
+                    os.makedirs(preprocessed_path)
+                with open(dataset_path, 'wb') as dataset_file:
                     pickle.dump(self.videos, dataset_file)
 
     def load_videos(self, load_video_path = None):
@@ -55,10 +64,16 @@ class Signal4HelpDataset(Dataset):
                     break
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
-                if hand_region is None:
-                    hand_region = np.zeros((self.image_height, self.image_width, 3))
-                regions.append(hand_region)
+                if self.extract_bb_region:
+                    # Preprocess the frame by extracting the bounding box (hand) region
+                    hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
+                    if hand_region is None:
+                        hand_region = np.zeros((self.image_height, self.image_width, 3))
+                    regions.append(hand_region)
+                else:
+                    # Simply resize the entire frame without extracting the bounding box
+                    frame = cv2.resize(frame, (self.image_height, self.image_width))
+                    regions.append(frame)
 
             cap.release()
             video = torch.stack([transforms.ToTensor()(region) for region in regions])
@@ -97,10 +112,14 @@ class Signal4HelpDataset(Dataset):
                             break
                         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                        hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
-                        if hand_region is None:
-                            hand_region = np.zeros((self.image_height, self.image_width, 3))
-                        regions.append(hand_region)
+                        if self.extract_bb_region:
+                            hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
+                            if hand_region is None:
+                                hand_region = np.zeros((self.image_height, self.image_width, 3))
+                            regions.append(hand_region)
+                        else:
+                            frame = cv2.resize(frame, (self.image_height, self.image_width))
+                            regions.append(frame)
 
                     cap.release()
                     video = torch.stack([transforms.ToTensor()(region) for region in regions])
@@ -204,6 +223,7 @@ class Signal4HelpDataset(Dataset):
 
 if __name__ == '__main__':
     video_path = "./SFH/SFH_Dataset_S2CITIES"
+    dataset_name = "./"
 
     # Define any transforms you want to apply to the videos
     transform = transforms.Compose([
