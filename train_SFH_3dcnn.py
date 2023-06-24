@@ -140,7 +140,7 @@ def test(loader, model, criterion, device, epoch=None):
 
 if __name__ == '__main__':
 
-    batch_size=40
+    batch_size=16
     num_epochs=100
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -205,7 +205,6 @@ if __name__ == '__main__':
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    # optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-3)
     optimizer = torch.optim.SGD(list(model.parameters()), lr=0.1, dampening=0.9, weight_decay=0.01)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
 
