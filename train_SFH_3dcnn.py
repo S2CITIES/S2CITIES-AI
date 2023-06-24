@@ -96,7 +96,7 @@ def test(loader, model, device, epoch=None):
 
 if __name__ == '__main__':
 
-    batch_size=16
+    batch_size=40
     num_epochs=100
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -123,8 +123,8 @@ if __name__ == '__main__':
 
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
     
     # Testing if it works correctly
     # train_features, train_labels = next(iter(train_dataloader))
@@ -139,8 +139,11 @@ if __name__ == '__main__':
     T, C, H, W = video.shape
     print(f"Video shape = {(T, C, H, W)}")
 
+    num_gpus = min(torch.cuda.device_count())
+    print(f"Available GPUs: {num_gpus}")
     model = build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth', 
-                        type='mobilenet')
+                        type='mobilenet', 
+                        gpus=list(range(0, num_gpus)))
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
