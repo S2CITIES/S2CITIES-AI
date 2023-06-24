@@ -24,7 +24,7 @@ writer = SummaryWriter(f'./experiments/{args.exp}')
 
 
 
-def train(model, optimizer, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
     
     best_val_accuracy = 0
 
@@ -78,18 +78,21 @@ def train(model, optimizer, criterion, train_loader, val_loader, val_step, num_e
 
         # Validate/Test (if no val/dev set) the model every <validation_step> epochs of training
         if epoch % val_step == 0:
-            val_accuracy = test(loader=val_loader, model=model, device=device, epoch=epoch)
+            # NOTE: test function validates the model, when it takes in input the loader for the validation set
+            val_accuracy, val_loss = test(loader=val_loader, model=model, device=device, epoch=epoch)
+            scheduler.step(val_loss)
             if val_accuracy > best_val_accuracy:
                 # Save the best model based on validation accuracy metric
                 torch.save(model.state_dict(), f'models/saves/best_model_{args.exp}.h5')
                 best_val_accuracy = val_accuracy
-     
 
-def test(loader, model, device, epoch=None):
+
+def test(loader, model, criterion, device, epoch=None):
     totals = 0
     corrects = 0
     y_pred = []
     y_true = []
+    val_loss = []
 
     with torch.no_grad():
         model.eval()
@@ -100,6 +103,10 @@ def test(loader, model, device, epoch=None):
             videos = videos.float()
             videos = videos.to(device)
             logits = model(videos)
+            
+            val_loss_batch = criterion(logits, labels)
+
+            val_loss.append(val_loss_batch.item())
 
             y_true.append(labels)
 
@@ -113,17 +120,23 @@ def test(loader, model, device, epoch=None):
     y_true = torch.cat(y_true, dim=0)
     y_pred = torch.cat(y_pred, dim=0)
 
-    test_accuracy = 100 * corrects / totals
+    val_accuracy = 100 * corrects / totals
+    val_loss = np.array(val_loss).mean()
+
     if epoch is not None:
         # Save metrics with tensorboard
-        writer.add_scalars(main_tag='test_accuracy', tag_scalar_dict={
-            'accuracy': test_accuracy
+        writer.add_scalars(main_tag='val_accuracy', tag_scalar_dict={
+            'accuracy': val_accuracy
         }, global_step=epoch)
-        print('[Epoch {}] Test Accuracy: {:.2f}%'.format(epoch, test_accuracy))
-    else:
-        print('Test Accuracy: {:.2f}%'.format(test_accuracy))
+        writer.add_scalars(main_tag='val_loss', tag_scalar_dict={
+            'loss': val_loss
+        }, global_step=epoch)
 
-    return test_accuracy
+        print('[Epoch {}] Validation Accuracy: {:.2f}%'.format(epoch, val_accuracy))
+    else:
+        print('Test Accuracy: {:.2f}%'.format(val_accuracy))
+
+    return val_accuracy, val_loss
 
 if __name__ == '__main__':
 
@@ -151,10 +164,8 @@ if __name__ == '__main__':
                                  extract_bb_region=False, 
                                  transform=transform)
 
-    train_size = int(0.8*len(dataset))
-    test_size = len(dataset) - train_size
-
-    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+    train_dataset, test_dataset = random_split(dataset, [0.8, 0.2])
+    train_dataset, val_dataset = random_split(train_dataset, [0.9, 0.1])
 
     # train_videos = [video for video, _ in train_dataset]
     # train_videos = torch.stack(train_videos) #(N, T, C, H, W)
@@ -167,6 +178,7 @@ if __name__ == '__main__':
     # dataset.set_mean_std()
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
     
     # Testing if it works correctly
@@ -175,6 +187,7 @@ if __name__ == '__main__':
     # print(f"Labels batch shape: {train_labels.size()}")
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
+    print('Size of Validation Set: {}'.format(len(train_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
 
     video, label = train_dataset[0] 
@@ -192,17 +205,20 @@ if __name__ == '__main__':
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-3)
-    # optimizer = torch.optim.SGD(list(model.parameters()), lr=0.01, dampening=0.9, weight_decay=0.01)
+    # optimizer = torch.optim.AdamW(list(model.parameters()), lr=1e-3)
+    optimizer = torch.optim.SGD(list(model.parameters()), lr=0.1, dampening=0.9, weight_decay=0.01)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
+
     criterion = nn.CrossEntropyLoss()
 
     pbar = tqdm(total=len(train_dataset))
 
     train(model=model, 
-          optimizer=optimizer, 
+          optimizer=optimizer,
+          scheduler=scheduler,
           criterion=criterion, 
           train_loader=train_dataloader,
-          val_loader=test_dataloader,
+          val_loader=val_dataloader,
           val_step=1,  
           num_epochs=num_epochs, 
           device=device, 
@@ -210,4 +226,5 @@ if __name__ == '__main__':
     
     test(loader=test_dataloader, 
          model=model,
+         criterion=criterion,
          device=device)
