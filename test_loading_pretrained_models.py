@@ -6,7 +6,7 @@ from models.mobilenet import (
 )
 
 model_path = 'models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth'
-model = get_model_mobilenet(num_classes=27, sample_size = 112, width_mult=1.)
+model = get_model_mobilenet(num_classes=27, sample_size = 224, width_mult=1.)
 model = model.cuda()
 model = nn.DataParallel(model, device_ids=None)
 
@@ -19,6 +19,6 @@ model.load_state_dict(checkpoint['state_dict'])
 print(model)
 
 # Testing the model with a random input
-input_var = torch.randn((8, 3, 16, 112, 112)) # (B, C, T, H, W)
+input_var = torch.randn((8, 3, 16, 224, 224)) # (B, C, T, H, W)
 output = model(input_var)
 print(output.shape)
