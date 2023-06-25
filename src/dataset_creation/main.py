@@ -28,7 +28,8 @@ with open("../const.json", "r", encoding="utf-8") as f:
 #     videos_labeled_folder=const["VIDEOS_LABELED"],
 #     video_extensions=const["VIDEO_EXTENSIONS"],
 #     subclip_duration=2.5,
-#     shift_duration=1
+#     shift_duration=1,
+#     starting_idx=275
 #     )
 # processor.move_arrived_videos()
 # processor.split_raw_videos()
@@ -48,6 +49,6 @@ with open("../const.json", "r", encoding="utf-8") as f:
 # The following is for being used when the labeling is already done
 # and we want to move the files to the corresponding folders
 
-# labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
-# labeler.read_dataframe("labeling.csv")
-# labeler.move_files(source_folder="3_videos_splitted", destination_folder="4_videos_labeled")
+labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
+labeler.read_dataframe("labeling.csv")
+labeler.move_files(source_folder="3_videos_splitted", destination_folder="4_videos_labeled")

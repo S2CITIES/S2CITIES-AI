@@ -19,10 +19,12 @@ class VideoProcessor:
                  videos_labeled_folder,
                  video_extensions,
                  subclip_duration,
-                 shift_duration):
+                 shift_duration,
+                 starting_idx=None):
 
         self.subclip_duration = subclip_duration
         self.shift_duration = shift_duration
+        self.starting_idx = starting_idx
 
         # Define paths
         self.VIDEOS_ARRIVED = videos_arrived_folder
@@ -40,7 +42,12 @@ class VideoProcessor:
 
     def move_arrived_videos(self):
         files = get_video_files(self.VIDEOS_ARRIVED, self.VIDEO_EXTENSIONS)
-        number = self.find_last_number(self.VIDEOS_RAW_PROCESSED) + 1
+
+        if self.starting_idx is None:
+            number = self.find_last_number(self.VIDEOS_RAW_PROCESSED) + 1
+        else:
+            number = self.starting_idx
+            
         for file in files:
             destination_name = "vid_" + self.format_with_leading(number)
             destination_extension = Path(file).suffix
@@ -97,7 +104,7 @@ class VideoProcessor:
                 if not ret:
                     break
                 # Flip frame vertically
-                frame = cv2.flip(frame, 0)
+                # frame = cv2.flip(frame, 0)
                 out.write(frame)
 
             # Release video writer object for current subclip
