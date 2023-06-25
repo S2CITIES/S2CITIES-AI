@@ -11,7 +11,16 @@ https://stackoverflow.com/questions/71759248/importerror-cannot-import-name-buil
 
 ## Resources
 
-[Advanced Computer Vision with Python - Full Course](https://www.youtube.com/watch?v=01sAkU_NvOY)
+- [Advanced Computer Vision with Python - Full Course](https://www.youtube.com/watch?v=01sAkU_NvOY)
+- [CS231n Winter 2016: Lecture 14: Videos and Unsupervised Learning](https://www.youtube.com/watch?v=ekyBklxwQMU)
+- [Mediapipe](https://google.github.io/mediapipe/)
+- [OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
+- https://medium.com/analytics-vidhya/image-classification-with-mobilenet-cc6fbb2cd470
+- https://arxiv.org/pdf/1704.04861.pdf
+- https://paperswithcode.com/search?q_meta=&q_type=&q=resnet-10
+- https://pure.port.ac.uk/ws/files/27762140/Dynamic_hand_gesture.pdf
+- https://github.com/russointroitoa/Machine-Learning-Collection
+- https://cs50.harvard.edu/x/2022/
 
 ## Usage
 
