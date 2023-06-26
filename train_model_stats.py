@@ -17,10 +17,7 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_sp
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
 
-from modelevaluator import ModelEvaluator
-
-# Set working directory to this file's directory using pathlib
-os.chdir(Path(__file__).parent)
+from src.modelevaluator import ModelEvaluator
 
 # Read X from pickle
 X = pd.read_pickle('dataset_creation/6_X.pkl')

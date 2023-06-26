@@ -4,7 +4,7 @@ import os
 import cv2
 import pandas as pd
 
-from utils import get_video_files, move_file
+from src.utils import get_video_files, move_file
 
 class VideoLabeler:
     def __init__(self, video_extensions):
