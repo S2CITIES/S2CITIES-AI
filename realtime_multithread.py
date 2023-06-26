@@ -18,8 +18,8 @@ import joblib
 import cv2
 import mediapipe as mp
 import numpy as np
-from featureextractor import FeatureExtractor
-from model import Model
+from src.featureextractor import FeatureExtractor
+from models.model import Model
 
 
 # Set up the feature extractor
