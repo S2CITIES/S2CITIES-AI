@@ -8,7 +8,7 @@ import json
 
 import numpy as np
 
-from featureextractor import FeatureExtractor
+from featureextractor import KeypointsExtractor
 
 # Set working directory to this file's directory using pathlib
 os.chdir(Path(__file__).parent)
@@ -52,7 +52,7 @@ for label in ["0", "1"]:
         print(f"Processing {video_file}")
         
         # Extract keypoints from the video
-        feature_extractor = FeatureExtractor(str(video_file), show_image=True)
+        feature_extractor = KeypointsExtractor(str(video_file), show_image=True)
         keypoints = feature_extractor.extract_keypoints_from_video()
 
         # Save keypoints as npy file if keypoints is not None

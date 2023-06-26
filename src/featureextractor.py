@@ -6,7 +6,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-class FeatureExtractor:
+class KeypointsExtractor:
     def __init__(self, video_path, show_image=True):
         self.video_path = video_path
         self.show_image = show_image
