@@ -25,7 +25,7 @@ https://stackoverflow.com/questions/71759248/importerror-cannot-import-name-buil
 ## Usage
 
 1. Follow the istructions to have the [`4_videos_labeled`](./src/dataset_creation/4_videos_labeled/) folder with the labeled videos
-2. Run the script [`subsample_videos.py`](./dataset_creation_subsample_videos.py) to subsample the videos to a predefined FPS
+2. Run the script [`dataset_creation_subsample_videos.py`](./dataset_creation_subsample_videos.py) to subsample the videos to a predefined FPS
 3. Run the script [`extract_features.py`](./src/extract_features.py) to extract the keypoints using MediaPipe
 4. Run the script [`timeseries_feature_extraction.py`](./src/timeseries_feature_extraction.py) to extract features from the timeseries of keypoints using, momentarily, [`tsfresh`](https://tsfresh.readthedocs.io/)
 5. Run the [`train_model_nn.py`](./train_model_nn.py) or the [`train_model_stats.py`](./train_model_stats.py) to train the model for classification.
