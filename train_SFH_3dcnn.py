@@ -208,7 +208,12 @@ if __name__ == '__main__':
     print("Trainable parameters:", trainable_params)
 
     classifier = model.module.get_submodule('classifier')
-    optimizer = torch.optim.SGD(list(classifier.parameters()), lr=0.1, dampening=0.9, weight_decay=0.01, nesterov=True)
+    optimizer = torch.optim.SGD(list(classifier.parameters()), 
+                                                lr=0.1, 
+                                                momentum=0.9, 
+                                                weight_decay=0.01,
+                                                nesterov=True)
+    
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
 
     criterion = nn.CrossEntropyLoss()
