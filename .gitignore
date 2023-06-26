@@ -153,3 +153,7 @@ report*
 *.pickle
 models/pretrained
 notes.txt
+models/neural_network_LSTM.h5
+models/random_forest.pkl
+src/features/6_X.pkl
+src/features/6_y.pkl
