@@ -8,7 +8,7 @@ from tsfresh.utilities.dataframe_functions import impute
 class Model:
     def __init__(self, threshold=0.5):
         self.threshold = threshold
-        self.model = joblib.load('src/model.pkl')
+        self.model = joblib.load('./models/random_forest.pkl')
 
 
 
