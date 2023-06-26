@@ -4,7 +4,15 @@ import os
 import re
 
 class DatasetSync:
-    def __init__(self, local_path, bucket_name, prefix='', ignore_patterns=None, aws_access_key_id=None, aws_secret_access_key=None):
+    def __init__(
+            self,
+            local_path,
+            bucket_name,
+            prefix='',
+            ignore_patterns=None,
+            aws_access_key_id=None,
+            aws_secret_access_key=None
+            ):
         self.local_path = local_path
         self.bucket_name = bucket_name
         self.prefix = prefix
