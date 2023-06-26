@@ -83,14 +83,14 @@ def resize_frames(target_width, target_height, source_video_path, dest_video_pat
 
 if __name__ == '__main__':
 
-    source_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES'
-    dest_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1'
+    source_video_path = './SFH/SFH_Dataset_S2CITIES'
+    dest_video_path = './SFH/SFH_Dataset_S2CITIES_ratio1'
     convert_ratio(target_ratio=1, 
                   source_video_path=source_video_path,
                   dest_video_path=dest_video_path)
 
-    source_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1'
-    dest_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224'
+    source_video_path = './SFH/SFH_Dataset_S2CITIES_ratio1'
+    dest_video_path = './SFH/SFH_Dataset_S2CITIES_ratio1_224x224'
 
     resize_frames(target_width=224, 
                   target_height=224, 

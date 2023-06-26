@@ -7,6 +7,7 @@ from dataset.SFHDataset.dataset import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
 from tqdm import tqdm
+from temporal_transforms import TemporalRandomCrop
 
 import argparse
 
@@ -22,8 +23,6 @@ args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
 
-
-
 def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
     
     best_val_accuracy = 0
@@ -31,6 +30,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
     ############### Training ##################
     for epoch in range(num_epochs):
         model.train()
+
         epoch_loss = []
         corrects = 0
         totals = 0
@@ -51,8 +51,9 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             labels = labels.to(device)
 
             loss = criterion(logits, labels)
-            loss.backward()
             epoch_loss.append(loss.item())
+
+            loss.backward()
             optimizer.step()
 
             if pbar:
@@ -149,12 +150,6 @@ if __name__ == '__main__':
 
     video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224"
 
-    # Define any transforms you want to apply to the videos
-    transform = transforms.Compose([
-        UniformTemporalSubsample(num_samples=16, temporal_dim=0)
-        # Avoid normalization for now - It will be done after computing mean and std for the training set
-    ])
-
     # Create the VideoDataset and DataLoader
     dataset = Signal4HelpDataset(video_path, 
                                  image_width=112, 
@@ -163,8 +158,7 @@ if __name__ == '__main__':
                                  preprocessing_on=False,
                                  load_on_demand=True,
                                  extract_bb_region=False,
-                                 resize_frames=False, 
-                                 transform=transform)
+                                 resize_frames=False)
 
     train_dataset, test_dataset = random_split(dataset, [0.8, 0.2])
     train_dataset, val_dataset = random_split(train_dataset, [0.9, 0.1])
@@ -208,12 +202,14 @@ if __name__ == '__main__':
     print("Trainable parameters:", trainable_params)
 
     classifier = model.module.get_submodule('classifier')
-    optimizer = torch.optim.SGD(list(classifier.parameters()), 
-                                                lr=0.1, 
-                                                momentum=0.9, 
-                                                weight_decay=0.01,
-                                                nesterov=True)
+    # optimizer = torch.optim.SGD(list(classifier.parameters()), 
+    #                                             lr=0.1, 
+    #                                             momentum=0.9, 
+    #                                             weight_decay=0.01,
+    #                                             nesterov=True)
     
+    optimizer = torch.optim.Adam(list(classifier.parameters()))
+
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
 
     criterion = nn.CrossEntropyLoss()

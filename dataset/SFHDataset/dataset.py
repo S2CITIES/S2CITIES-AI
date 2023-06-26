@@ -13,8 +13,7 @@ from pytorchvideo.transforms import UniformTemporalSubsample
 class Signal4HelpDataset(Dataset):
     def __init__(self, video_path, image_width, image_height,
                  dataset_source, 
-                 extract_bb_region=True, preprocessing_on=True, load_on_demand=False, resize_frames=True,
-                 transform=None):
+                 extract_bb_region=True, preprocessing_on=True, load_on_demand=False, resize_frames=True):
         
         self.video_path = video_path
         self.transform = transform
@@ -48,24 +47,24 @@ class Signal4HelpDataset(Dataset):
                 with open(dataset_path, 'wb') as dataset_file:
                     pickle.dump(self.videos, dataset_file)
         
-        self.norm_mean = [0, 0, 0]
-        self.norm_std = [1, 1, 1]
+        # self.norm_mean = [0, 0, 0]
+        # self.norm_std = [1, 1, 1]
 
         # Other transformations to be applied when each single batch is built
-        self.on_demand_transform = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
-        ])
+        # self.on_demand_transform = transforms.Compose([
+        #     transforms.RandomHorizontalFlip(),
+        #     transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
+        # ])
 
-    def set_mean_std(self, mean, std):
-        # Set mean and std computed for the training set
-        self.norm_mean = mean
-        self.norm_std = std
-        # Set again transforms
-        self.on_demand_transform = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
-        ])
+    # def set_mean_std(self, mean, std):
+    #     # Set mean and std computed for the training set
+    #     self.norm_mean = mean
+    #     self.norm_std = std
+    #     # Set again transforms
+    #     self.on_demand_transform = transforms.Compose([
+    #         transforms.RandomHorizontalFlip(),
+    #         transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
+    #     ])
 
     def load_videos(self, load_video_path = None):
 
@@ -146,8 +145,7 @@ class Signal4HelpDataset(Dataset):
 
                     cap.release()
                     video = torch.stack([transforms.ToTensor()(region) for region in regions])
-                    if self.transform:
-                        video = self.transform(video)
+                    video = self.transform(video)
 
                     videos.append((video, int(label)))
                     pbar.update(1)
@@ -239,10 +237,10 @@ class Signal4HelpDataset(Dataset):
         if self.load_on_demand:
             video_path, label = self.videos[index]
             video = self.load_videos(load_video_path=video_path)
-            return self.on_demand_transform(video), label
         else:
             video, label = self.videos[index]
-            return self.on_demand_transform(video), label
+        # return self.on_demand_transform(video), label
+        return video, label
 
 if __name__ == '__main__':
     video_path = "./SFH/SFH_Dataset_S2CITIES"
