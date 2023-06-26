@@ -24,8 +24,12 @@ https://stackoverflow.com/questions/71759248/importerror-cannot-import-name-buil
 
 ## Usage
 
-1. Follow the istructions to have the [`4_videos_labeled`](./src/dataset_creation/4_videos_labeled/) folder with the labeled videos
+1. Follow the istructions to have the [`4_videos_labeled`](./src/dataset_creation/4_videos_labeled/) folder with the labeled videos:
+   1. Run the script [`dataset_creation_move_and_split.py`](./dataset_creation_move_and_split.py) to move, rename and split the videos.
+   2. Run the script [`dataset_creation_starter_csv.py`](./dataset_creation_starter_csv.py) to create the starter CSV file and facilitate labeling by someone else.
+   3. Run the script [`dataset_creation_perform_labeling.py`](./dataset_creation_perform_labeling.py) to actually perform the labeling.
+   4. Run the script [`dataset_creation_move_labeled.py`](./dataset_creation_move_labeled.py) to move the labeled videos into the respective class folders according to the CSV file.
 2. Run the script [`dataset_creation_subsample_videos.py`](./dataset_creation_subsample_videos.py) to subsample the videos to a predefined FPS
-3. Run the script [`extract_features.py`](./src/extract_features.py) to extract the keypoints using MediaPipe
-4. Run the script [`timeseries_feature_extraction.py`](./src/timeseries_feature_extraction.py) to extract features from the timeseries of keypoints using, momentarily, [`tsfresh`](https://tsfresh.readthedocs.io/)
+3. [WIP] Run the script [`extract_features.py`](./src/extract_features.py) to extract the keypoints using MediaPipe
+4. [WIP] Run the script [`timeseries_feature_extraction.py`](./src/timeseries_feature_extraction.py) to extract features from the timeseries of keypoints using, momentarily, [`tsfresh`](https://tsfresh.readthedocs.io/)
 5. Run the [`train_model_nn.py`](./train_model_nn.py) or the [`train_model_stats.py`](./train_model_stats.py) to train the model for classification.
