@@ -7,7 +7,6 @@ from dataset.SFHDataset.dataset import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
 from tqdm import tqdm
-from temporal_transforms import TemporalRandomCrop
 
 import argparse
 
@@ -152,8 +151,8 @@ if __name__ == '__main__':
 
     # Create the VideoDataset and DataLoader
     dataset = Signal4HelpDataset(video_path, 
-                                 image_width=112, 
-                                 image_height=112,
+                                 image_width=224, 
+                                 image_height=224,
                                  dataset_source='dataset_noBB_224x224.pkl',
                                  preprocessing_on=False,
                                  load_on_demand=True,
@@ -163,33 +162,63 @@ if __name__ == '__main__':
     train_dataset, test_dataset = random_split(dataset, [0.8, 0.2])
     train_dataset, val_dataset = random_split(train_dataset, [0.9, 0.1])
 
-    # train_videos = [video for video, _ in train_dataset]
-    # train_videos = torch.stack(train_videos) #(N, T, C, H, W)
-    # trainset_mean = torch.mean(train_videos, dim=(0, 1, 3, 4))
-    # trainset_std = torch.mean(train_videos, dim=(0, 1, 3, 4))
-
-    # print(trainset_mean)
-    # print(trainset_std)
-
-    # dataset.set_mean_std()
+    video, label = train_dataset[0] 
+    print(video.shape)
+    T, C, H, W = video.shape
+    print(f"Video shape = {(T, C, H, W)}")
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
     
     # Testing if it works correctly
     # train_features, train_labels = next(iter(train_dataloader))
     # print(f"Feature batch shape: {train_features.size()}")
     # print(f"Labels batch shape: {train_labels.size()}")
 
+    # Compute mean and std on the training set
+    # Accumulate the sum and squared sum for each channel
+    n_samples = 0
+    channel_sum = 0
+    channel_squared_sum = 0
+
+    for data in train_dataloader:  # Iterate over the dataset or dataloader
+        videos, _ = data  # Assuming images are the input data and _ represents the labels/targets
+        batch_size = videos.size(0)
+        B, T, C, H, W = videos.shape
+        videos = videos.view(B, C, -1)  # Reshape the tensor to (batch_size, channels, pixels)
+
+        channel_sum += torch.sum(videos, dim=2).sum(dim=0)
+        channel_squared_sum += torch.sum(videos ** 2, dim=2).sum(dim=0)
+        n_samples += batch_size
+
+    # Compute the mean and std values for each channel
+    mean = channel_sum / n_samples
+    std = torch.sqrt((channel_squared_sum / n_samples) - (mean ** 2))
+
+    # Loaders with Normalization
+    train_dataloader = DataLoader(train_dataset, 
+                                  batch_size=batch_size, 
+                                  shuffle=True, 
+                                  num_workers=4, 
+                                  transforms=transforms.Normalize(mean=mean, std=std))
+    
+    val_dataloader = DataLoader(val_dataset,
+                                batch_size=batch_size,
+                                shuffle=False,
+                                num_workers=4,
+                                transforms=transforms.Normalize(mean=mean, std=std))
+    
+    test_dataloader = DataLoader(test_dataset,
+                                batch_size=batch_size,
+                                shuffle=False,
+                                num_workers=4,
+                                transforms=transforms.Normalize(mean=mean, std=std))
+    
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
 
-    video, label = train_dataset[0] 
-    print(video.shape)
-    T, C, H, W = video.shape
-    print(f"Video shape = {(T, C, H, W)}")
+    print(f"Mean of the Training Set: {mean}")
+    print(f"Std. of the Training Set: {std}")
 
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")

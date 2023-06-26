@@ -1,4 +1,6 @@
 import torch
+import random
+import math
 import numpy as np
 from torch.utils.data import Dataset, DataLoader, random_split
 import torchvision.transforms as transforms
@@ -10,13 +12,52 @@ import cv2
 import mediapipe as mp
 from pytorchvideo.transforms import UniformTemporalSubsample
 
+class TemporalRandomCrop(object):
+    """Temporally crop the given frame indices at a random location.
+
+    If the number of frames is less than the size,
+    loop the indices as many times as necessary to satisfy the size.
+
+    Args:
+        size (int): Desired output size of the crop.
+    """
+
+    def __init__(self, size, downsample):
+        self.size = size
+        self.downsample = downsample
+
+    def __call__(self, frame_indices):
+        """
+        Args:
+            frame_indices (list): frame indices to be cropped.
+        Returns:
+            list: Cropped frame indices.
+        """
+
+        vid_duration  = len(frame_indices)
+        clip_duration = self.size * self.downsample
+
+        rand_end = max(0, vid_duration - clip_duration - 1)
+        begin_index = random.randint(0, rand_end)
+        end_index = min(begin_index + clip_duration, vid_duration)
+
+        out = frame_indices[begin_index:end_index]
+
+        for index in out:
+            if len(out) >= clip_duration:
+                break
+            out.append(index)
+
+        selected_frames = [out[i] for i in range(0, clip_duration, self.downsample)]
+
+        return selected_frames
+
 class Signal4HelpDataset(Dataset):
     def __init__(self, video_path, image_width, image_height,
                  dataset_source, 
                  extract_bb_region=True, preprocessing_on=True, load_on_demand=False, resize_frames=True):
         
         self.video_path = video_path
-        self.transform = transform
         self.image_width = image_width
         self.image_height = image_height
         self.preprocessing_on = preprocessing_on
@@ -46,15 +87,6 @@ class Signal4HelpDataset(Dataset):
                     os.makedirs(preprocessed_path)
                 with open(dataset_path, 'wb') as dataset_file:
                     pickle.dump(self.videos, dataset_file)
-        
-        # self.norm_mean = [0, 0, 0]
-        # self.norm_std = [1, 1, 1]
-
-        # Other transformations to be applied when each single batch is built
-        # self.on_demand_transform = transforms.Compose([
-        #     transforms.RandomHorizontalFlip(),
-        #     transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
-        # ])
 
     # def set_mean_std(self, mean, std):
     #     # Set mean and std computed for the training set
@@ -98,8 +130,11 @@ class Signal4HelpDataset(Dataset):
 
             cap.release()
             video = torch.stack([transforms.ToTensor()(region) for region in regions])
-            if self.transform:
-                video = self.transform(video)
+
+            selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
+            video = video[selected_frames]
+            
+            # video = UniformTemporalSubsample(num_samples=16, temporal_dim=0)(video)
 
             return video
         
@@ -145,9 +180,12 @@ class Signal4HelpDataset(Dataset):
 
                     cap.release()
                     video = torch.stack([transforms.ToTensor()(region) for region in regions])
-                    video = self.transform(video)
+
+                    selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
+                    video = video[selected_frames]
 
                     videos.append((video, int(label)))
+
                     pbar.update(1)
 
             return videos
@@ -243,26 +281,23 @@ class Signal4HelpDataset(Dataset):
         return video, label
 
 if __name__ == '__main__':
-    video_path = "./SFH/SFH_Dataset_S2CITIES"
+    video_path = "./SFH/SFH_Dataset_S2CITIES_ratio1_224x224"
     dataset_name = "./"
-
-    # Define any transforms you want to apply to the videos
-    transform = transforms.Compose([
-        UniformTemporalSubsample(num_samples=16, temporal_dim=0),
-        # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-    ])
 
     # Create the VideoDataset and DataLoader
     dataset = Signal4HelpDataset(video_path, 
-                                 image_width=112, 
-                                 image_height=112, 
-                                 preprocessing_on=False,  # Do not load from already existing file
-                                 load_on_demand=False,    # Do not load on-demand (preprocess all the videos)
-                                 transform=transform)
+                                 image_width=224, 
+                                 image_height=224,
+                                 dataset_source='dataset_noBB_224x224.pkl',
+                                 preprocessing_on=False,
+                                 load_on_demand=True,
+                                 extract_bb_region=False,
+                                 resize_frames=False)
+    
     # Check that the dataset has correctly been created
     print(len(dataset))
     dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
     for idx, batch in enumerate(dataloader):
-        print(batch) 
+        # print(batch) 
         break
 
