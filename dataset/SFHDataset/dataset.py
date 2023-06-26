@@ -13,7 +13,7 @@ from pytorchvideo.transforms import UniformTemporalSubsample
 class Signal4HelpDataset(Dataset):
     def __init__(self, video_path, image_width, image_height,
                  dataset_source, 
-                 extract_bb_region=True, preprocessing_on=True, load_on_demand=False, 
+                 extract_bb_region=True, preprocessing_on=True, load_on_demand=False, resize_frames=True,
                  transform=None):
         
         self.video_path = video_path
@@ -23,6 +23,7 @@ class Signal4HelpDataset(Dataset):
         self.preprocessing_on = preprocessing_on
         self.load_on_demand = load_on_demand
         self.extract_bb_region = extract_bb_region
+        self.resize_frames = resize_frames
 
         preprocessed_path = './dataset/SFHDataset/SFH/preprocessed_data'
         dataset_path = os.path.join(preprocessed_path, dataset_source)
@@ -92,7 +93,8 @@ class Signal4HelpDataset(Dataset):
                     regions.append(hand_region)
                 else:
                     # Simply resize the entire frame without extracting the bounding box
-                    frame = cv2.resize(frame, (self.image_height, self.image_width))
+                    if self.resize_frames:
+                        frame = cv2.resize(frame, (self.image_height, self.image_width))
                     regions.append(frame)
 
             cap.release()
@@ -138,7 +140,8 @@ class Signal4HelpDataset(Dataset):
                                 hand_region = np.zeros((self.image_height, self.image_width, 3))
                             regions.append(hand_region)
                         else:
-                            frame = cv2.resize(frame, (self.image_height, self.image_width))
+                            if self.resize_frames:
+                                frame = cv2.resize(frame, (self.image_height, self.image_width))
                             regions.append(frame)
 
                     cap.release()

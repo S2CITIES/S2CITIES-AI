@@ -8,7 +8,7 @@ from models.mobilenet import (
 def build_model(base_model_path, type='mobilenet', gpus=None):
     # All models pretrained on Jester (27 classes)
     if type == 'mobilenet':
-        model=get_model_mobilenet(num_classes=27, sample_size = 112, width_mult=1.)
+        model=get_model_mobilenet(num_classes=27, sample_size = 224, width_mult=1.)
         model=model.cuda()
         model=nn.DataParallel(model, device_ids=gpus)
         checkpoint=torch.load(base_model_path)

@@ -141,13 +141,13 @@ def test(loader, model, criterion, device, epoch=None):
 
 if __name__ == '__main__':
 
-    batch_size=16
+    batch_size=32
     num_epochs=100
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
-    video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES"
+    video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224"
 
     # Define any transforms you want to apply to the videos
     transform = transforms.Compose([
@@ -159,10 +159,11 @@ if __name__ == '__main__':
     dataset = Signal4HelpDataset(video_path, 
                                  image_width=112, 
                                  image_height=112,
-                                 dataset_source='dataset_noBB.pkl',
-                                 preprocessing_on=True,
-                                 load_on_demand=False,
-                                 extract_bb_region=False, 
+                                 dataset_source='dataset_noBB_224x224.pkl',
+                                 preprocessing_on=False,
+                                 load_on_demand=True,
+                                 extract_bb_region=False,
+                                 resize_frames=False, 
                                  transform=transform)
 
     train_dataset, test_dataset = random_split(dataset, [0.8, 0.2])
@@ -206,7 +207,8 @@ if __name__ == '__main__':
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    optimizer = torch.optim.SGD(list(model.parameters()), lr=0.1, dampening=0.9, weight_decay=0.01)
+    classifier = model.module.get_submodule('classifier')
+    optimizer = torch.optim.SGD(list(classifier.parameters()), lr=0.1, dampening=0.9, weight_decay=0.01, nesterov=True)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
 
     criterion = nn.CrossEntropyLoss()

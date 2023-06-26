@@ -68,7 +68,9 @@ class MobileNet(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
+        # print(x.shape)
         x = F.avg_pool3d(x, x.data.size()[-3:])
+        # print(x.shape)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
