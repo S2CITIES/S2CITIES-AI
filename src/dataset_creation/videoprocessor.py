@@ -8,7 +8,7 @@ import os
 import cv2
 from tqdm import tqdm
 
-from utils import get_video_files, move_file
+from src.utils import get_video_files, move_file
 
 class VideoProcessor:
     def __init__(self,
