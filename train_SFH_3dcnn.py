@@ -3,7 +3,7 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from pytorchvideo.transforms import UniformTemporalSubsample
 from torch.utils.data import DataLoader, random_split
-from dataset.SFHDataset.dataset import Signal4HelpDataset
+from data.SFHDataset.dataset import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
 from tqdm import tqdm
@@ -194,24 +194,32 @@ if __name__ == '__main__':
     mean = channel_sum / n_samples
     std = torch.sqrt((channel_squared_sum / n_samples) - (mean ** 2))
 
+    # Note that the ToTensor and TemporalRandomCrop Transformations are already applied inside the Dataset class.
+    video_transforms = transforms.Compose([
+        transforms.Normalize(mean=mean, std=std),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5)
+    ])
+
+    transformed_train_dataset = video_transforms(train_dataset)
+    transformed_val_dataset = video_transforms(val_dataset)
+    transformed_test_dataset = video_transforms(test_dataset)
+
     # Loaders with Normalization
-    train_dataloader = DataLoader(train_dataset, 
+    train_dataloader = DataLoader(transformed_train_dataset, 
                                   batch_size=batch_size, 
                                   shuffle=True, 
-                                  num_workers=4, 
-                                  transforms=transforms.Normalize(mean=mean, std=std))
+                                  num_workers=4)
     
-    val_dataloader = DataLoader(val_dataset,
+    val_dataloader = DataLoader(transformed_val_dataset,
                                 batch_size=batch_size,
                                 shuffle=False,
-                                num_workers=4,
-                                transforms=transforms.Normalize(mean=mean, std=std))
+                                num_workers=4)
     
-    test_dataloader = DataLoader(test_dataset,
+    test_dataloader = DataLoader(transformed_test_dataset,
                                 batch_size=batch_size,
                                 shuffle=False,
-                                num_workers=4,
-                                transforms=transforms.Normalize(mean=mean, std=std))
+                                num_workers=4)
     
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
