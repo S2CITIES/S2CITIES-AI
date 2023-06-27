@@ -70,6 +70,9 @@ class DatasetSync:
                 print(f'Skipping {s3_key}, already exists locally')
                 continue
 
+            # Make sure the directory exists
+            os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+
             # Download the file from S3
             self.s3.download_file(self.bucket_name, s3_key, local_file_path)
             print(f'Downloaded {s3_key} from S3: {local_file_path}')
