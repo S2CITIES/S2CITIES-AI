@@ -23,9 +23,12 @@ def build_model(base_model_path, type='mobilenet', gpus=None):
 
         # Weights of the new classifier will be fine-tunable
         new_classifier = nn.Sequential(
-            nn.Dropout(p=0.2, inplace=False),
+            nn.Dropout(p=0.5, inplace=False),
             nn.Linear(in_features=1024, out_features=2, bias=True)
         )
+        # Init weights of the linear layer
+        nn.init.normal_(tensor=new_classifier[1].weight, mean=0.0, std=1.0)
+
         new_classifier.cuda()
         model.module.classifier = new_classifier
         classifier = model.module.get_submodule('classifier')
