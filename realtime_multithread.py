@@ -18,7 +18,7 @@ import joblib
 import cv2
 import mediapipe as mp
 import numpy as np
-from src.featureextractor import FeatureExtractor
+from src.keypointsextractor import FeatureExtractor
 from models.model import Model
 
 

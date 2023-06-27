@@ -7,6 +7,7 @@
     "VIDEOS_LABELED_SUBSAMPLED": "5_videos_labeled_subsampled",
     "SUBSAMPLE_FPS": 12,
     "FEATURES_EXTRACTED": "6_features_extracted",
+    "TIMESERIES_FEATURES_EXTRACTED": "7_timeseries_features_extracted",
     "DATASET_FOLDER": "/Users/teo/Library/CloudStorage/OneDrive-PolitecnicodiMilano/ASP/S2Cities/S2C - Machine Learning/Dataset/S2Cities_Dataset_Collection",
     "VIDEO_EXTENSIONS": [
         ".mp4",
