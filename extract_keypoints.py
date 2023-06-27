@@ -8,7 +8,7 @@ import json
 
 import numpy as np
 
-from featureextractor import KeypointsExtractor
+from src.keypointsextractor import KeypointsExtractor
 
 # Set working directory to this file's directory using pathlib
 os.chdir(Path(__file__).parent)
