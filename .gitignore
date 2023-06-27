@@ -109,6 +109,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.vscode/settings.json
 
 # Spyder project settings
 .spyderproject
@@ -128,8 +129,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# macOS hidden files
 *.DS_Store
-notebooks/dataset/*
 
 # Dataset Folder
 dataset/UCF101
@@ -141,19 +142,21 @@ dataset/Jester_videos
 
 # Trained Models
 models/saves
-.vscode/settings.json
+
+# Videos and temporary files
 *.mp4
 *.mov
 *.npy
 *.avi
 src/logs*
+
+# Output files
 report*
 
 # Pre-trained Models
-*.pickle
+*.pkl
+*.h5
 models/pretrained
+
+# Miscellaneous
 notes.txt
-models/neural_network_LSTM.h5
-models/random_forest.pkl
-src/features/6_X.pkl
-src/features/6_y.pkl
