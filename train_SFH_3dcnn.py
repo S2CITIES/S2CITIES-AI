@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from pytorchvideo.transforms import UniformTemporalSubsample
+from pytorchvideo.transforms import UniformTemporalSubsample, Normalize
 from torch.utils.data import DataLoader, random_split
 from data.SFHDataset.dataset import Signal4HelpDataset
 from build_models import build_model
@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
 
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None, transform=None):
     
     best_val_accuracy = 0
 
@@ -45,6 +45,10 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             videos = videos.to(device) # Send inputs to CUDA
 
             optimizer.zero_grad()
+
+            if transform:
+                videos = transform(videos)
+
             logits = model(videos)
 
             labels = labels.to(device)
@@ -79,7 +83,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
         # Validate/Test (if no val/dev set) the model every <validation_step> epochs of training
         if epoch % val_step == 0:
             # NOTE: test function validates the model, when it takes in input the loader for the validation set
-            val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
+            val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch, transform=transform)
             scheduler.step(val_loss)
             if val_accuracy > best_val_accuracy:
                 # Save the best model based on validation accuracy metric
@@ -87,7 +91,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
                 best_val_accuracy = val_accuracy
 
 
-def test(loader, model, criterion, device, epoch=None):
+def test(loader, model, criterion, device, epoch=None, transform=None):
     totals = 0
     corrects = 0
     y_pred = []
@@ -102,6 +106,10 @@ def test(loader, model, criterion, device, epoch=None):
             videos = videos.permute(0, 2, 1, 3, 4) # (B, T, C, H, W) -> (B, C, T, H, W)
             videos = videos.float()
             videos = videos.to(device)
+
+            if transform:
+                videos = transform(videos)
+
             logits = model(videos)
             
             labels = labels.to(device)
@@ -168,7 +176,9 @@ if __name__ == '__main__':
     print(f"Video shape = {(T, C, H, W)}")
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+
     # Testing if it works correctly
     # train_features, train_labels = next(iter(train_dataloader))
     # print(f"Feature batch shape: {train_features.size()}")
@@ -183,43 +193,18 @@ if __name__ == '__main__':
     for data in train_dataloader:  # Iterate over the dataset or dataloader
         videos, _ = data  # Assuming images are the input data and _ represents the labels/targets
         batch_size = videos.size(0)
-        B, T, C, H, W = videos.shape
-        videos = videos.view(B, C, -1)  # Reshape the tensor to (batch_size, channels, pixels)
-
-        channel_sum += torch.sum(videos, dim=2).sum(dim=0)
-        channel_squared_sum += torch.sum(videos ** 2, dim=2).sum(dim=0)
+        channel_sum += torch.sum(videos, dim=(0,1,3,4)) 
+        channel_squared_sum += torch.sum(videos ** 2, dim=(0,1,3,4))
         n_samples += batch_size
 
     # Compute the mean and std values for each channel
-    mean = channel_sum / n_samples
-    std = torch.sqrt((channel_squared_sum / n_samples) - (mean ** 2))
+    mean = channel_sum / (n_samples*T*H*W)
+    std = torch.sqrt((channel_squared_sum / (n_samples*T*H*W)) - (mean ** 2))
 
     # Note that the ToTensor and TemporalRandomCrop Transformations are already applied inside the Dataset class.
     video_transforms = transforms.Compose([
-        transforms.Normalize(mean=mean, std=std),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomVerticalFlip(p=0.5)
+        Normalize(mean=mean, std=std) # Normalize from Pytorchvideo (not torchvision.transforms)
     ])
-
-    transformed_train_dataset = video_transforms(train_dataset)
-    transformed_val_dataset = video_transforms(val_dataset)
-    transformed_test_dataset = video_transforms(test_dataset)
-
-    # Loaders with Normalization
-    train_dataloader = DataLoader(transformed_train_dataset, 
-                                  batch_size=batch_size, 
-                                  shuffle=True, 
-                                  num_workers=4)
-    
-    val_dataloader = DataLoader(transformed_val_dataset,
-                                batch_size=batch_size,
-                                shuffle=False,
-                                num_workers=4)
-    
-    test_dataloader = DataLoader(transformed_test_dataset,
-                                batch_size=batch_size,
-                                shuffle=False,
-                                num_workers=4)
     
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
@@ -262,9 +247,11 @@ if __name__ == '__main__':
           val_step=1,  
           num_epochs=num_epochs, 
           device=device, 
-          pbar=pbar)
+          pbar=pbar, 
+          transform=video_transforms)
     
     test(loader=test_dataloader, 
          model=model,
          criterion=criterion,
-         device=device)
+         device=device,
+         transform=video_transforms)
