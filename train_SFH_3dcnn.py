@@ -242,8 +242,8 @@ if __name__ == '__main__':
         optimizer = torch.optim.SGD(list(classifier.parameters()), 
                                                     lr=0.1, 
                                                     momentum=0.9, 
-                                                    weight_decay=0.01,
-                                                    nesterov=True)
+                                                    dampening=0.9,
+                                                    weight_decay=1e-3)
     elif args.optimizer == 'Adam':
         optimizer = torch.optim.Adam(list(classifier.parameters()), lr=0.1, weight_decay=0.01)
 
