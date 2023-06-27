@@ -4,6 +4,7 @@ This file acts on the extracted time series coordinates from the video using med
 
 import os
 from pathlib import Path
+import json
 
 import numpy as np
 import pandas as pd
@@ -12,8 +13,12 @@ from tsfresh import extract_features
 from tsfresh.utilities.dataframe_functions import impute
 from tsfresh.feature_extraction import ComprehensiveFCParameters, EfficientFCParameters, MinimalFCParameters
 
-# Set working directory to this file's directory using pathlib
-os.chdir(Path(__file__).parent)
+# Read from json file
+with open("./src/const.json", "r", encoding="utf-8") as f:
+    const = json.load(f)
+
+data_path = Path(const["DATA_PATH"])
+features_extracted_path = Path(const["FEATURES_EXTRACTED"])
 
 # Define empty lists
 list_0 = []
@@ -21,19 +26,17 @@ list_1 = []
 y = []
 
 # Read npy files and append to lists
-for file in os.listdir('dataset_creation/5_features_extracted/0'):
-    if file.endswith('.npy'):
-        data = np.load(os.path.join('dataset_creation/5_features_extracted/0', file))
-        data_df = pd.DataFrame(data)
-        list_0.append(data_df)
-        y.append(0)
+for file in (data_path / features_extracted_path).glob('0/*.npy'):
+    data = np.load(file)
+    data_df = pd.DataFrame(data)
+    list_0.append(data_df)
+    y.append(0)
         
-for file in os.listdir('dataset_creation/5_features_extracted/1'):
-    if file.endswith('.npy'):
-        data = np.load(os.path.join('dataset_creation/5_features_extracted/1', file))
-        data_df = pd.DataFrame(data)
-        list_1.append(data_df)
-        y.append(1)
+for file in (data_path / features_extracted_path).glob('1/*.npy'):
+    data = np.load(file)
+    data_df = pd.DataFrame(data)
+    list_1.append(data_df)
+    y.append(1)
 
 # Convert lists to dataframes
 id = 0
@@ -60,6 +63,10 @@ X = extract_features(df.drop('target', axis=1), column_id='id', column_sort=None
 
 y = pd.Series(y)
 
+# Create output directory
+output_path = data_path / const["TIMESERIES_FEATURES_EXTRACTED"]
+output_path.mkdir(parents=True, exist_ok=True)
+
 # Save X and y as pickle files
-X.to_pickle('dataset_creation/6_X.pkl')
-y.to_pickle('dataset_creation/6_y.pkl')
+X.to_pickle(output_path / "X.pkl")
+y.to_pickle(output_path / "y.pkl")

@@ -1,5 +1,5 @@
 """
-This file is used to extract the keypoints from the videos in the dataset by leveraging the FeatureExtractor class.
+This file is used to extract the keypoints from the videos in the dataset by leveraging the KeypointsExtractor class.
 """
 
 import os
@@ -10,19 +10,16 @@ import numpy as np
 
 from src.keypointsextractor import KeypointsExtractor
 
-# Set working directory to this file's directory using pathlib
-os.chdir(Path(__file__).parent)
-
 # Read from json file
-with open("const.json", "r", encoding="utf-8") as f:
+with open("./src/const.json", "r", encoding="utf-8") as f:
     const = json.load(f)
 
 # Define allowed extensions
 allowed_extensions = const["VIDEO_EXTENSIONS"]
 
 # Define paths
-input_folder = Path("dataset_creation") / const["VIDEOS_LABELED_SUBSAMPLED"]
-output_folder = Path("dataset_creation") / const["FEATURES_EXTRACTED"]
+input_folder = const["DATA_PATH"] / const["VIDEOS_LABELED_SUBSAMPLED"]
+output_folder = const["DATA_PATH"] / const["FEATURES_EXTRACTED"]
 
 # Create output folder if it doesn't exist
 output_folder.mkdir(parents=True, exist_ok=True)
