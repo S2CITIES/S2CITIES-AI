@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader, random_split
 from data.SFHDataset.dataset import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
+import functools
 from tqdm import tqdm
 
 import argparse
@@ -18,11 +19,25 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--exp', help='Name of the experiment', type=str, dest='exp', default='training_exp')
 parser.add_argument('--epochs', help='Number of training epochs', type=int, dest='epochs', default=100)
 parser.add_argument('--batch', help='Batch size for training with minibatch SGD', type=int, dest='batch', default=32)
+parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str, choices=['SGD', 'Adam'], default='SGD')
 args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
 
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None, transform=None):
+# "Collate" function for our dataloaders
+def collate_fn(batch, transform):
+    # NOTE (IMPORTANT): Normalize (pytorchvideo.transforms) from PyTorchVideo wants a volume with shape CTHW, 
+    # which is then internally converted to TCHW, processed and then again converted to CTHW.
+    # Because our volumes are in the shape TCHW, we convert them to CTHW here, instead of doing it inside the training loop.
+
+    videos = [transform(video.permute(1, 0, 2, 3)) for video, _ in batch]
+    labels = [label for _, label in batch]
+
+    videos = torch.stack(videos)
+    labels = torch.tensor(labels)
+    return videos, labels
+
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
     
     best_val_accuracy = 0
 
@@ -40,14 +55,10 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
 
         for i, data in enumerate(train_loader):
             videos, labels = data
-            videos = videos.permute(0, 2, 1, 3, 4) # (B, T, C, H, W) -> (B, C, T, H, W) 
             videos = videos.float()
             videos = videos.to(device) # Send inputs to CUDA
 
             optimizer.zero_grad()
-
-            if transform:
-                videos = transform(videos)
 
             logits = model(videos)
 
@@ -83,7 +94,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
         # Validate/Test (if no val/dev set) the model every <validation_step> epochs of training
         if epoch % val_step == 0:
             # NOTE: test function validates the model, when it takes in input the loader for the validation set
-            val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch, transform=transform)
+            val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
             scheduler.step(val_loss)
             if val_accuracy > best_val_accuracy:
                 # Save the best model based on validation accuracy metric
@@ -91,7 +102,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
                 best_val_accuracy = val_accuracy
 
 
-def test(loader, model, criterion, device, epoch=None, transform=None):
+def test(loader, model, criterion, device, epoch=None):
     totals = 0
     corrects = 0
     y_pred = []
@@ -103,12 +114,8 @@ def test(loader, model, criterion, device, epoch=None, transform=None):
 
         for i, data in enumerate(loader):
             videos, labels = data
-            videos = videos.permute(0, 2, 1, 3, 4) # (B, T, C, H, W) -> (B, C, T, H, W)
             videos = videos.float()
             videos = videos.to(device)
-
-            if transform:
-                videos = transform(videos)
 
             logits = model(videos)
             
@@ -149,8 +156,8 @@ def test(loader, model, criterion, device, epoch=None, transform=None):
 
 if __name__ == '__main__':
 
-    batch_size=32
-    num_epochs=100
+    batch_size=args.batch
+    num_epochs=args.epochs
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
@@ -176,8 +183,6 @@ if __name__ == '__main__':
     print(f"Video shape = {(T, C, H, W)}")
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
     # Testing if it works correctly
     # train_features, train_labels = next(iter(train_dataloader))
@@ -206,6 +211,14 @@ if __name__ == '__main__':
         Normalize(mean=mean, std=std) # Normalize from Pytorchvideo (not torchvision.transforms)
     ])
     
+    partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
+
+    # Create again DataLoader for training set
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=partial_collate_fn)
+    # And other DataLoaders
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=partial_collate_fn)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=partial_collate_fn)
+
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
@@ -247,11 +260,9 @@ if __name__ == '__main__':
           val_step=1,  
           num_epochs=num_epochs, 
           device=device, 
-          pbar=pbar, 
-          transform=video_transforms)
+          pbar=pbar)
     
     test(loader=test_dataloader, 
          model=model,
          criterion=criterion,
-         device=device,
-         transform=video_transforms)
+         device=device)
