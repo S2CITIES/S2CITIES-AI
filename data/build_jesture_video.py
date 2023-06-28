@@ -3,8 +3,8 @@ import os
 
 desired_video_duration = 2.5
 
-video_directory = "./Jester"
-output_directory = "./Jester_videos"
+video_directory = "../dataset/Jester"
+output_directory = "../dataset/Jester_videos"
 
 print(os.listdir(video_directory))
 
