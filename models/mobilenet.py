@@ -48,6 +48,7 @@ class MobileNet(nn.Module):
         [1024, 2, (1,1,1)],
         ]
 
+        self.last_channel = last_channel # Just to make it visible from the outside
         self.features = [conv_bn(3, input_channel, (1,2,2))]
         # building inverted residual blocks
         for c, n, s in cfg:

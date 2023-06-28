@@ -32,7 +32,7 @@ def build_model(base_model_path, type='mobilenet', gpus=None, width_mult=1.):
     # Weights of the new classifier will be fine-tunable
     new_classifier = nn.Sequential(
         nn.Dropout(p=0.5, inplace=False),
-        nn.Linear(in_features=1024, out_features=2, bias=True)
+        nn.Linear(in_features=model.module.last_channel, out_features=2, bias=True)
     )
 
     # Init weights of the linear layer
@@ -46,4 +46,5 @@ def build_model(base_model_path, type='mobilenet', gpus=None, width_mult=1.):
     return model
 
 if __name__ == '__main__':
-    build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth')
+    # build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth')
+    build_model(base_model_path='models/pretrained/jester/jester_mobilenetv2_1.0x_RGB_16_best.pth', type='mobilenetv2')
