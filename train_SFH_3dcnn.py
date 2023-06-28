@@ -162,7 +162,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
-    video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224"
+    video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224"
 
     # Create the VideoDataset and DataLoader
     dataset = Signal4HelpDataset(video_path, 
