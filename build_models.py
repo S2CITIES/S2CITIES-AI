@@ -47,4 +47,4 @@ def build_model(base_model_path, type='mobilenet', gpus=None, width_mult=1.):
 
 if __name__ == '__main__':
     # build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth')
-    build_model(base_model_path='models/pretrained/jester/jester_mobilenetv2_1.0x_RGB_16_best.pth', type='mobilenetv2')
+    build_model(base_model_path='models/pretrained/jester/jester_mobilenetv2_1.0x_RGB_16_best.pth', type="mobilenetv2")
