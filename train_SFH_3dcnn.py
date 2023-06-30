@@ -25,6 +25,7 @@ parser.add_argument('--epochs', help='Number of training epochs', type=int, dest
 parser.add_argument('--batch', help='Batch size for training with minibatch SGD', type=int, dest='batch', default=32)
 parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str, choices=['SGD', 'Adam'], default='SGD')
 parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choices=model_choices, default='mobilenet')
+parser.add_argument('--lr', help='Select learning rate', type=float,  dest='lr', default=0.1)
 args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
@@ -251,12 +252,12 @@ if __name__ == '__main__':
 
     if args.optimizer == 'SGD':
         optimizer = torch.optim.SGD(list(classifier.parameters()), 
-                                                    lr=0.1, 
+                                                    lr=args.lr, 
                                                     momentum=0.9, 
                                                     dampening=0.9,
                                                     weight_decay=1e-3)
     elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=0.1, weight_decay=0.01)
+        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=0.01)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
 
