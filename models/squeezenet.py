@@ -63,8 +63,13 @@ class SqueezeNet(nn.Module):
             raise ValueError("Unsupported SqueezeNet version {version}:"
                              "1.0 or 1.1 expected".format(version=version))
         self.num_classes = num_classes
+        
         last_duration = int(math.ceil(sample_duration / 16))
         last_size = int(math.ceil(sample_size / 32))
+
+        self.last_duration = last_duration
+        self.last_size = last_size 
+
         if version == 1.0:
             self.features = nn.Sequential(
                 nn.Conv3d(3, 96, kernel_size=7, stride=(1,2,2), padding=(3,3,3)),

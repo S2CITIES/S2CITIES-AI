@@ -13,6 +13,10 @@ import argparse
 
 from torch.utils.tensorboard import SummaryWriter
 
+
+model_choices = ['mobilenet',
+                 'mobilenetv2', 
+                 'squeezenet']
 parser = argparse.ArgumentParser(
     prog = 'Training Script for 3D-CNN models on SFH Dataset'
 )
@@ -20,7 +24,7 @@ parser.add_argument('--exp', help='Name of the experiment', type=str, dest='exp'
 parser.add_argument('--epochs', help='Number of training epochs', type=int, dest='epochs', default=100)
 parser.add_argument('--batch', help='Batch size for training with minibatch SGD', type=int, dest='batch', default=32)
 parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str, choices=['SGD', 'Adam'], default='SGD')
-parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choices=['mobilenet', 'mobilenetv2'], default='mobilenet')
+parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choices=model_choices, default='mobilenet')
 args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
@@ -229,7 +233,13 @@ if __name__ == '__main__':
 
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
-    model = build_model(base_model_path='models/pretrained/jester/jester_{model}_1.0x_RGB_16_best.pth'.format(model=args.model), 
+
+    if args.model in ['mobilenet', 'mobilenetv2']:
+        base_model_path='models/pretrained/jester/jester_{model}_1.0x_RGB_16_best.pth'.format(model=args.model)
+    else:
+        base_model_path='models/pretrained/jester/jester_squeezenet_RGB_16_best.pth'
+
+    model = build_model(base_model_path=base_model_path, 
                         type=args.model, 
                         gpus=list(range(0, num_gpus)))
     
