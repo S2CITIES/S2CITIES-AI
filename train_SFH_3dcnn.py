@@ -31,10 +31,15 @@ parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choice
 parser.add_argument('--lr', help='Select learning rate', type=float,  dest='lr', default=0.1)
 parser.add_argument('--data_path', help='Absolute/Relative path for train/val/test videos', type=str, dest='data_path', default=default_video_path)
 parser.add_argument('--pretrained_path', help='Absolute/Relative path for pretrained weights', type=str, dest='pretrained_path', default='auto')
-parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='models/saves')
+parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='./models/saves')
+parser.add_argument('--exp_path', help='Absolute/Relative path for saving experiment logs', type=str, dest='exp_path', default='./experiments')
 args = parser.parse_args()
 
-writer = SummaryWriter(f'./experiments/{args.exp}')
+# Create exp_path if it doesn't exist yet
+if not os.path.exists(args.exp_path):
+    os.makedirs(args.exp_path)
+    
+writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 
 # "Collate" function for our dataloaders
 def collate_fn(batch, transform):
