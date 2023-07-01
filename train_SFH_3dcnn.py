@@ -17,6 +17,8 @@ from torch.utils.tensorboard import SummaryWriter
 model_choices = ['mobilenet',
                  'mobilenetv2', 
                  'squeezenet']
+default_video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224"
+
 parser = argparse.ArgumentParser(
     prog = 'Training Script for 3D-CNN models on SFH Dataset'
 )
@@ -26,6 +28,7 @@ parser.add_argument('--batch', help='Batch size for training with minibatch SGD'
 parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str, choices=['SGD', 'Adam'], default='SGD')
 parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choices=model_choices, default='mobilenet')
 parser.add_argument('--lr', help='Select learning rate', type=float,  dest='lr', default=0.1)
+parser.add_argument('--data_path', help='Absolute/Relative path for train/val/test videos', type=str, dest='data_path', default=default_video_path)
 args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
@@ -168,10 +171,8 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
-    video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224"
-
     # Create the VideoDataset and DataLoader
-    dataset = Signal4HelpDataset(video_path, 
+    dataset = Signal4HelpDataset(args.data_path, 
                                  image_width=224, 
                                  image_height=224,
                                  dataset_source='dataset_noBB_224x224.pkl',
