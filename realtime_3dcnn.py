@@ -51,6 +51,7 @@ def thread_extract_keypoints():
 
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
     aspect_ratio =  width / height
 
     print(f"Input video resolution: {(width, height)}")
@@ -74,8 +75,6 @@ def thread_extract_keypoints():
 
         # Flip the frame horizontally for a mirror effect
         frame = cv2.flip(frame, 1)
-        # Show the frame 
-        cv2.imshow('Camera', frame)
 
         # Convert the frame to RGB 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -88,9 +87,10 @@ def thread_extract_keypoints():
 
         # Push the frame to the frame queue
         frame_queue.append(frame_rgb)
-       
+
+        # print("Appending to the queue...")
         # Flag if the timeseries is full
-        frame_queue_full = len(frame_queue) == frame_rate * window
+        frame_queue_full = len(frame_queue) == int(frame_rate * window)
 
         if frame_queue_full:
             # If the timeseries is full, after appending we remove the first frame of the queue
@@ -102,6 +102,10 @@ def thread_extract_keypoints():
             elif frames_to_next_prediction > 0:
                 # If not, just decrease the number of frames to collect until the next
                 frames_to_next_prediction -= 1
+
+        # print("Showing the frame...")
+        # Show the frame 
+        # cv2.imshow('Camera', frame)
 
         # Check if the user has pressed the 'q' key to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -121,19 +125,19 @@ def thread_predict(stop_event, predict_event, model, transform):
     while not stop_event.is_set():
 
         predict_event.wait()
-        start_time = time.time()
+        # start_time = time.time()
         video = torch.stack([transforms.ToTensor()(frame) for frame in frame_queue])
         video = transform(video.permute(1, 0, 2, 3))
+        video = torch.unsqueeze(video, dim=0) # Add the batch dimension 
 
         with torch.no_grad():
             # Predict the output using the model
             output = model(video)
 
-        end_time = time.time()
-
+        # end_time = time.time()
         output = torch.argmax(torch.softmax(output, dim=1), dim=1) # Take the prediction with the highest softmax score
         print(f"Predicted output: {output}")
-        print(f"Total inference time: {end_time-start_time}")
+        # print(f"Total inference time: {end_time-start_time}")
         # Reset the predict event
         predict_event.clear()
 

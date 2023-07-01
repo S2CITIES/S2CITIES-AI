@@ -121,8 +121,8 @@ class Signal4HelpDataset(Dataset):
             cap.release()
             video = torch.stack([transforms.ToTensor()(region) for region in regions])
 
-            selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
-            video = video[selected_frames]
+            # selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
+            # video = video[selected_frames]
             
             # video = UniformTemporalSubsample(num_samples=16, temporal_dim=0)(video)
 
@@ -171,8 +171,8 @@ class Signal4HelpDataset(Dataset):
                     cap.release()
                     video = torch.stack([transforms.ToTensor()(region) for region in regions])
 
-                    selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
-                    video = video[selected_frames]
+                    # selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
+                    # video = video[selected_frames]
 
                     videos.append((video, int(label)))
 
