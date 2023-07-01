@@ -88,16 +88,6 @@ class Signal4HelpDataset(Dataset):
                 with open(dataset_path, 'wb') as dataset_file:
                     pickle.dump(self.videos, dataset_file)
 
-    # def set_mean_std(self, mean, std):
-    #     # Set mean and std computed for the training set
-    #     self.norm_mean = mean
-    #     self.norm_std = std
-    #     # Set again transforms
-    #     self.on_demand_transform = transforms.Compose([
-    #         transforms.RandomHorizontalFlip(),
-    #         transforms.Normalize(mean=self.norm_mean, std=self.norm_std)
-    #     ])
-
     def load_videos(self, load_video_path = None):
 
         # If load_video_path is not None, then process a single video (for the on-demand option)

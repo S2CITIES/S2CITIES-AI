@@ -33,12 +33,13 @@ parser.add_argument('--data_path', help='Absolute/Relative path for train/val/te
 parser.add_argument('--pretrained_path', help='Absolute/Relative path for pretrained weights', type=str, dest='pretrained_path', default='auto')
 parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='./models/saves')
 parser.add_argument('--exp_path', help='Absolute/Relative path for saving experiment logs', type=str, dest='exp_path', default='./experiments')
+
 args = parser.parse_args()
 
 # Create exp_path if it doesn't exist yet
 if not os.path.exists(args.exp_path):
     os.makedirs(args.exp_path)
-    
+
 writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 
 # "Collate" function for our dataloaders
@@ -254,9 +255,10 @@ if __name__ == '__main__':
         # User provided entire path for pre-trained weights
         base_model_path = args.pretrained_path 
 
-    model = build_model(base_model_path=base_model_path, 
+    model = build_model(model_path=base_model_path, 
                         type=args.model, 
-                        gpus=list(range(0, num_gpus)))
+                        gpus=list(range(0, num_gpus)),
+                        finetune=True)
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
