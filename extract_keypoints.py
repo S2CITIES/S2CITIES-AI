@@ -18,8 +18,8 @@ with open("./src/const.json", "r", encoding="utf-8") as f:
 allowed_extensions = const["VIDEO_EXTENSIONS"]
 
 # Define paths
-input_folder = const["DATA_PATH"] / const["VIDEOS_LABELED_SUBSAMPLED"]
-output_folder = const["DATA_PATH"] / const["FEATURES_EXTRACTED"]
+input_folder = Path(const["DATA_PATH"]) / const["VIDEOS_LABELED_SUBSAMPLED"]
+output_folder = Path(const["DATA_PATH"]) / const["FEATURES_EXTRACTED"]
 
 # Create output folder if it doesn't exist
 output_folder.mkdir(parents=True, exist_ok=True)
