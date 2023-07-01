@@ -224,7 +224,6 @@ if __name__ == '__main__':
 
     # Note that the ToTensor and TemporalRandomCrop Transformations are already applied inside the Dataset class.
     video_transforms = transforms.Compose([
-        UniformTemporalSubsample(num_samples=16, temporal_dim=-3),
         Normalize(mean=mean, std=std) # Normalize from Pytorchvideo (not torchvision.transforms)
     ])
     

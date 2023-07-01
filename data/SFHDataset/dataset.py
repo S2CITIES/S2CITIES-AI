@@ -124,7 +124,7 @@ class Signal4HelpDataset(Dataset):
             # selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
             # video = video[selected_frames]
             
-            # video = UniformTemporalSubsample(num_samples=16, temporal_dim=0)(video)
+            video = UniformTemporalSubsample(num_samples=16, temporal_dim=0)(video)
 
             return video
         
@@ -173,6 +173,7 @@ class Signal4HelpDataset(Dataset):
 
                     # selected_frames = TemporalRandomCrop(size=16, downsample=4)(list(range(video.shape[0])))
                     # video = video[selected_frames]
+                    video = UniformTemporalSubsample(num_samples=16, temporal_dim=0)(video)
 
                     videos.append((video, int(label)))
 
