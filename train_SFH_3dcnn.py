@@ -31,6 +31,7 @@ parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choice
 parser.add_argument('--lr', help='Select learning rate', type=float,  dest='lr', default=0.1)
 parser.add_argument('--data_path', help='Absolute/Relative path for train/val/test videos', type=str, dest='data_path', default=default_video_path)
 parser.add_argument('--pretrained_path', help='Absolute/Relative path for pretrained weights', type=str, dest='pretrained_path', default='auto')
+parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='models/saves')
 args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
@@ -49,7 +50,7 @@ def collate_fn(batch, transform):
     return videos, labels
 
 def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
-    
+
     best_val_accuracy = 0
 
     ############### Training ##################
@@ -88,7 +89,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
 
-        torch.save(model.state_dict(), f'models/saves/model_{args.exp}_epoch_{epoch}.h5')
+        torch.save(model.state_dict(), os.path.join(args.model_save_path, f'model_{args.exp}_epoch_{epoch}.h5'))
 
         avg_train_loss = np.array(epoch_loss).mean()
         train_accuracy = 100 * corrects / totals
@@ -109,7 +110,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             scheduler.step(val_loss)
             if val_accuracy > best_val_accuracy:
                 # Save the best model based on validation accuracy metric
-                torch.save(model.state_dict(), f'models/saves/best_model_{args.exp}.h5')
+                torch.save(model.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
                 best_val_accuracy = val_accuracy
 
 
@@ -274,8 +275,8 @@ if __name__ == '__main__':
     pbar = tqdm(total=len(train_dataset))
 
     # Create model saves path if it doesn't exist yet
-    if not os.path.exists('models/saves'):
-        os.makedirs('models/saves')
+    if not os.path.exists(args.model_save_path):
+        os.makedirs(args.model_save_path)
 
     train(model=model, 
           optimizer=optimizer,
