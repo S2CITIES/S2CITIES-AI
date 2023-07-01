@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
@@ -271,6 +272,10 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
 
     pbar = tqdm(total=len(train_dataset))
+
+    # Create model saves path if it doesn't exist yet
+    if not os.path.exists('models/saves'):
+        os.makedirs('models/saves')
 
     train(model=model, 
           optimizer=optimizer,
