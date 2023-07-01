@@ -29,6 +29,7 @@ parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str
 parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choices=model_choices, default='mobilenet')
 parser.add_argument('--lr', help='Select learning rate', type=float,  dest='lr', default=0.1)
 parser.add_argument('--data_path', help='Absolute/Relative path for train/val/test videos', type=str, dest='data_path', default=default_video_path)
+parser.add_argument('--pretrained_path', help='Absolute/Relative path for pretrained weights', type=str, dest='pretrained_path', default='auto')
 args = parser.parse_args()
 
 writer = SummaryWriter(f'./experiments/{args.exp}')
@@ -236,10 +237,15 @@ if __name__ == '__main__':
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
 
-    if args.model in ['mobilenet', 'mobilenetv2']:
-        base_model_path='models/pretrained/jester/jester_{model}_1.0x_RGB_16_best.pth'.format(model=args.model)
+    if args.pretrained_path == 'auto':
+        # 'Build' path for pretrained weights with provided information
+        if args.model in ['mobilenet', 'mobilenetv2']:
+            base_model_path='models/pretrained/jester/jester_{model}_1.0x_RGB_16_best.pth'.format(model=args.model)
+        else:
+            base_model_path='models/pretrained/jester/jester_squeezenet_RGB_16_best.pth'
     else:
-        base_model_path='models/pretrained/jester/jester_squeezenet_RGB_16_best.pth'
+        # User provided entire path for pre-trained weights
+        base_model_path = args.pretrained_path 
 
     model = build_model(base_model_path=base_model_path, 
                         type=args.model, 
