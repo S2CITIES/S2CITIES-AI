@@ -2,9 +2,8 @@
 This file is used to extract the keypoints from the videos in the dataset by leveraging the KeypointsExtractor class.
 """
 
-import os
-from pathlib import Path
 import json
+from pathlib import Path
 
 import numpy as np
 
@@ -18,8 +17,8 @@ with open("./src/const.json", "r", encoding="utf-8") as f:
 allowed_extensions = const["VIDEO_EXTENSIONS"]
 
 # Define paths
-input_folder = const["DATA_PATH"] / const["VIDEOS_LABELED_SUBSAMPLED"]
-output_folder = const["DATA_PATH"] / const["FEATURES_EXTRACTED"]
+input_folder = Path(const["DATA_PATH"]) / const["VIDEOS_LABELED_SUBSAMPLED"]
+output_folder = Path(const["DATA_PATH"]) / const["FEATURES_EXTRACTED"]
 
 # Create output folder if it doesn't exist
 output_folder.mkdir(parents=True, exist_ok=True)
@@ -34,7 +33,7 @@ for label in ["0", "1"]:
     for video_file in sorted((input_folder / label).glob("*")):
 
         # Skip if not a video file
-        if not video_file.suffix.lower() in allowed_extensions:
+        if video_file.suffix.lower() not in allowed_extensions:
             continue
         
         keypoints_file = video_file.stem + ".npy"
