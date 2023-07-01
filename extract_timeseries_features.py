@@ -2,20 +2,19 @@
 This file acts on the extracted time series coordinates from the video using mediapipes and extracts features from them using tsfresh.
 """
 
-import os
-from pathlib import Path
 import json
+import pickle
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from tsfresh import extract_features
-from tsfresh.utilities.dataframe_functions import impute
 from tsfresh.feature_extraction import (
     ComprehensiveFCParameters,
     EfficientFCParameters,
     MinimalFCParameters,
 )
+from tsfresh.utilities.dataframe_functions import impute
 
 if __name__ == "__main__":
     # Read from json file
@@ -74,5 +73,8 @@ if __name__ == "__main__":
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Save X and y as pickle files
-    X.to_pickle(output_path / "X.pkl")
-    y.to_pickle(output_path / "y.pkl")
+    with open(str(output_path / "X.pkl"), "wb") as handle:
+        pickle.dump(X, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    with open(str(output_path / "y.pkl"), "wb") as handle:
+        pickle.dump(y, handle, protocol=pickle.HIGHEST_PROTOCOL)
