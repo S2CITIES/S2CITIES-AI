@@ -55,7 +55,8 @@ if __name__ == "__main__":
     df = pd.concat(df_list, ignore_index=True)
 
     # Plot the time series
-    # df[df['id'] == 3].drop(['id','target'],axis=1).plot(subplots=False, sharex=True, figsize=(10,10))
+    # df[df['id'] == 3].drop(['id', 'target'], axis=1).plot(
+    #     subplots=False, sharex=True, figsize=(10, 10))
 
     # Extract features using tsfresh
     X = extract_features(
