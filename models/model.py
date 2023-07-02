@@ -13,17 +13,26 @@ class Model:
         self.threshold = threshold
         self.model = joblib.load('./models/random_forest.pkl')
 
-
+        with open("./src/const.json", "r", encoding="utf-8") as f:
+            const = json.load(f)
+        
+        # Read the settings from pkl file
+        features_path = Path(const["DATA_PATH"]) / const["TIMESERIES_FEATURES_EXTRACTED"]
+        with open(str(features_path / 'kind_to_fc_parameters.pkl'), "rb") as f:
+            self.kind_to_fc_parameters = pickle.load(f)
 
     def predict(self, features):
 
         features = pd.DataFrame(features)
         features['id'] = 1
-        X = extract_features(features, column_id='id', column_sort=None,
-                     # default_fc_parameters=extraction_settings,
-                     # we impute = remove all NaN features automatically
-                     impute_function=impute,
-                     n_jobs=1)
+        X = extract_features(
+            features,
+            column_id='id',
+            column_sort=None,
+            kind_to_fc_parameters=self.kind_to_fc_parameters,
+            impute_function=impute,
+            n_jobs=1
+            )
         
         proba = self.model.predict_proba(X)
 
