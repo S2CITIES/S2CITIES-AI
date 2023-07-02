@@ -2,20 +2,40 @@
 This file trains a model on the extracted features using statistical methods.
 """
 
+import json
+import multiprocessing
 import os
-from pathlib import Path
+import pickle
 import sys
+from pathlib import Path
+
 import joblib
-
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
+import seaborn as sns
+import tsfresh
+from mlxtend.feature_selection import SequentialFeatureSelector
+from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+    roc_curve,
+)
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
-from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.utils import class_weight
 
 from src.modelevaluator import ModelEvaluator
 
