@@ -136,7 +136,7 @@ def thread_extract_keypoints():
 def thread_predict(stop_event, predict_event):
 
     # Load the random forest model
-    model = Model(threshold=0.5)
+    model = Model(threshold=0.9)
 
     while not stop_event.is_set():
 
