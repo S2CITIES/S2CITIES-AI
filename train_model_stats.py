@@ -19,9 +19,6 @@ from mlxtend.feature_selection import SequentialFeatureSelector
 from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
-
-from tsfresh import extract_features
-from tsfresh.utilities.dataframe_functions import impute
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
@@ -39,6 +36,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.utils import class_weight
+from tsfresh import extract_features
+from tsfresh.utilities.dataframe_functions import impute
 
 from src.modelevaluator import ModelEvaluator
 
