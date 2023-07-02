@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import utils
+import src.utils as utils
 
 # Set resolution of the plots to retina
 #plt.rcParams['figure.dpi'] = 300
@@ -154,6 +154,9 @@ class AnalyseTimeSeries:
             0: 'SFH_No',
             1: 'SFH_Yes',
         }
+
+        # Set numpy seed for reproducibility
+        np.random.seed(42)
 
     def run(self):
 
