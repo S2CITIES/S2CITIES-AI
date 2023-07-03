@@ -66,7 +66,9 @@ def thread_extract_keypoints():
     while True:
         # Read a frame from the video capture
         ret, frame = cap.read()
-
+        print(f"RET: {ret}")
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        cv2.imshow('frame', frame_rgb)
         # Implement logit to limit the frame rate to frame_rate
         time_elapsed = time.time() - prev
         if not time_elapsed > 1./frame_rate:
@@ -104,8 +106,6 @@ def thread_extract_keypoints():
                 frames_to_next_prediction -= 1
 
         # print("Showing the frame...")
-        # Show the frame 
-        # cv2.imshow('Camera', frame)
 
         # Check if the user has pressed the 'q' key to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -125,19 +125,20 @@ def thread_predict(stop_event, predict_event, model, transform):
     while not stop_event.is_set():
 
         predict_event.wait()
-        # start_time = time.time()
-        video = torch.stack([transforms.ToTensor()(frame) for frame in frame_queue])
-        video = transform(video.permute(1, 0, 2, 3))
-        video = torch.unsqueeze(video, dim=0) # Add the batch dimension 
+        # # start_time = time.time()
+        # video = torch.stack([transforms.ToTensor()(frame) for frame in frame_queue])
+        # video = transform(video.permute(1, 0, 2, 3))
+        # video = torch.unsqueeze(video, dim=0) # Add the batch dimension 
 
-        with torch.no_grad():
-            # Predict the output using the model
-            output = model(video)
-
-        # end_time = time.time()
-        output = torch.argmax(torch.softmax(output, dim=1), dim=1) # Take the prediction with the highest softmax score
-        print(f"Predicted output: {output}")
-        # print(f"Total inference time: {end_time-start_time}")
+        # with torch.no_grad():
+        #     # Predict the output using the model
+        #     output = model(video)
+        print("CIAO")
+        # # end_time = time.time()
+        # print(output)
+        # output = torch.argmax(torch.softmax(output, dim=1), dim=1) # Take the prediction with the highest softmax score
+        # print(f"Predicted output: {output}")
+        # # print(f"Total inference time: {end_time-start_time}")
         # Reset the predict event
         predict_event.clear()
 
@@ -168,10 +169,10 @@ if __name__ == '__main__':
     predict_event = threading.Event()
 
     # Start the predict thread
-    predict_process = threading.Thread(name='predict', target=thread_predict, args=(stop_event,predict_event, model, transform))
-    predict_process.start()
+    # predict_process = threading.Thread(name='predict', target=thread_predict, args=(stop_event,predict_event, model, transform))
+    # predict_process.start()
 
     # Start the extract keypoints thread which is the main thread
     thread_extract_keypoints()
 
-    predict_process.join()
+    # predict_process.join()
