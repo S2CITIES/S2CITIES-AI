@@ -40,7 +40,7 @@ def crop_frame(frame, height, width, aspect_ratio, target_ratio):
     return frame[crop_top:height - crop_bottom, crop_left:width - crop_right]
 
 
-def thread_extract_keypoints():
+def thread_collect_frames():
 
     # Set up the global variables
     global frame_queue
@@ -66,7 +66,6 @@ def thread_extract_keypoints():
     while True:
         # Read a frame from the video capture
         ret, frame = cap.read()
-        print(f"RET: {ret}")
 
         # Implement logit to limit the frame rate to frame_rate
         time_elapsed = time.time() - prev
@@ -76,6 +75,7 @@ def thread_extract_keypoints():
 
         # Flip the frame horizontally for a mirror effect
         frame = cv2.flip(frame, 1)
+
         cv2.imshow('frame', frame)
         # Convert the frame to RGB 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -124,20 +124,19 @@ def thread_predict(stop_event, predict_event, model, transform):
     while not stop_event.is_set():
 
         predict_event.wait()
-        # # start_time = time.time()
-        # video = torch.stack([transforms.ToTensor()(frame) for frame in frame_queue])
-        # video = transform(video.permute(1, 0, 2, 3))
-        # video = torch.unsqueeze(video, dim=0) # Add the batch dimension 
+        start_time = time.time()
+        video = torch.stack([transforms.ToTensor()(frame) for frame in frame_queue])
+        video = transform(video.permute(1, 0, 2, 3))
+        video = torch.unsqueeze(video, dim=0) # Add the batch dimension 
 
-        # with torch.no_grad():
-        #     # Predict the output using the model
-        #     output = model(video)
-        print("CIAO")
-        # # end_time = time.time()
+        with torch.no_grad():
+            # Predict the output using the model
+            output = model(video)
+        end_time = time.time()
         # print(output)
-        # output = torch.argmax(torch.softmax(output, dim=1), dim=1) # Take the prediction with the highest softmax score
-        # print(f"Predicted output: {output}")
-        # # print(f"Total inference time: {end_time-start_time}")
+        output = torch.argmax(torch.softmax(output, dim=1), dim=1) # Take the prediction with the highest softmax score
+        print(f"Predicted output: {output}")
+        print(f"Total inference time: {end_time-start_time}")
         # Reset the predict event
         predict_event.clear()
 
@@ -145,21 +144,21 @@ if __name__ == '__main__':
 
     # Set up the frame queue (to push and pop frames)
     frame_queue = []
-    # model_type = 'mobilenetv2' # Make the model type an argument through argparse
-    # model_path = 'models/saves/best_sfh_mobilenetv2.h5'
+    model_type = 'mobilenetv2' # Make the model type an argument through argparse
+    model_path = 'checkpoints/best_sfh_mobilenetv2.h5'
     # Load 3DCNN model
-    # model = build_model(model_path=model_path, 
-    #                     type=model_type, 
-    #                    gpus=[0],           # Inference on a single GPU
-    #                    num_classes=2,
-    #                    finetune=False,     # Load the entire model as it is, no fine-tuning
-    #                    state_dict=True)    # Only the state_dict of the model was saved
-    # model.eval()                            # Set model to eval model
+    model = build_model(model_path=model_path, 
+                        type=model_type, 
+                       gpus=[0],           # Inference on a single GPU
+                       num_classes=2,
+                       finetune=False,     # Load the entire model as it is, no fine-tuning
+                       state_dict=True)    # Only the state_dict of the model was saved
+    model.eval()                            # Set model to eval model
 
-    # transform = transforms.Compose([
-    #     UniformTemporalSubsample(num_samples=16, temporal_dim=-3),
-    #    Normalize(mean=[0.4666, 0.4328, 0.3962], std=[0.2529, 0.2532, 0.2479]) 
-    # ])
+    transform = transforms.Compose([
+        UniformTemporalSubsample(num_samples=16, temporal_dim=-3),
+       Normalize(mean=[0.4666, 0.4328, 0.3962], std=[0.2529, 0.2532, 0.2479]) 
+    ])
 
     # Create the stop event
     stop_event = threading.Event()
@@ -168,10 +167,10 @@ if __name__ == '__main__':
     predict_event = threading.Event()
 
     # Start the predict thread
-    # predict_process = threading.Thread(name='predict', target=thread_predict, args=(stop_event,predict_event, model, transform))
-    # predict_process.start()
+    predict_process = threading.Thread(name='predict', target=thread_predict, args=(stop_event,predict_event, model, transform))
+    predict_process.start()
 
     # Start the extract keypoints thread which is the main thread
-    thread_extract_keypoints()
+    thread_collect_frames()
 
-    # predict_process.join()
+    predict_process.join()
