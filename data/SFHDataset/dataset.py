@@ -11,6 +11,7 @@ import pickle
 import cv2
 import mediapipe as mp
 from pytorchvideo.transforms import UniformTemporalSubsample
+import matplotlib.pyplot as plt
 
 class TemporalRandomCrop(object):
     """Temporally crop the given frame indices at a random location.
@@ -111,12 +112,12 @@ class Signal4HelpDataset(Dataset):
                     hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
                     if hand_region is None:
                         hand_region = np.zeros((self.image_height, self.image_width, 3))
-                    regions.append(hand_region)
+                    regions.append(cv2.cvtColor(hand_region, cv2.COLOR_BGR2RGB))
                 else:
                     # Simply resize the entire frame without extracting the bounding box
                     if self.resize_frames:
                         frame = cv2.resize(frame, (self.image_height, self.image_width))
-                    regions.append(frame)
+                    regions.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
             cap.release()
             video = torch.stack([transforms.ToTensor()(region) for region in regions])
@@ -125,6 +126,34 @@ class Signal4HelpDataset(Dataset):
             # video = video[selected_frames]
             
             video = UniformTemporalSubsample(num_samples=16, temporal_dim=0)(video)
+
+            # selected_frames = []
+
+            # for i in range(video.shape[0]):
+            #     selected_frames.append(video[i])
+
+            # codec = cv2.VideoWriter_fourcc(*"mp4v")  # Video codec (e.g., "mp4v", "XVID")
+            # output_file = os.path.join('data/SFHDataset/test', load_video_path.split('/')[-1])  # Output video file name
+            # frame_size = (224, 224)  # Frame size (width, height)
+            # fps = 16/2.5
+
+            # video_writer = cv2.VideoWriter(output_file, codec, fps, frame_size)
+
+            # for frame in selected_frames:
+            #     np_img = frame.numpy()
+            #     np_img = np.transpose(np_img, (1, 2, 0))
+            #     np_img = np_img * 255.0
+            #     np_img = np_img.astype(np.uint8)
+            #     np_img = cv2.cvtColor(np_img, cv2.COLOR_BGR2RGB)
+            #     #plt.figure()
+            #     #plt.imshow(np_img) 
+            #     #plt.show()  # display it
+            #     # Assuming the frame is in NumPy array format
+            #     video_writer.write(np_img)
+
+            # print(f"Saving {output_file}")
+            # video_writer.release()
+
 
             return video
         
@@ -162,11 +191,11 @@ class Signal4HelpDataset(Dataset):
                             hand_region = self.extract_hand_bb(frame, frame_width, frame_height, first_only=True) 
                             if hand_region is None:
                                 hand_region = np.zeros((self.image_height, self.image_width, 3))
-                            regions.append(hand_region)
+                            regions.append(cv2.cvtColor(hand_region, cv2.COLOR_BGR2RGB))
                         else:
                             if self.resize_frames:
                                 frame = cv2.resize(frame, (self.image_height, self.image_width))
-                            regions.append(frame)
+                            regions.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
                     cap.release()
                     video = torch.stack([transforms.ToTensor()(region) for region in regions])

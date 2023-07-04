@@ -146,6 +146,7 @@ models/saves
 # Videos and temporary files
 *.mp4
 *.mov
+*.MOV
 *.npy
 *.avi
 src/logs*
