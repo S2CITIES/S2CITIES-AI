@@ -45,6 +45,11 @@ def thread_collect_frames():
     # Set up the global variables
     global frame_queue
 
+    # Initialize Hand Detector Model
+    print("Initializing hand detector model...")
+    mp_hands = mp.solutions.hands
+    mp_drawing = mp.solutions.drawing_utils
+
     # Set up the video capture from the webcam
     print("Initializing camera...")
     cap = cv2.VideoCapture(0)
@@ -76,18 +81,27 @@ def thread_collect_frames():
         # Flip the frame horizontally for a mirror effect
         frame = cv2.flip(frame, 1)
 
-        cv2.imshow('frame', frame)
         # Convert the frame to RGB 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Convert the aspect ratio of the frame to a target ratio of 1 by cropping
-        frame_rgb = crop_frame(frame_rgb, height=height, width=width, aspect_ratio=aspect_ratio, target_ratio=1)
+        with mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
+            results = hands.process(frame_rgb)
 
-        # Resize the frame
-        frame_rgb = cv2.resize(frame_rgb, (224, 224))
+            # One hand (and exactly ONE hand) is detected
+            if results.multi_hand_landmarks and len(results.multi_hand_landmarks) == 1: 
 
-        # Push the frame to the frame queue
-        frame_queue.append(frame_rgb)
+                # Convert the aspect ratio of the frame to a target ratio of 1 by cropping
+                frame_rgb = crop_frame(frame_rgb, height=height, width=width, aspect_ratio=aspect_ratio, target_ratio=1)
+
+                # Resize the frame
+                frame_rgb = cv2.resize(frame_rgb, (224, 224))
+
+                # Push the frame to the frame queue
+                frame_queue.append(frame_rgb)
+            else:
+                # No hand was detected, restarting the acquisition process
+                frame_queue = []
+                frames_to_next_prediction = 0
 
         # print("Appending to the queue...")
         # Flag if the timeseries is full
@@ -106,6 +120,7 @@ def thread_collect_frames():
 
         # print("Showing the frame...")
 
+        cv2.imshow('frame', frame)
         # Check if the user has pressed the 'q' key to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             # Perform the last prediction so that the thread can stop
@@ -144,6 +159,7 @@ if __name__ == '__main__':
 
     # Set up the frame queue (to push and pop frames)
     frame_queue = []
+    print("Builing gesture recognition model...")
     model_type = 'mobilenetv2' # Make the model type an argument through argparse
     model_path = 'checkpoints/best_sfh_mobilenetv2.h5'
     # Load 3DCNN model
