@@ -67,8 +67,7 @@ def thread_extract_keypoints():
         # Read a frame from the video capture
         ret, frame = cap.read()
         print(f"RET: {ret}")
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        cv2.imshow('frame', frame_rgb)
+
         # Implement logit to limit the frame rate to frame_rate
         time_elapsed = time.time() - prev
         if not time_elapsed > 1./frame_rate:
@@ -77,7 +76,7 @@ def thread_extract_keypoints():
 
         # Flip the frame horizontally for a mirror effect
         frame = cv2.flip(frame, 1)
-
+        cv2.imshow('frame', frame)
         # Convert the frame to RGB 
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -146,21 +145,21 @@ if __name__ == '__main__':
 
     # Set up the frame queue (to push and pop frames)
     frame_queue = []
-    model_type = 'mobilenetv2' # Make the model type an argument through argparse
-    model_path = 'models/saves/best_sfh_mobilenetv2.h5'
+    # model_type = 'mobilenetv2' # Make the model type an argument through argparse
+    # model_path = 'models/saves/best_sfh_mobilenetv2.h5'
     # Load 3DCNN model
-    model = build_model(model_path=model_path, 
-                        type=model_type, 
-                        gpus=[0],           # Inference on a single GPU
-                        num_classes=2,
-                        finetune=False,     # Load the entire model as it is, no fine-tuning
-                        state_dict=True)    # Only the state_dict of the model was saved
-    model.eval()                            # Set model to eval model
+    # model = build_model(model_path=model_path, 
+    #                     type=model_type, 
+    #                    gpus=[0],           # Inference on a single GPU
+    #                    num_classes=2,
+    #                    finetune=False,     # Load the entire model as it is, no fine-tuning
+    #                    state_dict=True)    # Only the state_dict of the model was saved
+    # model.eval()                            # Set model to eval model
 
-    transform = transforms.Compose([
-        UniformTemporalSubsample(num_samples=16, temporal_dim=-3),
-        Normalize(mean=[0.4666, 0.4328, 0.3962], std=[0.2529, 0.2532, 0.2479]) 
-    ])
+    # transform = transforms.Compose([
+    #     UniformTemporalSubsample(num_samples=16, temporal_dim=-3),
+    #    Normalize(mean=[0.4666, 0.4328, 0.3962], std=[0.2529, 0.2532, 0.2479]) 
+    # ])
 
     # Create the stop event
     stop_event = threading.Event()
