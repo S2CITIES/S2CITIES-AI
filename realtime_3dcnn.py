@@ -89,6 +89,8 @@ def thread_collect_frames():
 
             # One hand (and exactly ONE hand) is detected
             if results.multi_hand_landmarks and len(results.multi_hand_landmarks) == 1: 
+                
+                mp_drawing.draw_landmarks(frame, results.multi_hand_landmarks[0], mp_hands.HAND_CONNECTIONS)
 
                 # Convert the aspect ratio of the frame to a target ratio of 1 by cropping
                 frame_rgb = crop_frame(frame_rgb, height=height, width=width, aspect_ratio=aspect_ratio, target_ratio=1)
@@ -148,8 +150,9 @@ def thread_predict(stop_event, predict_event, model, transform):
             # Predict the output using the model
             output = model(video)
         end_time = time.time()
-        # print(output)
-        output = torch.argmax(torch.softmax(output, dim=1), dim=1) # Take the prediction with the highest softmax score
+        output = torch.softmax(output, dim=1)
+        print(output)
+        output = torch.argmax(output, dim=1) # Take the prediction with the highest softmax score
         print(f"Predicted output: {output}")
         print(f"Total inference time: {end_time-start_time}")
         # Reset the predict event
@@ -173,7 +176,7 @@ if __name__ == '__main__':
 
     transform = transforms.Compose([
         UniformTemporalSubsample(num_samples=16, temporal_dim=-3),
-       Normalize(mean=[0.4666, 0.4328, 0.3962], std=[0.2529, 0.2532, 0.2479]) 
+       Normalize(mean=[0.3940, 0.4313, 0.4641], std=[0.2475, 0.2536, 0.2538]) 
     ])
 
     # Create the stop event
