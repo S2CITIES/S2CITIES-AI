@@ -189,21 +189,12 @@ if __name__ == '__main__':
 
     train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
-    # TODO: 
-    # Create the VideoDataset and DataLoader
-    dataset = Signal4HelpDataset(args.data_path, 
+
+    train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
                                  image_width=224, 
                                  image_height=224,
-                                 dataset_source='dataset_noBB_224x224.pkl',
                                  spatial_transform=train_spatial_transform,
-                                 temporal_transform=train_temporal_transform,
-                                 preprocessing_on=False,
-                                 load_on_demand=True,
-                                 extract_bb_region=False,
-                                 resize_frames=False)
-
-    train_dataset, test_dataset = random_split(dataset, [0.8, 0.2])
-    train_dataset, val_dataset = random_split(train_dataset, [0.9, 0.1])
+                                 temporal_transform=train_temporal_transform)
 
     video, label = train_dataset[0] 
     print(video.shape)
@@ -217,6 +208,7 @@ if __name__ == '__main__':
     # print(f"Feature batch shape: {train_features.size()}")
     # print(f"Labels batch shape: {train_labels.size()}")
 
+    # TODO: Move all this code in a function to compute the mean and the std of the training set
     # Compute mean and std on the training set
     # Accumulate the sum and squared sum for each channel
     n_samples = 0

@@ -1,0 +1,26 @@
+{
+    "statistics": {
+        "train": {
+            "positives": 1284,
+            "negatives": 1239
+        },
+        "test": {
+            "positives": 152,
+            "negatives": 164
+        },
+        "val": {
+            "positives": 141,
+            "negatives": 174
+        }
+    },
+    "mean": [
+        -1,
+        -1,
+        -1
+    ],
+    "std": [
+        -1,
+        -1,
+        -1
+    ]
+}
