@@ -4,7 +4,7 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 from pytorchvideo.transforms import UniformTemporalSubsample, Normalize
 from torch.utils.data import DataLoader, random_split
-from data.SFHDataset.dataset import Signal4HelpDataset
+from data.SFHDataset.SignalForHelp import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
 import functools
@@ -12,6 +12,7 @@ from tqdm import tqdm
 from train_args import parse_args
 import data.SFHDataset.spatial_transforms as SPtranforms
 import data.SFHDataset.temporal_transforms as TPtransforms
+from data.SFHDataset.compute_mean_std import get_SFH_mean_std
 from torch.utils.tensorboard import SummaryWriter
 
 args = parse_args()
@@ -196,35 +197,7 @@ if __name__ == '__main__':
                                  spatial_transform=train_spatial_transform,
                                  temporal_transform=train_temporal_transform)
 
-    video, label = train_dataset[0] 
-    print(video.shape)
-    T, C, H, W = video.shape
-    print(f"Video shape = {(T, C, H, W)}")
-
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-
-    # Testing if it works correctly
-    # train_features, train_labels = next(iter(train_dataloader))
-    # print(f"Feature batch shape: {train_features.size()}")
-    # print(f"Labels batch shape: {train_labels.size()}")
-
-    # TODO: Move all this code in a function to compute the mean and the std of the training set
-    # Compute mean and std on the training set
-    # Accumulate the sum and squared sum for each channel
-    n_samples = 0
-    channel_sum = 0
-    channel_squared_sum = 0
-
-    for data in train_dataloader:  # Iterate over the dataset or dataloader
-        videos, _ = data  # Assuming images are the input data and _ represents the labels/targets
-        batch_size = videos.size(0)
-        channel_sum += torch.sum(videos, dim=(0,1,3,4)) 
-        channel_squared_sum += torch.sum(videos ** 2, dim=(0,1,3,4))
-        n_samples += batch_size
-
-    # Compute the mean and std values for each channel
-    mean = channel_sum / (n_samples*T*H*W)
-    std = torch.sqrt((channel_squared_sum / (n_samples*T*H*W)) - (mean ** 2))
+    mean, std = get_SFH_mean_std(image_height=args.sample_size, image_width=args.sample_size, n_frames=args.sample_duration)
 
     # Note that the ToTensor and TemporalRandomCrop Transformations are already applied inside the Dataset class.
     video_transforms = transforms.Compose([
