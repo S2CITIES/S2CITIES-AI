@@ -35,6 +35,7 @@ writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 #     labels = torch.tensor(labels)
 #     return videos, labels
 
+# TODO: Implement custom scheduler to manual adjust learning rate after N epochs
 def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
 
     # Set up early stopping criteria
@@ -277,7 +278,7 @@ if __name__ == '__main__':
     elif args.optimizer == 'Adam':
         optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=1e-3)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=10)
 
     criterion = nn.CrossEntropyLoss()
 
