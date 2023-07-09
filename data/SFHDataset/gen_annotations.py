@@ -1,8 +1,13 @@
 import os
 import random
 import json
-# Set the paths to your dataset folders
-dataset_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1'
+import argparse
+
+parser = argparse.ArgumentParser(
+    prog = 'Script to generate SignalForHelp dataset annotations.'
+)
+parser.add_argument('--data_path', default='dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1', type=str, help='Path for train/test/val video files.')
+args = parser.parse_args()
 
 # Create the annotation files
 train_file = 'data/SFHDataset/train_annotations.txt'
@@ -24,7 +29,7 @@ def write_annotations(file_path, annotations):
 # Collect all video paths and labels
 video_paths = []
 for label in [0, 1]:
-    class_folder = os.path.join(dataset_folder, str(label))
+    class_folder = os.path.join(args.data_path, str(label))
     for video_file in os.listdir(class_folder):
         video_path = os.path.join(class_folder, video_file)
         video_paths.append((video_path, label))

@@ -163,7 +163,7 @@ class Signal4HelpDataset(Dataset):
         video = load_video(video_path, 
                            temporal_transform=self.temporal_transform,
                            spatial_transform=self.spatial_transform,
-                           save_output=True)
+                           save_output=False)
         return video, label
 
 if __name__ == '__main__':

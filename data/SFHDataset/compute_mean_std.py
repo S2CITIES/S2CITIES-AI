@@ -2,6 +2,7 @@ from data.SFHDataset.SignalForHelp import load_video
 from transforms.spatial_transforms import ToTensor, Compose, Scale
 import torch
 import json
+import tqdm
 
 def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
 
@@ -18,7 +19,7 @@ def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
         with open('data/SFHDataset/train_annotations.txt', 'r') as annotation_file:
             lines = annotation_file.readlines()
         
-        for line in lines:
+        for line in tqdm(lines):
             video_path, _ = line.strip().split(' ')
 
             spatial_transform = Compose([

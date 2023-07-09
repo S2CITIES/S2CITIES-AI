@@ -34,6 +34,9 @@ def parse_args():
     parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='./models/saves')
     parser.add_argument('--exp_path', help='Absolute/Relative path for saving experiment logs', type=str, dest='exp_path', default='./experiments')
     parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
+    parser.add_argument('--recompute_mean_std', action='store_true', help='If true, compute from scratch mean and std.')
+    parser.set_defaults(recompute_mean_std=False)
+    parser.add_argument('--num_workers', default=4, type=int, help='Number of working threads for loaders')
 
     args = parser.parse_args()
     return args

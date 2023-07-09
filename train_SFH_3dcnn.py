@@ -187,7 +187,7 @@ if __name__ == '__main__':
         crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
     
     # Compute channel-wise mean and std. on the training set
-    mean, std = get_SFH_mean_std(image_size=args.sample_size, norm_value=args.norm_value, force_compute=False)
+    mean, std = get_SFH_mean_std(image_size=args.sample_size, norm_value=args.norm_value, force_compute=args.recompute_mean_std)
 
     print(f"Train mean: {mean}")
     print(f"Train std.: {std}")
@@ -247,9 +247,9 @@ if __name__ == '__main__':
     print(f"Available GPUs: {num_gpus}")
 
     # Initialize DataLoaders
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
 
     if args.pretrained_path == 'auto':
         # 'Build' path for pretrained weights with provided information
