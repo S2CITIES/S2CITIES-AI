@@ -13,7 +13,7 @@ import mediapipe as mp
 from pytorchvideo.transforms import UniformTemporalSubsample
 import matplotlib.pyplot as plt
 
-def load_video(video_path, image_height, image_width):
+def load_video(video_path, image_height, image_width, temporal_transform, spatial_transform):
 
         cap = cv2.VideoCapture(video_path)
 
@@ -21,20 +21,29 @@ def load_video(video_path, image_height, image_width):
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        frames = []
+        clip = []
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame_rgb = cv2.resize(frame_rgb, (image_height, image_width))
-            frames.append(frame_rgb)
+            clip.append(frame_rgb)
 
         cap.release()
 
-        # TODO: Apply spatial and temporal transforms here
-        video = torch.stack([transforms.ToTensor()(frame) for frame in frames])
-        video = UniformTemporalSubsample(num_samples=16, temporal_dim=0)(video)
+        # Apply Temporal Transform
+        n_frames = len(clip)
+        frame_indices = list(range(1, n_frames+1))
+        frame_indices = temporal_transform(frame_indices)
+
+        # Apply Spatial Transform
+        spatial_transform.randomize_parameters()
+        clip = [spatial_transform(frame) for frame in clip]
+        clip = torch.stack(clip, dim=0) # Tensor with shape TCHW
+        clip = clip.permute(1, 0, 2, 3) # Tensor with shape TCHW
+
+        return clip
 
         # selected_frames = []
 
@@ -62,8 +71,6 @@ def load_video(video_path, image_height, image_width):
 
         # print(f"Saving {output_file}")
         # video_writer.release()
-
-        return video
 
 class TemporalRandomCrop(object):
     """Temporally crop the given frame indices at a random location.
@@ -206,7 +213,11 @@ class Signal4HelpDataset(Dataset):
 
     def __getitem__(self, index):
         video_path, label = self.videos[index]
-        video = self.load_video(video_path)
+        video = load_video(video_path, 
+                           image_height=self.image_height, 
+                           image_width=self.image_width, 
+                           temporal_transform=self.temporal_transform,
+                           spatial_transform=self.spatial_transform)
         return video, label
 
 if __name__ == '__main__':

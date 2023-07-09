@@ -212,7 +212,7 @@ if __name__ == '__main__':
     ])
 
     test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
-    
+
     # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
                                  image_width=224, 
@@ -220,11 +220,17 @@ if __name__ == '__main__':
                                  spatial_transform=train_spatial_transform,
                                  temporal_transform=train_temporal_transform)
     
-    train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
+    val_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
                                  image_width=224, 
                                  image_height=224,
                                  spatial_transform=val_spatial_transform,
                                  temporal_transform=val_temporal_transform)
+    
+    test_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'test_annotations.txt'), 
+                                image_width=224, 
+                                image_height=224,
+                                spatial_transform=test_spatial_transform,
+                                temporal_transform=test_temporal_transform)
     
     partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
 
