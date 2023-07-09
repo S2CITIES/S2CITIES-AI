@@ -9,6 +9,8 @@ def parse_args():
     model_choices = ['mobilenet',
                     'mobilenetv2', 
                     'squeezenet']
+    
+    train_crop_choices = ['corner', 'random', 'center']
     # Path for loading train/test/val videos
     default_video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224"
 
@@ -22,7 +24,7 @@ def parse_args():
     parser.add_argument('--initial_scale', default=1.0, type=float, help='Initial scale for multiscale cropping')
     parser.add_argument('--n_scales', default=5, type=int, help='Number of scales for multiscale cropping')
     parser.add_argument('--scale_step', default=0.84089641525, type=float, help='Scale step for multiscale cropping')
-    parser.add_argument('--train_crop', default='corner', type=str, help='Spatial cropping method in training. random is uniform. corner is selection from 4 corners and 1 center.  (random | corner | center)')
+    parser.add_argument('--train_crop', default='corner', type=str, choices=train_crop_choices, help='Spatial cropping method in training. random is uniform. corner is selection from 4 corners and 1 center.  (random | corner | center)')
     parser.add_argument('--learning_rate', default=0.04, type=float, help='Initial learning rate (divided by 10 while training by lr scheduler)')
     parser.add_argument('--lr', help='Select learning rate', type=float,  dest='lr', default=0.1)
     parser.add_argument('--lr_steps', default=[40, 55, 65, 70, 200, 250], type=float, nargs="+", metavar='LRSteps', help='epochs to decay learning rate by 10')
@@ -35,6 +37,7 @@ def parse_args():
     parser.add_argument('--pretrained_path', help='Absolute/Relative path for pretrained weights', type=str, dest='pretrained_path', default='auto')
     parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='./models/saves')
     parser.add_argument('--exp_path', help='Absolute/Relative path for saving experiment logs', type=str, dest='exp_path', default='./experiments')
+    parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
 
     args = parser.parse_args()
     return args

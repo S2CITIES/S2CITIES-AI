@@ -170,11 +170,30 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
+    torch.manual_seed(args.manual_seed)
+
+    if args.train_crop == 'random':
+        crop_method = SPtranforms.MultiScaleRandomCrop(args.scales, args.sample_size)
+    elif args.train_crop == 'corner':
+        crop_method = SPtranforms.MultiScaleCornerCrop(args.scales, args.sample_size)
+    elif args.train_crop == 'center':
+        crop_method = SPtranforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
+    
+    spatial_transform = SPtranforms.Compose([
+        SPtranforms.RandomHorizontalFlip(),
+        crop_method,
+        SPtranforms.ToTensor(args.norm_value)
+    ])
+
+    temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+
     # Create the VideoDataset and DataLoader
     dataset = Signal4HelpDataset(args.data_path, 
                                  image_width=224, 
                                  image_height=224,
                                  dataset_source='dataset_noBB_224x224.pkl',
+                                 spatial_transform=spatial_transform,
+                                 temporal_transform=temporal_transform,
                                  preprocessing_on=False,
                                  load_on_demand=True,
                                  extract_bb_region=False,
