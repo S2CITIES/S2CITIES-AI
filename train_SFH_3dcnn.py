@@ -9,7 +9,7 @@ import numpy as np
 import functools
 from tqdm import tqdm
 from train_args import parse_args
-import data.SFHDataset.spatial_transforms as SPtranforms
+import data.SFHDataset.spatial_transforms as SPtransforms
 import data.SFHDataset.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
 from torch.utils.tensorboard import SummaryWriter
@@ -23,17 +23,17 @@ if not os.path.exists(args.exp_path):
 writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 
 # "Collate" function for our dataloaders
-def collate_fn(batch, transform):
-    # NOTE (IMPORTANT): Normalize (pytorchvideo.transforms) from PyTorchVideo wants a volume with shape CTHW, 
-    # which is then internally converted to TCHW, processed and then again converted to CTHW.
-    # Because our volumes are in the shape TCHW, we convert them to CTHW here, instead of doing it inside the training loop.
+# def collate_fn(batch, transform):
+#     # NOTE (IMPORTANT): Normalize (pytorchvideo.transforms) from PyTorchVideo wants a volume with shape CTHW, 
+#     # which is then internally converted to TCHW, processed and then again converted to CTHW.
+#     # Because our volumes are in the shape TCHW, we convert them to CTHW here, instead of doing it inside the training loop.
 
-    videos = [transform(video.permute(1, 0, 2, 3)) for video, _ in batch]
-    labels = [label for _, label in batch]
+#     videos = [transform(video.permute(1, 0, 2, 3)) for video, _ in batch]
+#     labels = [label for _, label in batch]
 
-    videos = torch.stack(videos)
-    labels = torch.tensor(labels)
-    return videos, labels
+#     videos = torch.stack(videos)
+#     labels = torch.tensor(labels)
+#     return videos, labels
 
 def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
 
@@ -172,83 +172,80 @@ if __name__ == '__main__':
 
     # Set torch manual seed for reproducibility
     torch.manual_seed(args.manual_seed)
+    # Init different scales for random scaling
+    args.scales = [args.initial_scale]
+    for i in range(1, args.n_scales):
+        args.scales.append(args.scales[-1] * args.scale_step)
 
     # Initialize spatial and temporal transforms (training versions)
     if args.train_crop == 'random':
-        crop_method = SPtranforms.MultiScaleRandomCrop(args.scales, args.sample_size)
+        crop_method = SPtransforms.MultiScaleRandomCrop(args.scales, args.sample_size)
     elif args.train_crop == 'corner':
-        crop_method = SPtranforms.MultiScaleCornerCrop(args.scales, args.sample_size)
+        crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size)
     elif args.train_crop == 'center':
-        crop_method = SPtranforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
+        crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
     
     # Compute channel-wise mean and std. on the training set
     mean, std = get_SFH_mean_std(image_height=args.sample_size, image_width=args.sample_size, n_frames=args.sample_duration)
 
-    train_spatial_transform = SPtranforms.Compose([
-        SPtranforms.RandomHorizontalFlip(),
+    train_spatial_transform = SPtransforms.Compose([
+        SPtransforms.RandomHorizontalFlip(),
         crop_method,
-        SPtranforms.ToTensor(args.norm_value),
-        SPtranforms.Normalize(mean=mean, std=std)
+        SPtransforms.ToTensor(args.norm_value),
+        SPtransforms.Normalize(mean=mean, std=std)
     ])
 
+    # TODO: Add variable downsample factor depending on the number of frames in a video
+    # The idea is that a video with an higher frame rate should have an higher downsample factor in order to span
+    # a longer temporal window.
     train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (validation versions)
-    val_spatial_transform = SPtranforms.Compose([
-        SPtranforms.Scale(args.sample_size),
-        SPtranforms.CenterCrop(args.sample_size),
-        SPtranforms.ToTensor(args.norm_value),
-        SPtranforms.Normalize(mean=mean, std=std)
+    val_spatial_transform = SPtransforms.Compose([
+        SPtransforms.Scale(args.sample_size),
+        SPtransforms.CenterCrop(args.sample_size),
+        SPtransforms.ToTensor(args.norm_value),
+        SPtransforms.Normalize(mean=mean, std=std)
     ])
 
     val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (test versions)
-    test_spatial_transform = SPtranforms.Compose([
-        SPtranforms.Scale(args.sample_size),
-        SPtranforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
-        SPtranforms.ToTensor(args.norm_value),
-        SPtranforms.Normalize(mean=mean, std=std)
+    test_spatial_transform = SPtransforms.Compose([
+        SPtransforms.Scale(args.sample_size),
+        SPtransforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
+        SPtransforms.ToTensor(args.norm_value),
+        SPtransforms.Normalize(mean=mean, std=std)
     ])
 
     test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
     # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
-                                 image_width=224, 
-                                 image_height=224,
                                  spatial_transform=train_spatial_transform,
                                  temporal_transform=train_temporal_transform)
     
     val_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
-                                 image_width=224, 
-                                 image_height=224,
                                  spatial_transform=val_spatial_transform,
                                  temporal_transform=val_temporal_transform)
     
     test_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'test_annotations.txt'), 
-                                image_width=224, 
-                                image_height=224,
                                 spatial_transform=test_spatial_transform,
                                 temporal_transform=test_temporal_transform)
     
-    partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
-
-    # Create again DataLoader for training set - Needed because this time the collate_fn will normalize each batch
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=partial_collate_fn)
-    # And other DataLoaders
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=partial_collate_fn)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=partial_collate_fn)
+    # partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
 
-    print(f"Mean of the Training Set: {mean}")
-    print(f"Std. of the Training Set: {std}")
-
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
+
+    # Initialize DataLoaders
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 
     if args.pretrained_path == 'auto':
         # 'Build' path for pretrained weights with provided information
@@ -278,9 +275,9 @@ if __name__ == '__main__':
                                                     dampening=0.9,
                                                     weight_decay=1e-3)
     elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=0.01)
+        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=1e-3)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience)
 
     criterion = nn.CrossEntropyLoss()
 

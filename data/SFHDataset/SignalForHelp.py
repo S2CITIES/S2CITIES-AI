@@ -60,12 +60,11 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
         return clip
 
 class Signal4HelpDataset(Dataset):
-    def __init__(self, annotation_path, temporal_transform, spatial_transform):
+    def __init__(self, annotation_path, temporal_transform, spatial_transform, norm_value):
         
         self.video_path = video_path
         self.temporal_transform = temporal_transform
         self.spatial_transform = spatial_transform
-
         self.videos = []
         
         with open(annotation_path, 'r') as f:
@@ -160,7 +159,8 @@ class Signal4HelpDataset(Dataset):
         video_path, label = self.videos[index]
         video = load_video(video_path, 
                            temporal_transform=self.temporal_transform,
-                           spatial_transform=self.spatial_transform)
+                           spatial_transform=self.spatial_transform,
+                           save_output=False)
         return video, label
 
 if __name__ == '__main__':
