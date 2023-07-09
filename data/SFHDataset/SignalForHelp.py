@@ -1,123 +1,68 @@
 import torch
-import random
-import math
 import numpy as np
 from torch.utils.data import Dataset, DataLoader, random_split
 import torchvision.transforms as transforms
+import spatial_transforms as SPtransforms
+import temporal_transforms as TPtransforms
 import os
-import sys
-from tqdm import tqdm
-import pickle
 import cv2
 import mediapipe as mp
-from pytorchvideo.transforms import UniformTemporalSubsample
-import matplotlib.pyplot as plt
+from PIL import Image
 
-def load_video(video_path, image_height, image_width, temporal_transform, spatial_transform):
+def load_video(video_path, temporal_transform=None, spatial_transform=None, sample_duration=16, norm_value=1.0, save_output=False):
 
         cap = cv2.VideoCapture(video_path)
-
-        # print(cap)
-        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         clip = []
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame_rgb = cv2.resize(frame_rgb, (image_height, image_width))
-            clip.append(frame_rgb)
+            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # print(frame.size)
+            clip.append(frame)
 
         cap.release()
 
         # Apply Temporal Transform
-        n_frames = len(clip)
-        frame_indices = list(range(1, n_frames+1))
-        frame_indices = temporal_transform(frame_indices)
+        if temporal_transform is not None:
+            n_frames = len(clip)
+            print(f"Clip lenght: {n_frames}")
+            frame_indices = list(range(1, n_frames+1))
+            frame_indices = temporal_transform(frame_indices)
 
-        # Apply Spatial Transform
-        spatial_transform.randomize_parameters()
-        clip = [spatial_transform(frame) for frame in clip]
+        if spatial_transform is not None:
+            # Apply Spatial Transform
+            spatial_transform.randomize_parameters()
+            clip = [spatial_transform(Image.fromarray(frame)) for frame in clip]
+
+        if save_output: # To "visualize" the effect of temporal and spatial transforms
+            codec = cv2.VideoWriter_fourcc(*"mp4v")  # Video codec (e.g., "mp4v", "XVID")
+            output_file = os.path.join('test', video_path.split('/')[-1])  # Output video file name
+            print(output_file)
+            frame_size = (112, 112)  # Frame size (width, height)
+            fps = sample_duration/2.5
+
+            video_writer = cv2.VideoWriter(output_file, codec, fps, frame_size)
+
+            for frame in clip:
+                np_img = frame.numpy()
+                np_img = np.transpose(np_img, (1, 2, 0))
+                np_img = np_img * norm_value
+                np_img = np_img.astype(np.uint8)
+                video_writer.write(np_img)
+
+            video_writer.release()
+
         clip = torch.stack(clip, dim=0) # Tensor with shape TCHW
-        clip = clip.permute(1, 0, 2, 3) # Tensor with shape TCHW
+        clip = clip.permute(1, 0, 2, 3) # Tensor with shape CTHW
 
         return clip
 
-        # selected_frames = []
-
-        # for i in range(video.shape[0]):
-        #     selected_frames.append(video[i])
-
-        # codec = cv2.VideoWriter_fourcc(*"mp4v")  # Video codec (e.g., "mp4v", "XVID")
-        # output_file = os.path.join('data/SFHDataset/test', load_video_path.split('/')[-1])  # Output video file name
-        # frame_size = (224, 224)  # Frame size (width, height)
-        # fps = 16/2.5
-
-        # video_writer = cv2.VideoWriter(output_file, codec, fps, frame_size)
-
-        # for frame in selected_frames:
-        #     np_img = frame.numpy()
-        #     np_img = np.transpose(np_img, (1, 2, 0))
-        #     np_img = np_img * 255.0
-        #     np_img = np_img.astype(np.uint8)
-        #     np_img = cv2.cvtColor(np_img, cv2.COLOR_BGR2RGB)
-        #     #plt.figure()
-        #     #plt.imshow(np_img) 
-        #     #plt.show()  # display it
-        #     # Assuming the frame is in NumPy array format
-        #     video_writer.write(np_img)
-
-        # print(f"Saving {output_file}")
-        # video_writer.release()
-
-class TemporalRandomCrop(object):
-    """Temporally crop the given frame indices at a random location.
-
-    If the number of frames is less than the size,
-    loop the indices as many times as necessary to satisfy the size.
-
-    Args:
-        size (int): Desired output size of the crop.
-    """
-
-    def __init__(self, size, downsample):
-        self.size = size
-        self.downsample = downsample
-
-    def __call__(self, frame_indices):
-        """
-        Args:
-            frame_indices (list): frame indices to be cropped.
-        Returns:
-            list: Cropped frame indices.
-        """
-
-        vid_duration  = len(frame_indices)
-        clip_duration = self.size * self.downsample
-
-        rand_end = max(0, vid_duration - clip_duration - 1)
-        begin_index = random.randint(0, rand_end)
-        end_index = min(begin_index + clip_duration, vid_duration)
-
-        out = frame_indices[begin_index:end_index]
-
-        for index in out:
-            if len(out) >= clip_duration:
-                break
-            out.append(index)
-
-        selected_frames = [out[i] for i in range(0, clip_duration, self.downsample)]
-
-        return selected_frames
-
 class Signal4HelpDataset(Dataset):
-    def __init__(self, annotation_path, image_width, image_height, temporal_transform, spatial_transform):
+    def __init__(self, annotation_path, temporal_transform, spatial_transform):
         
         self.video_path = video_path
-        self.image_width = image_width
-        self.image_height = image_height
         self.temporal_transform = temporal_transform
         self.spatial_transform = spatial_transform
 
@@ -214,25 +159,34 @@ class Signal4HelpDataset(Dataset):
     def __getitem__(self, index):
         video_path, label = self.videos[index]
         video = load_video(video_path, 
-                           image_height=self.image_height, 
-                           image_width=self.image_width, 
                            temporal_transform=self.temporal_transform,
                            spatial_transform=self.spatial_transform)
         return video, label
 
 if __name__ == '__main__':
-    video_path = "./SFH/SFH_Dataset_S2CITIES_ratio1_224x224"
-    dataset_name = "./"
 
-    # Create the VideoDataset and DataLoader
-    dataset = Signal4HelpDataset(video_path, 
-                                 image_width=224, 
-                                 image_height=224)
-    
-    # Check that the dataset has correctly been created
-    print(len(dataset))
-    dataloader = DataLoader(dataset, batch_size=8, shuffle=True, num_workers=0)
-    for idx, batch in enumerate(dataloader):
-        # print(batch) 
-        break
+    spatial_transform = SPtransforms.Compose([
+        SPtransforms.Scale(112),
+        SPtransforms.CenterCrop(112),
+        SPtransforms.ToTensor(1.0),
+        SPtransforms.Normalize(
+                        mean=[
+                            124.02363586425781,
+                            114.20242309570312,
+                            103.32056427001953
+                        ], 
+                        std=[
+                            61.589691162109375,
+                            61.51222610473633,
+                            60.233455657958984
+                        ])
+    ])
 
+    temporal_transform = TPtransforms.TemporalRandomCrop(16, 1)
+
+    # Test load_video 
+    load_video(video_path='../../dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1/0/vid_00402.mp4',
+               temporal_transform=temporal_transform,
+               spatial_transform=spatial_transform,
+               norm_value=1.0,
+               save_output=True)

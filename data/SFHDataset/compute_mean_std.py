@@ -1,16 +1,17 @@
 from SignalForHelp import load_video
+from spatial_transforms import ToTensor, Compose, Scale
 import torch
 import json
 
-def get_SFH_mean_std(image_height=112, image_width=112, n_frames=16):
+def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
 
     info_file = 'data/SFHDataset/info.json'
 
     with open(info_file, 'r') as file:
         info = json.load(file)
 
-    if info["mean"] == [-1, -1, -1] and info["std"] == [-1, -1, -1]:
-        n_samples = 0
+    if (not info["mean"] and not info["std"]) or force_compute:
+        n_frames = 0
         channel_sum = 0
         channel_squared_sum = 0
 
@@ -19,13 +20,20 @@ def get_SFH_mean_std(image_height=112, image_width=112, n_frames=16):
         
         for line in lines:
             video_path, _ = line.strip().split(' ')
-            video = load_video(video_path, image_height=image_height, image_width=image_width) # video shape TCHW
-            channel_sum += torch.sum(video, dim=(0, 2, 3))
-            channel_squared_sum += torch.sum(video**2, dim=(0, 2, 3))
-            n_samples += 1
+
+            spatial_transform = Compose([
+                Scale(image_size),
+                ToTensor(norm_value)
+            ])
+
+            video = load_video(video_path, spatial_transform=spatial_transform) # video shape CTHW
+            print(video.shape)
+            channel_sum += torch.sum(video, dim=(1, 2, 3))
+            channel_squared_sum += torch.sum(video**2, dim=(1, 2, 3))
+            n_frames += video.shape[-3]
         
-        mean = channel_sum / (n_samples*n_frames*image_height*image_width)
-        std = torch.sqrt((channel_squared_sum / (n_samples*n_frames*image_height*image_width)) - (mean ** 2))
+        mean = channel_sum / (n_frames*image_size*image_size)
+        std = torch.sqrt((channel_squared_sum / (n_frames*image_size*image_size)) - (mean ** 2))
         info["mean"] = mean.tolist()
         info["std"] = std.tolist()
 
@@ -38,4 +46,4 @@ def get_SFH_mean_std(image_height=112, image_width=112, n_frames=16):
 
     return mean, std
 
-get_SFH_mean_std()
+get_SFH_mean_std(force_compute=True)
