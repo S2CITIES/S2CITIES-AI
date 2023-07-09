@@ -14,11 +14,13 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
         cap = cv2.VideoCapture(video_path)
 
         clip = []
+        # TODO: Make it faster by only loading the sampled frames and save the total number of frames in the annotation file
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Convert frame to a PIL Image
+            frame = Image.fromarray(frame)
             # print(frame.size)
             clip.append(frame)
 
@@ -27,14 +29,16 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
         # Apply Temporal Transform
         if temporal_transform is not None:
             n_frames = len(clip)
-            print(f"Clip lenght: {n_frames}")
+            # print(f"Clip lenght: {n_frames}")
             frame_indices = list(range(1, n_frames+1))
             frame_indices = temporal_transform(frame_indices)
+            # print(frame_indices)
+            clip = [clip[i-1] for i in frame_indices]
 
         if spatial_transform is not None:
             # Apply Spatial Transform
             spatial_transform.randomize_parameters()
-            clip = [spatial_transform(Image.fromarray(frame)) for frame in clip]
+            clip = [spatial_transform(frame) for frame in clip]
 
         if save_output: # To "visualize" the effect of temporal and spatial transforms
             codec = cv2.VideoWriter_fourcc(*"mp4v")  # Video codec (e.g., "mp4v", "XVID")
@@ -60,9 +64,8 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
         return clip
 
 class Signal4HelpDataset(Dataset):
-    def __init__(self, annotation_path, temporal_transform, spatial_transform, norm_value):
+    def __init__(self, annotation_path, temporal_transform, spatial_transform):
         
-        self.video_path = video_path
         self.temporal_transform = temporal_transform
         self.spatial_transform = spatial_transform
         self.videos = []
@@ -160,7 +163,7 @@ class Signal4HelpDataset(Dataset):
         video = load_video(video_path, 
                            temporal_transform=self.temporal_transform,
                            spatial_transform=self.spatial_transform,
-                           save_output=False)
+                           save_output=True)
         return video, label
 
 if __name__ == '__main__':
@@ -185,7 +188,7 @@ if __name__ == '__main__':
     temporal_transform = TPtransforms.TemporalRandomCrop(16, 1)
 
     # Test load_video 
-    load_video(video_path='../../dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1/0/vid_00402.mp4',
+    load_video(video_path='../../dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1/1/vid_00053_00006.mp4',
                temporal_transform=temporal_transform,
                spatial_transform=spatial_transform,
                norm_value=1.0,

@@ -11,9 +11,6 @@ def parse_args():
                     'squeezenet']
     
     train_crop_choices = ['corner', 'random', 'center']
-    # Path for loading train/test/val videos
-    default_video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224"
-
     parser.add_argument('--exp', help='Name of the experiment', type=str, dest='exp', default='training_exp')
     parser.add_argument('--epochs', help='Number of training epochs', type=int, dest='epochs', default=100)
     parser.add_argument('--batch', help='Batch size for training with minibatch SGD', type=int, dest='batch', default=32)

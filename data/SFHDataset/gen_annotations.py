@@ -2,7 +2,7 @@ import os
 import random
 import json
 # Set the paths to your dataset folders
-dataset_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224'
+dataset_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1'
 
 # Create the annotation files
 train_file = 'data/SFHDataset/train_annotations.txt'

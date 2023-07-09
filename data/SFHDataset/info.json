@@ -1,16 +1,16 @@
 {
     "statistics": {
         "train": {
-            "positives": 1284,
-            "negatives": 1239
+            "positives": 1275,
+            "negatives": 1248
         },
         "test": {
-            "positives": 152,
-            "negatives": 164
+            "positives": 149,
+            "negatives": 167
         },
         "val": {
-            "positives": 141,
-            "negatives": 174
+            "positives": 153,
+            "negatives": 162
         }
     },
     "mean": [

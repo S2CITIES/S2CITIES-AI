@@ -39,7 +39,7 @@ writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
 
     # Set up early stopping criteria
-    patience = 3  # Number of epochs to wait for improvement
+    patience = 5  # Number of epochs to wait for improvement
     min_delta = 0.001  # Minimum change in validation loss to be considered as improvement
     best_loss = float('inf')  # Initialize the best validation loss
     counter = 0  # Counter to keep track of epochs without improvement
@@ -187,7 +187,10 @@ if __name__ == '__main__':
         crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
     
     # Compute channel-wise mean and std. on the training set
-    mean, std = get_SFH_mean_std(image_height=args.sample_size, image_width=args.sample_size, n_frames=args.sample_duration)
+    mean, std = get_SFH_mean_std(image_size=args.sample_size, norm_value=args.norm_value, force_compute=False)
+
+    print(f"Train mean: {mean}")
+    print(f"Train std.: {std}")
 
     train_spatial_transform = SPtransforms.Compose([
         SPtransforms.RandomHorizontalFlip(),

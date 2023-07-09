@@ -10,7 +10,7 @@ def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
     with open(info_file, 'r') as file:
         info = json.load(file)
 
-    if (not info["mean"] and not info["std"]) or force_compute:
+    if (not info["mean"] or not info["std"]) or force_compute:
         n_frames = 0
         channel_sum = 0
         channel_squared_sum = 0
@@ -45,4 +45,5 @@ def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
 
     return mean, std
 
-get_SFH_mean_std(force_compute=True)
+if __name__ == '__main__':
+    get_SFH_mean_std(force_compute=True)
