@@ -2,7 +2,6 @@ import os
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from pytorchvideo.transforms import UniformTemporalSubsample, Normalize
 from torch.utils.data import DataLoader, random_split
 from data.SFHDataset.SignalForHelp import Signal4HelpDataset
 from build_models import build_model
@@ -182,27 +181,50 @@ if __name__ == '__main__':
     elif args.train_crop == 'center':
         crop_method = SPtranforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
     
+    # Compute channel-wise mean and std. on the training set
+    mean, std = get_SFH_mean_std(image_height=args.sample_size, image_width=args.sample_size, n_frames=args.sample_duration)
+
     train_spatial_transform = SPtranforms.Compose([
         SPtranforms.RandomHorizontalFlip(),
         crop_method,
-        SPtranforms.ToTensor(args.norm_value)
+        SPtranforms.ToTensor(args.norm_value),
+        SPtranforms.Normalize(mean=mean, std=std)
     ])
 
     train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
+    # Initialize spatial and temporal transforms (validation versions)
+    val_spatial_transform = SPtranforms.Compose([
+        SPtranforms.Scale(args.sample_size),
+        SPtranforms.CenterCrop(args.sample_size),
+        SPtranforms.ToTensor(args.norm_value),
+        SPtranforms.Normalize(mean=mean, std=std)
+    ])
 
+    val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
+
+    # Initialize spatial and temporal transforms (test versions)
+    test_spatial_transform = SPtranforms.Compose([
+        SPtranforms.Scale(args.sample_size),
+        SPtranforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
+        SPtranforms.ToTensor(args.norm_value),
+        SPtranforms.Normalize(mean=mean, std=std)
+    ])
+
+    test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    
+    # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
                                  image_width=224, 
                                  image_height=224,
                                  spatial_transform=train_spatial_transform,
                                  temporal_transform=train_temporal_transform)
-
-    mean, std = get_SFH_mean_std(image_height=args.sample_size, image_width=args.sample_size, n_frames=args.sample_duration)
-
-    # Note that the ToTensor and TemporalRandomCrop Transformations are already applied inside the Dataset class.
-    video_transforms = transforms.Compose([
-        Normalize(mean=mean, std=std) # Normalize from Pytorchvideo (not torchvision.transforms)
-    ])
+    
+    train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
+                                 image_width=224, 
+                                 image_height=224,
+                                 spatial_transform=val_spatial_transform,
+                                 temporal_transform=val_temporal_transform)
     
     partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
 
