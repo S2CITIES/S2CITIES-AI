@@ -2,8 +2,8 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader, random_split
 import torchvision.transforms as transforms
-import spatial_transforms as SPtransforms
-import temporal_transforms as TPtransforms
+import transforms.spatial_transforms as SPtransforms
+import transforms.temporal_transforms as TPtransforms
 import os
 import cv2
 import mediapipe as mp

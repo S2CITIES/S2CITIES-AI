@@ -9,8 +9,8 @@ import numpy as np
 import functools
 from tqdm import tqdm
 from train_args import parse_args
-import data.SFHDataset.spatial_transforms as SPtransforms
-import data.SFHDataset.temporal_transforms as TPtransforms
+import transforms.spatial_transforms as SPtransforms
+import transforms.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
 from torch.utils.tensorboard import SummaryWriter
 
@@ -278,7 +278,7 @@ if __name__ == '__main__':
     elif args.optimizer == 'Adam':
         optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=1e-3)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=10)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
     criterion = nn.CrossEntropyLoss()
 

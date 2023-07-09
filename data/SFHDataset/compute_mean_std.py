@@ -1,5 +1,5 @@
-from SignalForHelp import load_video
-from spatial_transforms import ToTensor, Compose, Scale
+from data.SFHDataset.SignalForHelp import load_video
+from transforms.spatial_transforms import ToTensor, Compose, Scale
 import torch
 import json
 
@@ -27,7 +27,6 @@ def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
             ])
 
             video = load_video(video_path, spatial_transform=spatial_transform) # video shape CTHW
-            print(video.shape)
             channel_sum += torch.sum(video, dim=(1, 2, 3))
             channel_squared_sum += torch.sum(video**2, dim=(1, 2, 3))
             n_frames += video.shape[-3]
