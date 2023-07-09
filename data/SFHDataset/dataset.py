@@ -56,6 +56,7 @@ class TemporalRandomCrop(object):
 class Signal4HelpDataset(Dataset):
     def __init__(self, video_path, image_width, image_height,
                  dataset_source, 
+                 temporal_transform, spatial_transform,
                  extract_bb_region=True, preprocessing_on=True, load_on_demand=False, resize_frames=True):
         
         self.video_path = video_path
@@ -65,6 +66,8 @@ class Signal4HelpDataset(Dataset):
         self.load_on_demand = load_on_demand
         self.extract_bb_region = extract_bb_region
         self.resize_frames = resize_frames
+        self.temporal_transform = temporal_transform
+        self.spatial_transform = spatial_transform
 
         preprocessed_path = './dataset/SFHDataset/SFH/preprocessed_data'
         dataset_path = os.path.join(preprocessed_path, dataset_source)

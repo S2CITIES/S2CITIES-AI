@@ -9,32 +9,12 @@ from build_models import build_model
 import numpy as np
 import functools
 from tqdm import tqdm
-
-import argparse
-
+from train_args import parse_args
+import data.SFHDataset.spatial_transforms as SPtranforms
+import data.SFHDataset.temporal_transforms as TPtransforms
 from torch.utils.tensorboard import SummaryWriter
 
-
-model_choices = ['mobilenet',
-                 'mobilenetv2', 
-                 'squeezenet']
-default_video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224"
-
-parser = argparse.ArgumentParser(
-    prog = 'Training Script for 3D-CNN models on SFH Dataset'
-)
-parser.add_argument('--exp', help='Name of the experiment', type=str, dest='exp', default='training_exp')
-parser.add_argument('--epochs', help='Number of training epochs', type=int, dest='epochs', default=100)
-parser.add_argument('--batch', help='Batch size for training with minibatch SGD', type=int, dest='batch', default=32)
-parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str, choices=['SGD', 'Adam'], default='SGD')
-parser.add_argument('--model', help='Select 3D-CNN model type', type=str, choices=model_choices, default='mobilenet')
-parser.add_argument('--lr', help='Select learning rate', type=float,  dest='lr', default=0.1)
-parser.add_argument('--data_path', help='Absolute/Relative path for train/val/test videos', type=str, dest='data_path', default=default_video_path)
-parser.add_argument('--pretrained_path', help='Absolute/Relative path for pretrained weights', type=str, dest='pretrained_path', default='auto')
-parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='./models/saves')
-parser.add_argument('--exp_path', help='Absolute/Relative path for saving experiment logs', type=str, dest='exp_path', default='./experiments')
-
-args = parser.parse_args()
+args = parse_args()
 
 # Create exp_path if it doesn't exist yet
 if not os.path.exists(args.exp_path):
@@ -239,7 +219,7 @@ if __name__ == '__main__':
     
     partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
 
-    # Create again DataLoader for training set
+    # Create again DataLoader for training set - Needed because this time the collate_fn will normalize each batch
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=partial_collate_fn)
     # And other DataLoaders
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=partial_collate_fn)
