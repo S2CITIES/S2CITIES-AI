@@ -55,9 +55,13 @@ def collate_fn(batch, transform):
     labels = torch.tensor(labels)
     return videos, labels
 
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
 
-    best_val_accuracy = 0
+    # Set up early stopping criteria
+    patience = 3  # Number of epochs to wait for improvement
+    min_delta = 0.001  # Minimum change in validation loss to be considered as improvement
+    best_loss = float('inf')  # Initialize the best validation loss
+    counter = 0  # Counter to keep track of epochs without improvement
 
     ############### Training ##################
     for epoch in range(num_epochs):
@@ -76,8 +80,6 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             videos = videos.float()
             videos = videos.to(device) # Send inputs to CUDA
 
-            optimizer.zero_grad()
-
             logits = model(videos)
 
             labels = labels.to(device)
@@ -85,6 +87,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             loss = criterion(logits, labels)
             epoch_loss.append(loss.item())
 
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -109,16 +112,23 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
                     'loss': avg_train_loss,
                 }, global_step=epoch)
 
-        # Validate/Test (if no val/dev set) the model every <validation_step> epochs of training
-        if epoch % val_step == 0:
-            # NOTE: test function validates the model, when it takes in input the loader for the validation set
-            val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
-            scheduler.step(val_loss)
-            if val_accuracy > best_val_accuracy:
-                # Save the best model based on validation accuracy metric
-                torch.save(model.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
-                best_val_accuracy = val_accuracy
+        # NOTE: test function validates the model, when it takes in input the loader for the validation set
+        val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
+        scheduler.step(val_loss)
 
+        # Checking early-stopping criteria
+        if val_loss + min_delta < best_loss:
+            best_loss = val_loss
+            counter = 0 # Reset the counter since there is improvement
+            # Save the improved model
+            torch.save(model.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
+        else:
+            counter += 1 # Increment the counter, since there is no improvement
+
+        # Check if training should be stopped 
+        if counter >= patience:
+            print(f"Early-stopping the training phase at epoch {epoch}")
+            break
 
 def test(loader, model, criterion, device, epoch=None):
     totals = 0
@@ -290,8 +300,7 @@ if __name__ == '__main__':
           scheduler=scheduler,
           criterion=criterion, 
           train_loader=train_dataloader,
-          val_loader=val_dataloader,
-          val_step=1,  
+          val_loader=val_dataloader, 
           num_epochs=num_epochs, 
           device=device, 
           pbar=pbar)

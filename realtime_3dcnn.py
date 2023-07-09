@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     transform = transforms.Compose([
         UniformTemporalSubsample(num_samples=16, temporal_dim=-3),
-       Normalize(mean=[0.4666, 0.4328, 0.3962], std=[0.2529, 0.2532, 0.2479]) 
+       Normalize(mean=[0.3956, 0.4320, 0.4656], std=[0.2475, 0.2530, 0.2528]) 
     ])
 
     # Create the stop event
