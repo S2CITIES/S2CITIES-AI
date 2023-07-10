@@ -164,7 +164,7 @@ if __name__ == '__main__':
     frame_queue = []
     print("Builing gesture recognition model...")
     model_type = 'mobilenetv2' # Make the model type an argument through argparse
-    model_path = 'checkpoints/best_sfh_mobilenetv2.h5'
+    model_path = 'checkpoints/best_model_b32_SGD_mobilenetv2_dwn5_es8_random.h5'
     # Load 3DCNN model
     model = build_model(model_path=model_path, 
                         type=model_type, 
