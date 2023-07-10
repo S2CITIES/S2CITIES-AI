@@ -75,7 +75,7 @@ class Signal4HelpDataset(Dataset):
         
         for line in lines:
             fields = line.strip().split(' ')
-            video_path = ' '.join([fields[:-1]])
+            video_path = ' '.join(fields[:-1])
             label = int(fields[-1])
             self.videos.append((video_path, label))
 
