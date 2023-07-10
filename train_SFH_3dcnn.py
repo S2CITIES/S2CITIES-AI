@@ -309,7 +309,10 @@ if __name__ == '__main__':
           device=device, 
           pbar=pbar)
 
-    # TODO: When testing, load the best model found during the training, not the result after N epochs of training.    
+    # Load the best checkpoint obtained until now
+    best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
+    model.load_state_dict(best_checkpoint)
+  
     test(loader=test_dataloader, 
          model=model,
          criterion=criterion,
