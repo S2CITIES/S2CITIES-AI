@@ -74,8 +74,10 @@ class Signal4HelpDataset(Dataset):
             lines = f.readlines()
         
         for line in lines:
-            video_path, label = line.strip().split(' ')
-            self.videos.append((video_path, int(label)))
+            fields = line.strip().split(' ')
+            video_path = ' '.join([fields[:-1]])
+            label = int(fields[-1])
+            self.videos.append((video_path, label))
 
     # def extract_hand_bb(self, frame, frame_width, frame_height, first_only=True):
     #     # Apparently the process() function is not thread-safe. With multiple workers, the code gets stuck here.
