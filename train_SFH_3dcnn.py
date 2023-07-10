@@ -304,7 +304,8 @@ if __name__ == '__main__':
           num_epochs=num_epochs, 
           device=device, 
           pbar=pbar)
-    
+
+    # TODO: When testing, load the best model found during the training, not the result after N epochs of training.    
     test(loader=test_dataloader, 
          model=model,
          criterion=criterion,

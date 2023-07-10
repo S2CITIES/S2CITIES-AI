@@ -19,7 +19,7 @@ def get_SFH_mean_std(target_dataset, image_size=112, norm_value=1.0, force_compu
         with open('data/SFHDataset/train_annotations.txt', 'r') as annotation_file:
             lines = annotation_file.readlines()
         
-        for line in tqdm(lines):
+        for line in tqdm(lines, ascii=True, desc='Computing Mean/Std.'):
             video_path, _ = line.strip().split(' ')
 
             spatial_transform = Compose([
