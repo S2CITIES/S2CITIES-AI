@@ -42,6 +42,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
     patience = args.early_stop_patience
     min_delta = 0.001  # Minimum change in validation loss to be considered as improvement
     best_loss = float('inf')  # Initialize the best validation loss
+    best_accuracy = 0.0
     counter = 0  # Counter to keep track of epochs without improvement
 
     ############### Training ##################
@@ -100,6 +101,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
         # Checking early-stopping criteria
         if val_loss + min_delta < best_loss:
             best_loss = val_loss
+            best_accuracy = val_accuracy
             counter = 0 # Reset the counter since there is improvement
             # Save the improved model
             torch.save(model.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
@@ -110,6 +112,8 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
         if counter >= patience:
             print(f"Early-stopping the training phase at epoch {epoch}")
             break
+    
+    print("--- END Training. Results - Best Val. Loss: {:.2f}, Best Val. Accuracy: {:.2f}".format(best_loss, best_accuracy))
 
 def test(loader, model, criterion, device, epoch=None):
     totals = 0
@@ -272,6 +276,8 @@ if __name__ == '__main__':
     model = build_model(model_path=base_model_path, 
                         type=args.model, 
                         gpus=list(range(0, num_gpus)),
+                        sample_size=args.sample_size,
+                        sample_duration=args.sample_duration,
                         finetune=True)
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")

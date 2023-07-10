@@ -10,14 +10,14 @@ from models.squeezenet import (
     get_model as get_model_squeezenet
 )
 
-def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, width_mult=1., finetune=True, state_dict=False):
+def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_size=112, sample_duration=16, width_mult=1., finetune=True, state_dict=False):
     # All models pretrained on Jester (27 classes)
     if type == 'mobilenet':
-        model=get_model_mobilenet(num_classes=num_classes, sample_size = 224, width_mult=width_mult)
+        model=get_model_mobilenet(num_classes=num_classes, sample_size=sample_size, width_mult=width_mult)
     elif type=='mobilenetv2':
-        model=get_model_mobilenetv2(num_classes=num_classes, sample_size = 224, width_mult=width_mult)
+        model=get_model_mobilenetv2(num_classes=num_classes, sample_size=sample_size, width_mult=width_mult)
     elif type=='squeezenet':
-        model=get_model_squeezenet(sample_size=224, sample_duration=16, num_classes=num_classes)
+        model=get_model_squeezenet(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
     else:
         print("Unknown model type. Select between: mobilenet, mobilenetv2, squeezenet.")
         return None
