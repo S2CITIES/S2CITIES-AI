@@ -39,7 +39,7 @@ writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
 
     # Set up early stopping criteria
-    patience = 5  # Number of epochs to wait for improvement
+    patience = args.early_stop_patience
     min_delta = 0.001  # Minimum change in validation loss to be considered as improvement
     best_loss = float('inf')  # Initialize the best validation loss
     counter = 0  # Counter to keep track of epochs without improvement

@@ -2,7 +2,7 @@ from data.SFHDataset.SignalForHelp import load_video
 from transforms.spatial_transforms import ToTensor, Compose, Scale
 import torch
 import json
-import tqdm
+from tqdm import tqdm
 
 def get_SFH_mean_std(target_dataset, image_size=112, norm_value=1.0, force_compute=False):
 
