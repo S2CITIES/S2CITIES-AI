@@ -14,6 +14,7 @@ train_file = 'data/SFHDataset/train_annotations.txt'
 val_file = 'data/SFHDataset/val_annotations.txt'
 test_file = 'data/SFHDataset/test_annotations.txt'
 info_file = 'data/SFHDataset/info.json'
+target_dataset = args.data_path.split('/')[-1]
 
 # Set the split ratios
 train_ratio = 0.8
@@ -75,12 +76,12 @@ print("Test Set: Negatives:", test_negatives, "Positives:", test_positives)
 with open(info_file, 'r') as file:
     info = json.load(file)
 
-info['statistics']['train']['positives'] = train_positives
-info['statistics']['train']['negatives'] = train_negatives
-info['statistics']['test']['positives'] = test_positives
-info['statistics']['test']['negatives'] = test_negatives
-info['statistics']['val']['positives'] = val_positives
-info['statistics']['val']['negatives'] = val_negatives
+info[target_dataset]['statistics']['train']['positives'] = train_positives
+info[target_dataset]['statistics']['train']['negatives'] = train_negatives
+info[target_dataset]['statistics']['test']['positives'] = test_positives
+info[target_dataset]['statistics']['test']['negatives'] = test_negatives
+info[target_dataset]['statistics']['val']['positives'] = val_positives
+info[target_dataset]['statistics']['val']['negatives'] = val_negatives
 
 with open(info_file, 'w') as file:
     json.dump(info, file, indent=4)  # indent=4 for pretty formatting

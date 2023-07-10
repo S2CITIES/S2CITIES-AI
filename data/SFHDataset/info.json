@@ -1,26 +1,46 @@
 {
-    "statistics": {
-        "train": {
-            "positives": 1275,
-            "negatives": 1248
+    "SFH_Dataset_S2CITIES_simplified_ratio1": {
+        "statistics": {
+            "train": {
+                "positives": 1275,
+                "negatives": 1248
+            },
+            "test": {
+                "positives": 149,
+                "negatives": 167
+            },
+            "val": {
+                "positives": 153,
+                "negatives": 162
+            }
         },
-        "test": {
-            "positives": 149,
-            "negatives": 167
-        },
-        "val": {
-            "positives": 153,
-            "negatives": 162
-        }
+        "mean": [
+            105.46717834472656,
+            115.16809844970703,
+            125.67674255371094
+        ],
+        "std": [
+            60.821353912353516,
+            62.009315490722656,
+            62.135868072509766
+        ]
     },
-    "mean": [
-        105.46717834472656,
-        115.16809844970703,
-        125.67674255371094
-    ],
-    "std": [
-        60.821353912353516,
-        62.009315490722656,
-        62.135868072509766
-    ]
+    "SFH_Dataset_S2CITIES_simplified_ratio1_224x224": {
+        "statistics": {
+            "train": {
+                "positives": 1274,
+                "negatives": 1249
+            },
+            "test": {
+                "positives": 163,
+                "negatives": 153
+            },
+            "val": {
+                "positives": 140,
+                "negatives": 175
+            }
+        },
+        "mean": [],
+        "std": []
+    }
 }

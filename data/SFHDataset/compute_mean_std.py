@@ -4,14 +4,14 @@ import torch
 import json
 import tqdm
 
-def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
+def get_SFH_mean_std(target_dataset, image_size=112, norm_value=1.0, force_compute=False):
 
     info_file = 'data/SFHDataset/info.json'
 
     with open(info_file, 'r') as file:
         info = json.load(file)
 
-    if (not info["mean"] or not info["std"]) or force_compute:
+    if (not info[target_dataset]["mean"] or not info[target_dataset]["std"]) or force_compute:
         n_frames = 0
         channel_sum = 0
         channel_squared_sum = 0
@@ -34,15 +34,15 @@ def get_SFH_mean_std(image_size=112, norm_value=1.0, force_compute=False):
         
         mean = channel_sum / (n_frames*image_size*image_size)
         std = torch.sqrt((channel_squared_sum / (n_frames*image_size*image_size)) - (mean ** 2))
-        info["mean"] = mean.tolist()
-        info["std"] = std.tolist()
+        info[target_dataset]["mean"] = mean.tolist()
+        info[target_dataset]["std"] = std.tolist()
 
         with open(info_file, 'w') as file:
             json.dump(info, file, indent=4)  # indent=4 for pretty formatting
     
     else:
-        mean = info["mean"]
-        std = info["std"]  
+        mean = info[target_dataset]["mean"]
+        std = info[target_dataset]["std"]  
 
     return mean, std
 

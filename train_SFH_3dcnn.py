@@ -186,8 +186,12 @@ if __name__ == '__main__':
     elif args.train_crop == 'center':
         crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
     
+    target_dataset = args.data_path.split('/')[-1]
     # Compute channel-wise mean and std. on the training set
-    mean, std = get_SFH_mean_std(image_size=args.sample_size, norm_value=args.norm_value, force_compute=args.recompute_mean_std)
+    mean, std = get_SFH_mean_std(target_dataset=target_dataset,
+                                 image_size=args.sample_size, 
+                                 norm_value=args.norm_value, 
+                                 force_compute=args.recompute_mean_std)
 
     print(f"Train mean: {mean}")
     print(f"Train std.: {std}")
