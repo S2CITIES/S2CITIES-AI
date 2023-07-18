@@ -1,45 +1,49 @@
+import os
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-from pytorchvideo.transforms import UniformTemporalSubsample, Normalize
 from torch.utils.data import DataLoader, random_split
-from data.SFHDataset.dataset import Signal4HelpDataset
+from data.SFHDataset.SignalForHelp import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
 import functools
 from tqdm import tqdm
-
-import argparse
-
+from train_args import parse_args
+import transforms.spatial_transforms as SPtransforms
+import transforms.temporal_transforms as TPtransforms
+from data.SFHDataset.compute_mean_std import get_SFH_mean_std
 from torch.utils.tensorboard import SummaryWriter
 
-parser = argparse.ArgumentParser(
-    prog = 'Training Script for 3D-CNN models on SFH Dataset'
-)
-parser.add_argument('--exp', help='Name of the experiment', type=str, dest='exp', default='training_exp')
-parser.add_argument('--epochs', help='Number of training epochs', type=int, dest='epochs', default=100)
-parser.add_argument('--batch', help='Batch size for training with minibatch SGD', type=int, dest='batch', default=32)
-parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str, choices=['SGD', 'Adam'], default='SGD')
-args = parser.parse_args()
+args = parse_args()
 
-writer = SummaryWriter(f'./experiments/{args.exp}')
+# Create exp_path if it doesn't exist yet
+if not os.path.exists(args.exp_path):
+    os.makedirs(args.exp_path)
+
+writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 
 # "Collate" function for our dataloaders
-def collate_fn(batch, transform):
-    # NOTE (IMPORTANT): Normalize (pytorchvideo.transforms) from PyTorchVideo wants a volume with shape CTHW, 
-    # which is then internally converted to TCHW, processed and then again converted to CTHW.
-    # Because our volumes are in the shape TCHW, we convert them to CTHW here, instead of doing it inside the training loop.
+# def collate_fn(batch, transform):
+#     # NOTE (IMPORTANT): Normalize (pytorchvideo.transforms) from PyTorchVideo wants a volume with shape CTHW, 
+#     # which is then internally converted to TCHW, processed and then again converted to CTHW.
+#     # Because our volumes are in the shape TCHW, we convert them to CTHW here, instead of doing it inside the training loop.
 
-    videos = [transform(video.permute(1, 0, 2, 3)) for video, _ in batch]
-    labels = [label for _, label in batch]
+#     videos = [transform(video.permute(1, 0, 2, 3)) for video, _ in batch]
+#     labels = [label for _, label in batch]
 
-    videos = torch.stack(videos)
-    labels = torch.tensor(labels)
-    return videos, labels
+#     videos = torch.stack(videos)
+#     labels = torch.tensor(labels)
+#     return videos, labels
 
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_step, num_epochs, device, pbar=None):
-    
-    best_val_accuracy = 0
+# TODO: Implement custom scheduler to manual adjust learning rate after N epochs
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
+
+    # Set up early stopping criteria
+    patience = args.early_stop_patience
+    min_delta = 0.001  # Minimum change in validation loss to be considered as improvement
+    best_loss = float('inf')  # Initialize the best validation loss
+    best_accuracy = 0.0
+    counter = 0  # Counter to keep track of epochs without improvement
 
     ############### Training ##################
     for epoch in range(num_epochs):
@@ -58,8 +62,6 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             videos = videos.float()
             videos = videos.to(device) # Send inputs to CUDA
 
-            optimizer.zero_grad()
-
             logits = model(videos)
 
             labels = labels.to(device)
@@ -67,6 +69,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             loss = criterion(logits, labels)
             epoch_loss.append(loss.item())
 
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -77,7 +80,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
 
-        torch.save(model.state_dict(), f'models/saves/model_{args.exp}_epoch_{epoch}.h5')
+        torch.save(model.state_dict(), os.path.join(args.model_save_path, f'model_{args.exp}_epoch_{epoch}.h5'))
 
         avg_train_loss = np.array(epoch_loss).mean()
         train_accuracy = 100 * corrects / totals
@@ -91,16 +94,26 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, val_
                     'loss': avg_train_loss,
                 }, global_step=epoch)
 
-        # Validate/Test (if no val/dev set) the model every <validation_step> epochs of training
-        if epoch % val_step == 0:
-            # NOTE: test function validates the model, when it takes in input the loader for the validation set
-            val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
-            scheduler.step(val_loss)
-            if val_accuracy > best_val_accuracy:
-                # Save the best model based on validation accuracy metric
-                torch.save(model.state_dict(), f'models/saves/best_model_{args.exp}.h5')
-                best_val_accuracy = val_accuracy
+        # NOTE: test function validates the model, when it takes in input the loader for the validation set
+        val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
+        scheduler.step(val_loss)
 
+        # Checking early-stopping criteria
+        if val_loss + min_delta < best_loss:
+            best_loss = val_loss
+            best_accuracy = val_accuracy
+            counter = 0 # Reset the counter since there is improvement
+            # Save the improved model
+            torch.save(model.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
+        else:
+            counter += 1 # Increment the counter, since there is no improvement
+
+        # Check if training should be stopped 
+        if counter >= patience:
+            print(f"Early-stopping the training phase at epoch {epoch}")
+            break
+    
+    print("--- END Training. Results - Best Val. Loss: {:.2f}, Best Val. Accuracy: {:.2f}".format(best_loss, best_accuracy))
 
 def test(loader, model, criterion, device, epoch=None):
     totals = 0
@@ -162,75 +175,110 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
-    video_path = "./dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224"
+    # Set torch manual seed for reproducibility
+    torch.manual_seed(args.manual_seed)
+    # Init different scales for random scaling
+    args.scales = [args.initial_scale]
+    for i in range(1, args.n_scales):
+        args.scales.append(args.scales[-1] * args.scale_step)
 
-    # Create the VideoDataset and DataLoader
-    dataset = Signal4HelpDataset(video_path, 
-                                 image_width=224, 
-                                 image_height=224,
-                                 dataset_source='dataset_noBB_224x224.pkl',
-                                 preprocessing_on=False,
-                                 load_on_demand=True,
-                                 extract_bb_region=False,
-                                 resize_frames=False)
-
-    train_dataset, test_dataset = random_split(dataset, [0.8, 0.2])
-    train_dataset, val_dataset = random_split(train_dataset, [0.9, 0.1])
-
-    video, label = train_dataset[0] 
-    print(video.shape)
-    T, C, H, W = video.shape
-    print(f"Video shape = {(T, C, H, W)}")
-
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-
-    # Testing if it works correctly
-    # train_features, train_labels = next(iter(train_dataloader))
-    # print(f"Feature batch shape: {train_features.size()}")
-    # print(f"Labels batch shape: {train_labels.size()}")
-
-    # Compute mean and std on the training set
-    # Accumulate the sum and squared sum for each channel
-    n_samples = 0
-    channel_sum = 0
-    channel_squared_sum = 0
-
-    for data in train_dataloader:  # Iterate over the dataset or dataloader
-        videos, _ = data  # Assuming images are the input data and _ represents the labels/targets
-        batch_size = videos.size(0)
-        channel_sum += torch.sum(videos, dim=(0,1,3,4)) 
-        channel_squared_sum += torch.sum(videos ** 2, dim=(0,1,3,4))
-        n_samples += batch_size
-
-    # Compute the mean and std values for each channel
-    mean = channel_sum / (n_samples*T*H*W)
-    std = torch.sqrt((channel_squared_sum / (n_samples*T*H*W)) - (mean ** 2))
-
-    # Note that the ToTensor and TemporalRandomCrop Transformations are already applied inside the Dataset class.
-    video_transforms = transforms.Compose([
-        Normalize(mean=mean, std=std) # Normalize from Pytorchvideo (not torchvision.transforms)
-    ])
+    # Initialize spatial and temporal transforms (training versions)
+    if args.train_crop == 'random':
+        crop_method = SPtransforms.MultiScaleRandomCrop(args.scales, args.sample_size)
+    elif args.train_crop == 'corner':
+        crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size)
+    elif args.train_crop == 'center':
+        crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
     
-    partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
+    if not args.no_norm:
+        target_dataset = args.data_path.split('/')[-1]
+        # Compute channel-wise mean and std. on the training set
+        mean, std = get_SFH_mean_std(target_dataset=target_dataset,
+                                    image_size=args.sample_size, 
+                                    norm_value=args.norm_value, 
+                                    force_compute=args.recompute_mean_std)
+    else:
+        mean = [0, 0, 0]
+        std = [1, 1, 1]
+        
+    print(f"Train mean: {mean}")
+    print(f"Train std.: {std}")
 
-    # Create again DataLoader for training set
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=partial_collate_fn)
-    # And other DataLoaders
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=partial_collate_fn)
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=partial_collate_fn)
+    train_spatial_transform = SPtransforms.Compose([
+        SPtransforms.RandomHorizontalFlip(),
+        crop_method,
+        SPtransforms.ToTensor(args.norm_value),
+        SPtransforms.Normalize(mean=mean, std=std)
+    ])
+
+    # TODO: Add variable downsample factor depending on the number of frames in a video
+    # The idea is that a video with an higher frame rate should have an higher downsample factor in order to span
+    # a longer temporal window.
+    train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+
+    # Initialize spatial and temporal transforms (validation versions)
+    val_spatial_transform = SPtransforms.Compose([
+        SPtransforms.Scale(args.sample_size),
+        SPtransforms.CenterCrop(args.sample_size),
+        SPtransforms.ToTensor(args.norm_value),
+        SPtransforms.Normalize(mean=mean, std=std)
+    ])
+
+    val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
+
+    # Initialize spatial and temporal transforms (test versions)
+    test_spatial_transform = SPtransforms.Compose([
+        SPtransforms.Scale(args.sample_size),
+        SPtransforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
+        SPtransforms.ToTensor(args.norm_value),
+        SPtransforms.Normalize(mean=mean, std=std)
+    ])
+
+    test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+
+    # Load Train/Val/Test SignalForHelp Datasets
+    train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
+                                 spatial_transform=train_spatial_transform,
+                                 temporal_transform=train_temporal_transform)
+    
+    val_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
+                                 spatial_transform=val_spatial_transform,
+                                 temporal_transform=val_temporal_transform)
+    
+    test_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'test_annotations.txt'), 
+                                spatial_transform=test_spatial_transform,
+                                temporal_transform=test_temporal_transform)
+    
+    # partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
 
-    print(f"Mean of the Training Set: {mean}")
-    print(f"Std. of the Training Set: {std}")
-
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
-    model = build_model(base_model_path='models/pretrained/jester/jester_mobilenet_1.0x_RGB_16_best.pth', 
-                        type='mobilenet', 
-                        gpus=list(range(0, num_gpus)))
+
+    # Initialize DataLoaders
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
+
+    if args.pretrained_path == 'auto':
+        # 'Build' path for pretrained weights with provided information
+        if args.model in ['mobilenet', 'mobilenetv2']:
+            base_model_path='models/pretrained/jester/jester_{model}_1.0x_RGB_16_best.pth'.format(model=args.model)
+        else:
+            base_model_path='models/pretrained/jester/jester_squeezenet_RGB_16_best.pth'
+    else:
+        # User provided entire path for pre-trained weights
+        base_model_path = args.pretrained_path 
+
+    model = build_model(model_path=base_model_path, 
+                        type=args.model, 
+                        gpus=list(range(0, num_gpus)),
+                        sample_size=args.sample_size,
+                        sample_duration=args.sample_duration,
+                        finetune=True)
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -240,30 +288,37 @@ if __name__ == '__main__':
 
     if args.optimizer == 'SGD':
         optimizer = torch.optim.SGD(list(classifier.parameters()), 
-                                                    lr=0.1, 
+                                                    lr=args.lr, 
                                                     momentum=0.9, 
                                                     dampening=0.9,
                                                     weight_decay=1e-3)
     elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=0.1, weight_decay=0.01)
+        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=1e-3)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min')
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
     criterion = nn.CrossEntropyLoss()
 
     pbar = tqdm(total=len(train_dataset))
+
+    # Create model saves path if it doesn't exist yet
+    if not os.path.exists(args.model_save_path):
+        os.makedirs(args.model_save_path)
 
     train(model=model, 
           optimizer=optimizer,
           scheduler=scheduler,
           criterion=criterion, 
           train_loader=train_dataloader,
-          val_loader=val_dataloader,
-          val_step=1,  
+          val_loader=val_dataloader, 
           num_epochs=num_epochs, 
           device=device, 
           pbar=pbar)
-    
+
+    # Load the best checkpoint obtained until now
+    best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
+    model.load_state_dict(best_checkpoint)
+  
     test(loader=test_dataloader, 
          model=model,
          criterion=criterion,

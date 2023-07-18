@@ -13,4 +13,4 @@ with open("./src/const.json", "r", encoding="utf-8") as f:
     const = json.load(f)
 
 labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
-labeler.create_starter_csv("3_videos_splitted", "labeling.csv")
+labeler.create_starter_csv("src/dataset_creation/3_videos_splitted", "src/dataset_creation/labeling.csv")

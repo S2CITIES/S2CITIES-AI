@@ -146,6 +146,7 @@ models/saves
 # Videos and temporary files
 *.mp4
 *.mov
+*.MOV
 *.npy
 *.avi
 src/logs*
@@ -155,8 +156,9 @@ report*
 
 # Pre-trained Models
 *.pkl
-*.h5
 models/pretrained
+models/saves
 
 # Miscellaneous
 notes.txt
+client_secret.json

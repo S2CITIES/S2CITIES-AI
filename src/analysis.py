@@ -1,11 +1,12 @@
-from pathlib import Path
-import os
 import json
-import cv2
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import os
+from pathlib import Path
 
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 import src.utils as utils
 
 # Set resolution of the plots to retina
@@ -129,3 +130,87 @@ class AnalyseDataset:
 
         # Sort by duration in seconds
         #df = df.sort_values(by="duration_seconds")
+
+
+class AnalyseTimeSeries:
+    def __init__(self, FOLDER):
+
+        self.FOLDER = FOLDER
+
+        self.X = []
+        self.y = []
+
+        # To be wrapped in a time serier loader
+
+        for class_target in [0, 1]:
+            for file in self.FOLDER.glob(f"{class_target}/*.npy"):
+                self.X.append(np.load(file))
+                self.y.append(class_target)
+
+        self.X = np.array(self.X)
+        self.y = np.array(self.y)
+    
+        self.class_labels = {
+            0: 'SFH_No',
+            1: 'SFH_Yes',
+        }
+
+        # Set numpy seed for reproducibility
+        np.random.seed(42)
+
+    def run(self):
+
+
+        # Exploration
+        print(self.X.shape)
+        print(self.y.shape)
+
+
+        # Plot timeseries for each class
+        fig, axs = plt.subplots(1, 2, figsize=(8, 4))
+        fig.suptitle('Example of timeseries for each class')
+
+        axs = axs.flatten()
+
+        for i in range(len(self.class_labels.keys())):
+            indicies = np.where(self.y == i)[0]
+            random_index = np.random.choice(indicies, size=1)[0]
+            sns.lineplot(ax=axs[i], data = self.X[random_index])
+            axs[i].set_title(self.class_labels[i])
+            axs[i].get_legend().remove()
+            axs[i].set_xticks([])
+        plt.show()
+
+
+        # We also notice that the classes are in order:
+        plt.figure(figsize=(10,4))
+        sns.lineplot(data = self.y)
+        plt.title('y')
+        plt.ylabel('Class')
+        plt.xlabel('Element')
+        plt.show()
+
+
+        plt.figure(figsize=(15,6))
+        counts = {self.class_labels[k]: np.count_nonzero(self.y == k)
+                  for k in self.class_labels.keys()}
+        sns.barplot(x=list(counts), y=list(counts.values()))
+        plt.title('Elements per class')
+        plt.show()
+        print(counts)
+
+
+
+        plt.figure(figsize=(15,6))
+        sns.boxplot(data = [self.X[:, :, f].flatten() for f in range(self.X.shape[-1])])
+        plt.title('Features')
+        plt.show()
+
+        print("Global mean:", np.around(np.mean(self.X[:, :]), 5))
+        print("Global std:", np.around(np.std(self.X[:, :]), 5))
+        print("Global median:", np.around(np.median(self.X[:, :]), 5))
+        print("Global min:", np.around(np.min(self.X[:, :]), 5))
+        print("Global max:", np.around(np.max(self.X[:, :]), 5))
+        for f in range(self.X.shape[-1]):
+            print(f"Feature {f}: mean={np.around(np.mean(self.X[:, :, f]), 5)}, std={np.around(np.std(self.X[:, :, f]), 5)}, median={np.around(np.median(self.X[:, :, f]), 5)}")
+

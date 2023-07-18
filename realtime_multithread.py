@@ -14,13 +14,14 @@ https://stackoverflow.com/questions/19790570/using-a-global-variable-with-a-thre
 
 import threading
 import time
-import joblib
+
 import cv2
+import joblib
 import mediapipe as mp
 import numpy as np
-from src.keypointsextractor import FeatureExtractor
-from models.model import Model
 
+from models.model import Model
+from src.keypointsextractor import KeypointsExtractor
 
 # Set up the feature extractor
 #feature_extractor = FeatureExtractor()
@@ -135,7 +136,7 @@ def thread_extract_keypoints():
 def thread_predict(stop_event, predict_event):
 
     # Load the random forest model
-    model = Model(threshold=0.5)
+    model = Model(threshold=0.9)
 
     while not stop_event.is_set():
 
