@@ -11,6 +11,12 @@ https://stackoverflow.com/questions/71759248/importerror-cannot-import-name-buil
 
 ## Resources
 
+[Title](https://mediapipe-studio.webapps.google.com/demo/hand_landmarker)
+[Title](https://developers.googleblog.com/2023/05/introducing-mediapipe-solutions-for-on-device-machine-learning.html)
+https://developers.google.com/mediapipe/solutions/vision/hand_landmarker
+https://developers.google.com/mediapipe/solutions/vision/hand_landmarker/python#image
+https://colab.research.google.com/github/googlesamples/mediapipe/blob/main/examples/hand_landmarker/python/hand_landmarker.ipynb#scrollTo=_JVO3rvPD4RN
+
 - [Advanced Computer Vision with Python - Full Course](https://www.youtube.com/watch?v=01sAkU_NvOY)
 - [CS231n Winter 2016: Lecture 14: Videos and Unsupervised Learning](https://www.youtube.com/watch?v=ekyBklxwQMU)
 - [Mediapipe](https://google.github.io/mediapipe/)
