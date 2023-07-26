@@ -128,7 +128,7 @@ class TemporalRandomCrop(object):
                 break
             out.append(index)
 
-        print("vid_duration: {}, \nclip_duration: {}, \nrand_end: {}, \ndownsample: {}, out_length: {}".format(vid_duration,clip_duration, rand_end, self.downsample, len(out)))
+        #print("vid_duration: {}, \nclip_duration: {}, \nrand_end: {}, \ndownsample: {}, out_length: {}".format(vid_duration,clip_duration, rand_end, self.downsample, len(out)))
         selected_frames = [out[i] for i in range(0, clip_duration, self.downsample)]
 
         return selected_frames
