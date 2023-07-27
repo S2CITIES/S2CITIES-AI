@@ -1,0 +1,14 @@
+{
+   "api": {
+      "base_url": "https://main.d20hzfirsyysby.amplifyapp.com/",
+      "prefix": "api/",
+      "endpoints": {
+         "create_signal_for_help": "alerts/signalforhelp"
+      }
+   },
+   "data": {
+      "zone_id": "648c2b195f701d23c4401efa",
+      "address": "Piazza Duca d'Aosta 2, 20122 Milano MI",
+      "cam": "#5"
+   }
+}
