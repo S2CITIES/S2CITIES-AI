@@ -1,5 +1,14 @@
 # S2CITIES-AI
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
+
 Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
+
+## Installation
+
+1. Clone this repository with `git clone https://github.com/S2CITIES/S2CITIES-AI`
+2. Install the dependencies with `pip install -r requirements.txt`
 
 ## Usage
 
@@ -37,3 +46,9 @@ https://stackoverflow.com/questions/71759248/importerror-cannot-import-name-buil
 - [Advanced Computer Vision with Python - Full Course](https://www.youtube.com/watch?v=01sAkU_NvOY)
 - [CS231n Winter 2016: Lecture 14: Videos and Unsupervised Learning](https://www.youtube.com/watch?v=ekyBklxwQMU)
 - [OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose) (too hard)
+
+## Authors
+
+- Teo Bucci ([@teobucci](https://github.com/teobucci))
+- Dario Cavalli ([@Cavalli98](https://github.com/Cavalli98))
+- Giuseppe Stracquadanio ([@pestrstr](https://github.com/pestrstr))
