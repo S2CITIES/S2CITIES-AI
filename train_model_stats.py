@@ -422,15 +422,3 @@ print("Best parameters LR:", grid_search.best_params_)
 
 y_proba_dict['LR'] = grid_search.best_estimator_.predict_proba(X_test_selected)[:,1]
 
-# -----------------------------------------------------------------------------
-
-# Evaluate performance on testing data
-evaluator = ModelEvaluator(y_true=y_test, y_proba_dict=y_proba_dict, threshold=0.5)
-evaluator.get_metrics(export="all", filename="./report/stats")
-evaluator.plot_roc_curve(export="save", filename='./report/roc')
-evaluator.plot_precision_recall_curve(export="save", filename='./report/precision_recall')
-evaluator.plot_confusion_matrix(export="save", filename='./report/confusion_matrix')
-
-# lavorato fin'ora coi video
-# 1: da vid_00097_00022 a vid_00161_00105
-# 0: da vid_00097_00025 a vid_00161_00107
