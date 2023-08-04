@@ -2,7 +2,6 @@
 This file acts on the extracted time series coordinates from the video using mediapipes and extracts features from them using tsfresh.
 """
 
-import json
 import pickle
 from pathlib import Path
 
@@ -15,14 +14,11 @@ from tsfresh.feature_extraction import (
     MinimalFCParameters,
 )
 from tsfresh.utilities.dataframe_functions import impute
+from src import constants
 
 if __name__ == "__main__":
-    # Read from json file
-    with open("./src/const.json", "r", encoding="utf-8") as f:
-        const = json.load(f)
 
-    data_path = Path(const["DATA_PATH"])
-    features_extracted_path = Path(const["FEATURES_EXTRACTED"])
+    input_path = constants.FEATURES_EXTRACTED
 
     # Define empty lists
     list_0 = []
@@ -30,13 +26,13 @@ if __name__ == "__main__":
     y = []
 
     # Read npy files and append to lists
-    for file in (data_path / features_extracted_path).glob("0/*.npy"):
+    for file in (input_path).glob("0/*.npy"):
         data = np.load(file)
         data_df = pd.DataFrame(data)
         list_0.append(data_df)
         y.append(0)
 
-    for file in (data_path / features_extracted_path).glob("1/*.npy"):
+    for file in (input_path).glob("1/*.npy"):
         data = np.load(file)
         data_df = pd.DataFrame(data)
         list_1.append(data_df)
@@ -70,7 +66,7 @@ if __name__ == "__main__":
     y = pd.Series(y)
 
     # Create output directory
-    output_path = data_path / const["TIMESERIES_FEATURES_EXTRACTED"]
+    output_path = constants.TIMESERIES_FEATURES_EXTRACTED
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Save X and y as pickle files
