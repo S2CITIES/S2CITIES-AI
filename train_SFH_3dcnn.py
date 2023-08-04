@@ -12,15 +12,11 @@ from train_args import parse_args
 import transforms.spatial_transforms as SPtransforms
 import transforms.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
-from torch.utils.tensorboard import SummaryWriter
+
+# Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
+import wandb
 
 args = parse_args()
-
-# Create exp_path if it doesn't exist yet
-if not os.path.exists(args.exp_path):
-    os.makedirs(args.exp_path)
-
-writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 
 # "Collate" function for our dataloaders
 # def collate_fn(batch, transform):
@@ -84,17 +80,13 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
 
         avg_train_loss = np.array(epoch_loss).mean()
         train_accuracy = 100 * corrects / totals
+
         print("[Epoch {}] Avg Loss: {}".format(epoch, avg_train_loss))
         print("[Epoch {}] Train Accuracy {:.2f}%".format(epoch, train_accuracy))
-        
-        writer.add_scalars(main_tag='train_accuracy', tag_scalar_dict={
-                    'accuracy': train_accuracy,
-                }, global_step=epoch)
-        writer.add_scalars(main_tag='avg_train_loss', tag_scalar_dict={
-                    'loss': avg_train_loss,
-                }, global_step=epoch)
 
-        # NOTE: test function validates the model, when it takes in input the loader for the validation set
+        wandb.log({"train_accuracy": train_accuracy, "train_loss": avg_train_loss})
+
+        # NOTE: test function validates the model when it takes in input the loader for the validation set
         val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
         scheduler.step(val_loss)
 
@@ -153,16 +145,13 @@ def test(loader, model, criterion, device, epoch=None):
     val_loss = np.array(val_loss).mean()
 
     if epoch is not None:
-        # Save metrics with tensorboard
-        writer.add_scalars(main_tag='val_accuracy', tag_scalar_dict={
-            'accuracy': val_accuracy
-        }, global_step=epoch)
-        writer.add_scalars(main_tag='val_loss', tag_scalar_dict={
-            'loss': val_loss
-        }, global_step=epoch)
+        # Save metrics with wandb
+        wandb.log({"val_accuracy": val_accuracy, "val_loss": val_loss})
 
         print('[Epoch {}] Validation Accuracy: {:.2f}%'.format(epoch, val_accuracy))
     else:
+        wandb.log({"test_accuracy": val_accuracy, "test_loss": val_loss})
+
         print('Test Accuracy: {:.2f}%'.format(val_accuracy))
 
     return val_accuracy, val_loss
@@ -171,6 +160,25 @@ if __name__ == '__main__':
 
     batch_size=args.batch
     num_epochs=args.epochs
+
+    # start a new wandb run to track this script
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project="3d-cnn-training",
+        name=args.exp,  
+        # track hyperparameters and run metadata
+        config={
+        "learning_rate": args.lr,
+        "architecture": args.model,
+        "dataset": args.data_path.split("/")[-1],
+        "epochs": num_epochs,
+        "batch": batch_size,
+        "optimizer": args.optimizer,
+        "sample_size": args.sample_size,
+        "sample_duration": args.sample_duration,
+        "train_crop": args.train_crop
+        }
+    )
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
@@ -299,6 +307,7 @@ if __name__ == '__main__':
 
     criterion = nn.CrossEntropyLoss()
 
+    # Initialize tqdm progress bar for tracking training steps
     pbar = tqdm(total=len(train_dataset))
 
     # Create model saves path if it doesn't exist yet
@@ -323,3 +332,6 @@ if __name__ == '__main__':
          model=model,
          criterion=criterion,
          device=device)
+    
+    # [optional] finish the wandb run, necessary in notebooks
+    wandb.finish()
