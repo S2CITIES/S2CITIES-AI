@@ -12,15 +12,60 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 
 ## Usage
 
-1. Follow the istructions to have the [`4_videos_labeled`](./src/dataset_creation/4_videos_labeled/) folder with the labeled videos:
-   1. Run the script [`dataset_creation_move_and_split.py`](./dataset_creation_move_and_split.py) to move, rename and split the videos.
-   2. Run the script [`dataset_creation_starter_csv.py`](./dataset_creation_starter_csv.py) to create the starter CSV file and facilitate labeling by someone else.
-   3. Run the script [`dataset_creation_perform_labeling.py`](./dataset_creation_perform_labeling.py) to actually perform the labeling.
-   4. Run the script [`dataset_creation_move_labeled.py`](./dataset_creation_move_labeled.py) to move the labeled videos into the respective class folders according to the CSV file.
-2. Run the script [`dataset_creation_subsample_videos.py`](./dataset_creation_subsample_videos.py) to subsample the videos to a predefined FPS
-3. [WIP] Run the script [`extract_features.py`](./src/extract_features.py) to extract the keypoints using MediaPipe
-4. [WIP] Run the script [`timeseries_feature_extraction.py`](./src/timeseries_feature_extraction.py) to extract features from the timeseries of keypoints using, momentarily, [`tsfresh`](https://tsfresh.readthedocs.io/)
-5. Run the [`train_model_nn.py`](./train_model_nn.py) or the [`train_model_stats.py`](./train_model_stats.py) to train the model for classification.
+### Dataset creation pipeline
+
+1. Run the script [`dataset_creation_move_and_split.py`](./dataset_creation_move_and_split.py) to move, rename and split the videos.
+2. Run the script [`dataset_creation_starter_csv.py`](./dataset_creation_starter_csv.py) to create the starter CSV file and facilitate labeling by someone else.
+3. Run the script [`dataset_creation_perform_labeling.py`](./dataset_creation_perform_labeling.py) to actually perform the labeling.
+4. Run the script [`dataset_creation_move_labeled.py`](./dataset_creation_move_labeled.py) to move the labeled videos into the respective class folders according to the CSV file.
+
+### mpkpts pipeline
+
+To subsample the videos use the following command
+
+```bash
+python dataset_creation_subsample_videos.py --input "/Users/teo/My Drive (s2cities.project@gmail.com)/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" --output "data/5_videos_labeled_subsampled"
+```
+
+To extract the keypoints from the videos use the following command
+
+```bash
+python mpkpts_extract_keypoints.py --input "data/5_videos_labeled_subsampled" --output "data/6_features_extracted"
+```
+
+To extract the timeseries features from the keypoints use the following command
+
+```bash
+python mpkpts_extract_timeseries_features.py
+```
+
+To perfrom the train test split use the following command
+
+```bash
+python mpkpts_split_train_test.py
+```
+
+To perform the feature selection use the following command
+
+```bash
+python mpkpts_feature_selection.py
+```
+
+After running the feature selection, you have to choose the best features eyeballing the plot by inspecting and running the `mpkpts_visualize.ipynb` notebook.
+
+To train the model use the following command
+
+```bash
+python mpkpts_train.py
+```
+
+To evaluate the model use the following command
+
+```bash
+python mpkpts_evaluate.py
+```
+
+
 
 ## Installing TensorFlow + MediaPipe on Apple Silicon
 
