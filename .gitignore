@@ -165,3 +165,4 @@ client_secret.json
 
 # Wandb run tracking (look at results on the online dashboard)
 wandb/
+note.txt
