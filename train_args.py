@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--sample_duration', default=16, type=int, help='Temporal duration of inputs')
     parser.add_argument('--downsample', default=1, type=int, help='Downsampling. Selecting 1 frame out of N')
     parser.add_argument('--initial_scale', default=1.0, type=float, help='Initial scale for multiscale cropping')
-    parser.add_argument('--n_scales', default=5, type=int, help='Number of scales for multiscale cropping')
+    parser.add_argument('--n_scales', default=1, type=int, help='Number of scales for multiscale cropping')
     parser.add_argument('--scale_step', default=0.84089641525, type=float, help='Scale step for multiscale cropping')
     parser.add_argument('--train_crop', default='corner', type=str, choices=train_crop_choices, help='Spatial cropping method in training. random is uniform. corner is selection from 4 corners and 1 center.  (random | corner | center)')
     parser.add_argument('--lr', default=0.04, type=float, help='Initial learning rate (divided by 10 while training by lr scheduler)')

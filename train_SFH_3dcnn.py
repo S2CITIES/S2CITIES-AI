@@ -189,9 +189,11 @@ if __name__ == '__main__':
     # Set torch manual seed for reproducibility
     torch.manual_seed(args.manual_seed)
     # Init different scales for random scaling
-    args.scales = [args.initial_scale]
-    for i in range(1, args.n_scales):
-        args.scales.append(args.scales[-1] * args.scale_step)
+    # args.scales = [args.initial_scale]
+    # for i in range(1, args.n_scales):
+    #     args.scales.append(args.scales[-1] * args.scale_step)
+
+    args.scales = [1.]
 
     # Initialize spatial and temporal transforms (training versions)
     if args.train_crop == 'random':
