@@ -16,6 +16,10 @@ from data.SFHDataset.compute_mean_std import get_SFH_mean_std
 # Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
 import wandb
 
+# Silent warnings about TypedStorage deprecations that appear on the cluster
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
+
 args = parse_args()
 
 # "Collate" function for our dataloaders
