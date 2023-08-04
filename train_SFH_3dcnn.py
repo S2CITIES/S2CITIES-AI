@@ -84,7 +84,8 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
         print("[Epoch {}] Avg Loss: {}".format(epoch, avg_train_loss))
         print("[Epoch {}] Train Accuracy {:.2f}%".format(epoch, train_accuracy))
 
-        wandb.log({"train_accuracy": train_accuracy, "train_loss": avg_train_loss})
+        # commit = false because I want commit to happen after validation (so that the step is incremented once per epoch)
+        wandb.log({"train_accuracy": train_accuracy, "train_loss": avg_train_loss}, commit=False)
 
         # NOTE: test function validates the model when it takes in input the loader for the validation set
         val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
@@ -146,11 +147,11 @@ def test(loader, model, criterion, device, epoch=None):
 
     if epoch is not None:
         # Save metrics with wandb
-        wandb.log({"val_accuracy": val_accuracy, "val_loss": val_loss})
+        wandb.log({"val_accuracy": val_accuracy, "val_loss": val_loss}, commit=True)
 
         print('[Epoch {}] Validation Accuracy: {:.2f}%'.format(epoch, val_accuracy))
     else:
-        wandb.log({"test_accuracy": val_accuracy, "test_loss": val_loss})
+        wandb.log({"test_accuracy": val_accuracy, "test_loss": val_loss}, commit=True)
 
         print('Test Accuracy: {:.2f}%'.format(val_accuracy))
 
@@ -297,16 +298,14 @@ if __name__ == '__main__':
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    classifier = model.module.get_submodule('classifier')
-
     if args.optimizer == 'SGD':
-        optimizer = torch.optim.SGD(list(classifier.parameters()), 
+        optimizer = torch.optim.SGD(list(model.parameters()), 
                                                     lr=args.lr, 
                                                     momentum=0.9, 
                                                     dampening=0.9,
                                                     weight_decay=1e-3)
     elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=1e-3)
+        optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=1e-3)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
