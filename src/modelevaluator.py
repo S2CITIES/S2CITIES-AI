@@ -73,7 +73,7 @@ class ModelEvaluator:
         self.threshold = threshold
         self.y_pred_dict = {
             model_name: np.where(y_proba > self.threshold, 1, 0)
-            for model_name, y_proba in y_proba_dict.items()
+            for model_name, y_proba in self.y_proba_dict.items()
         }
         self.metrics_df = pd.DataFrame(
             columns=[
