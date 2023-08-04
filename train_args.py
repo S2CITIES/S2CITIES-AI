@@ -37,7 +37,9 @@ def parse_args():
     parser.add_argument('--annotation_path', default='data/SFHDataset', type=str, help='Path for train/test/val annotation file')
     parser.add_argument('--pretrained_path', help='Absolute/Relative path for pretrained weights', type=str, dest='pretrained_path', default='auto')
     parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='./models/saves')
+    ### Was used with tensorboard
     parser.add_argument('--exp_path', help='Absolute/Relative path for saving experiment logs', type=str, dest='exp_path', default='./experiments')
+    ### 
     parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
     parser.add_argument('--recompute_mean_std', action='store_true', help='If true, compute from scratch mean and std.')
     parser.set_defaults(recompute_mean_std=False)

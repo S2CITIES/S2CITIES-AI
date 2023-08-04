@@ -76,6 +76,17 @@ print("Test Set: Negatives:", test_negatives, "Positives:", test_positives)
 with open(info_file, 'r') as file:
     info = json.load(file)
 
+# Init info dictionary
+info[target_dataset] = {}
+info[target_dataset]['statistics'] = {}
+info[target_dataset]['statistics']['train'] = {}
+info[target_dataset]['statistics']['test'] = {}
+info[target_dataset]['statistics']['val'] = {}
+
+# mean and std will be saved as empty and filled while training (if not already done)
+info[target_dataset]['mean'] = []
+info[target_dataset]['std'] = []
+
 info[target_dataset]['statistics']['train']['positives'] = train_positives
 info[target_dataset]['statistics']['train']['negatives'] = train_negatives
 info[target_dataset]['statistics']['test']['positives'] = test_positives

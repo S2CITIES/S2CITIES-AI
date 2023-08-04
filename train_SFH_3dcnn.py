@@ -176,7 +176,9 @@ if __name__ == '__main__':
         "optimizer": args.optimizer,
         "sample_size": args.sample_size,
         "sample_duration": args.sample_duration,
-        "train_crop": args.train_crop
+        "train_crop": args.train_crop,
+        "early_stop_patience": args.early_stop_patience,
+        "no_norm": args.no_norm
         }
     )
 
@@ -208,7 +210,10 @@ if __name__ == '__main__':
     else:
         mean = [0, 0, 0]
         std = [1, 1, 1]
-        
+
+    # Log normalization mean and std for future reference
+    wandb.log({"norm_mean": mean, "norm_std": std})
+    
     print(f"Train mean: {mean}")
     print(f"Train std.: {std}")
 

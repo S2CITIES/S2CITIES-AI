@@ -50,5 +50,31 @@
             61.8426513671875,
             61.899932861328125
         ]
+    },
+    "SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224": {
+        "statistics": {
+            "train": {
+                "positives": 538,
+                "negatives": 521
+            },
+            "test": {
+                "positives": 65,
+                "negatives": 68
+            },
+            "val": {
+                "positives": 59,
+                "negatives": 73
+            }
+        },
+        "mean": [
+            116.3516616821289,
+            127.90795135498047,
+            137.33343505859375
+        ],
+        "std": [
+            56.33842086791992,
+            54.74720764160156,
+            52.66481018066406
+        ]
     }
 }

@@ -1,0 +1,152 @@
+{
+    "os": "Linux-5.19.0-50-generic-x86_64-with-glibc2.35",
+    "python": "3.10.12",
+    "heartbeatAt": "2023-08-04T10:42:14.967513",
+    "startedAt": "2023-08-04T10:42:14.050290",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--exp",
+        "training-new-negatives",
+        "--model",
+        "mobilenetv2",
+        "--data_path",
+        "dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224"
+    ],
+    "state": "running",
+    "program": "/home/pestrstr/Desktop/University/S2CITIES/S2CITIES-AI/train_SFH_3dcnn.py",
+    "codePath": "train_SFH_3dcnn.py",
+    "git": {
+        "remote": "https://github.com/S2CITIES/S2CITIES-AI.git",
+        "commit": "ac9d6bf9ead779c97f7309e94cb7f85ea918380d"
+    },
+    "email": "giuseppestracquadanio2@gmail.com",
+    "root": "/home/pestrstr/Desktop/University/S2CITIES/S2CITIES-AI",
+    "host": "pestrstr-Legion-5-Pro-16IAH7H",
+    "username": "pestrstr",
+    "executable": "/home/pestrstr/VirtualEnvs/s2cities/bin/python",
+    "cpu_count": 14,
+    "cpu_count_logical": 20,
+    "cpu_freq": {
+        "current": 2091.8962,
+        "min": 400.0,
+        "max": 4180.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2348.441,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2272.343,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2090.55,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 878.563,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 399.865,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 4700.0
+        },
+        {
+            "current": 1991.298,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 614.226,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2307.261,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 4600.0
+        },
+        {
+            "current": 824.072,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 399.983,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 754.875,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 3500.0
+        },
+        {
+            "current": 2700.0,
+            "min": 400.0,
+            "max": 3500.0
+        }
+    ],
+    "disk": {
+        "total": 383.42799377441406,
+        "used": 286.7171516418457
+    },
+    "gpu": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+            "memory_total": 8589934592
+        }
+    ],
+    "memory": {
+        "total": 15.343578338623047
+    }
+}
