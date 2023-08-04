@@ -169,12 +169,17 @@ if __name__ == '__main__':
         name=args.exp,  
         # track hyperparameters and run metadata
         config={
-        "learning_rate": args.lr,
+        "optimizer": args.optimizer,
+        "lr": args.lr,
+        "lr_patience": args.lr_patience,
+        "momentum": args.momentum,
+        "dampening": args.dampening if not args.nesterov else 0.,
+        "nesterov": args.nesterov,
+        "weight_decay": args.wd, 
         "architecture": args.model,
         "dataset": args.data_path.split("/")[-1],
         "epochs": num_epochs,
         "batch": batch_size,
-        "optimizer": args.optimizer,
         "sample_size": args.sample_size,
         "sample_duration": args.sample_duration,
         "train_crop": args.train_crop,
@@ -188,11 +193,13 @@ if __name__ == '__main__':
 
     # Set torch manual seed for reproducibility
     torch.manual_seed(args.manual_seed)
+
     # Init different scales for random scaling
     # args.scales = [args.initial_scale]
     # for i in range(1, args.n_scales):
     #     args.scales.append(args.scales[-1] * args.scale_step)
 
+    # No erandom scaling - Just original scale
     args.scales = [1.]
 
     # Initialize spatial and temporal transforms (training versions)
@@ -300,12 +307,16 @@ if __name__ == '__main__':
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
+    if args.nesterov:
+        args.dampening = 0.
+
     if args.optimizer == 'SGD':
         optimizer = torch.optim.SGD(list(model.parameters()), 
                                                     lr=args.lr, 
-                                                    momentum=0.9, 
-                                                    dampening=0.9,
-                                                    weight_decay=1e-3)
+                                                    momentum=args.momentum, 
+                                                    dampening=args.dampening,
+                                                    weight_decay=args.wd,
+                                                    nesterov=args.nesterov)
     elif args.optimizer == 'Adam':
         optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=1e-3)
 
