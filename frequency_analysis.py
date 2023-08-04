@@ -95,8 +95,8 @@ if __name__ == '__main__':
 
     if selected_domain == 'grayscale':
         # Provide the paths to the folders containing videos for each class
-        negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224/0'
-        positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224/1'
+        negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/0'
+        positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/1'
 
         # Compute the average pixel distribution for each class
         average_distribution_negatives = compute_average_distribution_grayscale(negatives_folder)
@@ -109,30 +109,30 @@ if __name__ == '__main__':
         plt.ylabel('Frequency')
         plt.title('Avg. Pixel Distribution - Original Dataset')
         plt.legend()
-        plt.savefig('data/SFHDataset/analysis/frequency_analysis_original.pdf', format='pdf')
+        plt.savefig('data/SFHDataset/analysis/frequency_analysis_grayscale_new_dataset.pdf', format='pdf')
         plt.close()
 
-        negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224/0'
-        positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224/1'
+        # negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/0'
+        # positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/1'
 
-        # Compute the average pixel distribution for each class
-        average_distribution_negatives = compute_average_distribution_grayscale(negatives_folder)
-        average_distribution_positives = compute_average_distribution_rgb(positives_folder)
+        # # Compute the average pixel distribution for each class
+        # average_distribution_negatives = compute_average_distribution_grayscale(negatives_folder)
+        # average_distribution_positives = compute_average_distribution_grayscale(positives_folder)
 
-        # Plot the average pixel distributions of both classes on the same plot
-        plt.plot(average_distribution_negatives, label='Negatives')
-        plt.plot(average_distribution_positives, label='Positives')
-        plt.xlabel('Pixel Intensity')
-        plt.ylabel('Frequency')
-        plt.title('Avg. Pixel Distribution - Simplified Dataset')
-        plt.legend()
-        plt.savefig('data/SFHDataset/analysis/frequency_analysis_simplified.pdf', format='pdf')
-        plt.close()
+        # # Plot the average pixel distributions of both classes on the same plot
+        # plt.plot(average_distribution_negatives, label='Negatives')
+        # plt.plot(average_distribution_positives, label='Positives')
+        # plt.xlabel('Pixel Intensity')
+        # plt.ylabel('Frequency')
+        # plt.title('Avg. Pixel Distribution - Simplified Dataset')
+        # plt.legend()
+        # plt.savefig('data/SFHDataset/analysis/frequency_analysis_simplified.pdf', format='pdf')
+        # plt.close()
 
     elif selected_domain == 'rgb':
         # Provide the paths to the folders containing videos for each class
-        negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224/0'
-        positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_ratio1_224x224/1'
+        negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/0'
+        positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/1'
 
         # Compute the average pixel distribution for each class
         average_distribution_r_negatives, average_distribution_g_negatives, average_distribution_b_negatives = compute_average_distribution_rgb(negatives_folder)
@@ -163,41 +163,41 @@ if __name__ == '__main__':
         axs[2].legend()
 
         plt.tight_layout()
-        plt.savefig('data/SFHDataset/analysis/frequency_analysis_rgb_original.pdf', format='pdf')
+        plt.savefig('data/SFHDataset/analysis/frequency_analysis_rgb_new_dataset.pdf', format='pdf')
         plt.close()
 
         # Provide the paths to the folders containing videos for each class
-        negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224/0'
-        positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1_224x224/1'
+        # negatives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/0'
+        # positives_folder = 'dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224/1'
 
-        # Compute the average pixel distribution for each class
-        average_distribution_r_negatives, average_distribution_g_negatives, average_distribution_b_negatives = compute_average_distribution_rgb(negatives_folder)
-        average_distribution_r_positives, average_distribution_g_positives, average_distribution_b_positives = compute_average_distribution_rgb(positives_folder)
-        # Create subplots for R, G, and B channels
-        fig, axs = plt.subplots(3, 1, figsize=(8, 12))
+        # # Compute the average pixel distribution for each class
+        # average_distribution_r_negatives, average_distribution_g_negatives, average_distribution_b_negatives = compute_average_distribution_rgb(negatives_folder)
+        # average_distribution_r_positives, average_distribution_g_positives, average_distribution_b_positives = compute_average_distribution_rgb(positives_folder)
+        # # Create subplots for R, G, and B channels
+        # fig, axs = plt.subplots(3, 1, figsize=(8, 12))
 
-        # Plot the average pixel distributions for each class in RGB domain
-        axs[0].plot(average_distribution_r_negatives, color='red', label='Negatives')
-        axs[0].plot(average_distribution_r_positives, color='blue', label='Positives')
-        axs[0].set_xlabel('Pixel Intensity')
-        axs[0].set_ylabel('Frequency')
-        axs[0].set_title('Average Pixel Distribution (Red Channel) - Simplified')
-        axs[0].legend()
+        # # Plot the average pixel distributions for each class in RGB domain
+        # axs[0].plot(average_distribution_r_negatives, color='red', label='Negatives')
+        # axs[0].plot(average_distribution_r_positives, color='blue', label='Positives')
+        # axs[0].set_xlabel('Pixel Intensity')
+        # axs[0].set_ylabel('Frequency')
+        # axs[0].set_title('Average Pixel Distribution (Red Channel) - Simplified')
+        # axs[0].legend()
 
-        axs[1].plot(average_distribution_g_negatives, color='green', label='Negatives')
-        axs[1].plot(average_distribution_g_positives, color='purple', label='Positives')
-        axs[1].set_xlabel('Pixel Intensity')
-        axs[1].set_ylabel('Frequency')
-        axs[1].set_title('Average Pixel Distribution (Green Channel) - Simplified')
-        axs[1].legend()
+        # axs[1].plot(average_distribution_g_negatives, color='green', label='Negatives')
+        # axs[1].plot(average_distribution_g_positives, color='purple', label='Positives')
+        # axs[1].set_xlabel('Pixel Intensity')
+        # axs[1].set_ylabel('Frequency')
+        # axs[1].set_title('Average Pixel Distribution (Green Channel) - Simplified')
+        # axs[1].legend()
 
-        axs[2].plot(average_distribution_b_negatives, color='blue', label='Negatives')
-        axs[2].plot(average_distribution_b_positives, color='lightblue', label='Positives')
-        axs[2].set_xlabel('Pixel Intensity')
-        axs[2].set_ylabel('Frequency')
-        axs[2].set_title('Average Pixel Distribution (Blue Channel) - Simplified')
-        axs[2].legend()
+        # axs[2].plot(average_distribution_b_negatives, color='blue', label='Negatives')
+        # axs[2].plot(average_distribution_b_positives, color='lightblue', label='Positives')
+        # axs[2].set_xlabel('Pixel Intensity')
+        # axs[2].set_ylabel('Frequency')
+        # axs[2].set_title('Average Pixel Distribution (Blue Channel) - Simplified')
+        # axs[2].legend()
 
-        plt.tight_layout()
-        plt.savefig('data/SFHDataset/analysis/frequency_analysis_rgb_simplified.pdf', format='pdf')
-        plt.close()
+        # plt.tight_layout()
+        # plt.savefig('data/SFHDataset/analysis/frequency_analysis_rgb_simplified.pdf', format='pdf')
+        # plt.close()
