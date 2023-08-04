@@ -15,10 +15,21 @@ from tsfresh.feature_extraction import (
 )
 from tsfresh.utilities.dataframe_functions import impute
 from src import constants
+import argparse
 
 if __name__ == "__main__":
 
-    input_path = constants.FEATURES_EXTRACTED
+    # Read input path
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--input_path",
+        type=str,
+        default=constants.FEATURES_EXTRACTED,
+        help="Path to the extracted time series",
+    )
+    args = parser.parse_args()
+    
+    input_path = args.input_path
 
     # Define empty lists
     list_0 = []
