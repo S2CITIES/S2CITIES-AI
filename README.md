@@ -19,6 +19,14 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 3. Run the script [`dataset_creation_perform_labeling.py`](./dataset_creation_perform_labeling.py) to actually perform the labeling.
 4. Run the script [`dataset_creation_move_labeled.py`](./dataset_creation_move_labeled.py) to move the labeled videos into the respective class folders according to the CSV file.
 
+### Analyse a dataset
+
+To analyse a dataset use the following command
+
+```bash
+python analyse_dataset.py --dataset_path "/Users/teo/Library/CloudStorage/OneDrive-PolitecnicodiMilano/ASP/S2Cities/S2C - Machine Learning/Dataset/S2Cities_Dataset_Collection"
+```
+
 ### mpkpts pipeline
 
 To subsample the videos use the following command

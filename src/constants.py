@@ -20,6 +20,3 @@ SHIFT_DURATION = 1
 SEED = 42
 MODEL_NAME = "mpkpts"
 LABELS = ["SFH_No", "SFH_Yes"]
-
-DATASET_FOLDER = "/Users/teo/Library/CloudStorage/OneDrive-PolitecnicodiMilano/ASP/S2Cities/S2C - Machine Learning/Dataset/S2Cities_Dataset_Collection"
-

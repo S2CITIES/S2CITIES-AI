@@ -14,7 +14,7 @@ import src.utils as utils
 
 class AnalyseDataset:
     def __init__(self, DATASET_FOLDER, VIDEO_EXTENSIONS, save_dir=None):
-        self.DATASET_FOLDER = DATASET_FOLDER
+        self.DATASET_FOLDER = Path(DATASET_FOLDER)
         self.VIDEO_EXTENSIONS = VIDEO_EXTENSIONS
         # Check that the dataset folder exists and contains only two folders, one 1 and one 0
         if not self.DATASET_FOLDER.exists():
