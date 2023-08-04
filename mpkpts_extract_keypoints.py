@@ -58,12 +58,4 @@ if __name__ == "__main__":
             else:
                 print("No hand detected for the whole video, or multiple hands detected.")
 
-        # Loop through the files in the output directory
-        for output_file in sorted((path_output / target).glob("*")):
-
-            # If there is not a corresponding file in the input directory, delete it
-            if not (path_input / output_file.relative_to(path_output)).is_file():
-                print(f"Deleting {output_file}")
-                output_file.unlink()
-
     print("Done extracting keypoints.")
