@@ -1,22 +1,19 @@
-"""
-The following is for being used when creating the dataset clips form the collected videos.
-"""
-
-from pathlib import Path
-import os
-import json
-
+import argparse
+from src import constants
 from src.dataset_creation.videosubsampler import VideoSubsampler
 
-# Read from json file
-with open("./src/const.json", "r", encoding="utf-8") as f:
-    const = json.load(f)
+if __name__ == "__main__":
 
-subsampler = VideoSubsampler(
-    target_fps=const["SUBSAMPLE_FPS"],
-    video_extensions=const["VIDEO_EXTENSIONS"],
-    source_dir=Path(const["DATA_PATH"]) / const["VIDEOS_LABELED"],
-    target_dir=Path(const["DATA_PATH"]) / const["VIDEOS_LABELED_SUBSAMPLED"]
-    )
+    parser = argparse.ArgumentParser(description='Subsample videos.')
+    parser.add_argument('--input', type=str, required=True, help='Path to input directory.')
+    parser.add_argument('--output', type=str, required=True, help='Path to output directory.')
+    args = parser.parse_args()
 
-subsampler.subsample_videos()
+    subsampler = VideoSubsampler(
+        target_fps=constants.SUBSAMPLE_FPS,
+        video_extensions=constants.VIDEO_EXTENSIONS,
+        path_input=args.input,
+        path_output=args.output,
+        )
+
+    subsampler.subsample_videos()
