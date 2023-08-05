@@ -105,7 +105,7 @@ python mpkpts_extract_timeseries_features.py \
 python mpkpts_split_train_test.py --folder "data/7_timeseries_features_extracted"
 ```
 
-optionally, you can specify the `--test_size` parameter to change the size of the test set (default is 0.2) and the `--shuffle` parameter to shuffle the dataset before splitting (default is `True`).
+optionally, you can specify the `--test_size` parameter to change the size of the test set (default is 0.2).
 
 5. To perform the feature selection use the following command
 

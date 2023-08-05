@@ -18,8 +18,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_size', type=float, default=0.2,
                         help='Test size for train_test_split.')
-    parser.add_argument('--shuffle', type=bool, default=True,
-                        help='Shuffle for train_test_split.')
     parser.add_argument('--folder', type=str, required=True,
                         help='Folder containing the extracted features.')
     args = parser.parse_args()
@@ -39,7 +37,7 @@ if __name__ == '__main__':
         y,
         test_size=args.test_size,
         random_state=constants.SEED,
-        shuffle=args.shuffle,
+        shuffle=True,
         stratify=y
     )
 
