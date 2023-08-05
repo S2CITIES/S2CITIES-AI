@@ -7,7 +7,7 @@ from src.dataset_creation.videoprocessor import VideoProcessor
 from src import constants
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--starting_idx', type=int,
+parser.add_argument('--starting_idx', type=int, required=True,
                     help='Starting index for next video to be processed.')
 args = parser.parse_args()
 

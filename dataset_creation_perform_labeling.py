@@ -2,20 +2,19 @@
 The following is for being used when actually performing the labeling
 """
 
-from pathlib import Path
-import os
-import json
-
 from src.dataset_creation.videolabeler import VideoLabeler
+from src import constants
+import argparse
 
-# Set working directory to this file's directory using pathlib
-os.chdir(Path(__file__).parent)
+# Read with argparse the folder and the csv filename
+parser = argparse.ArgumentParser()
+parser.add_argument('--folder', type=str, required=True,
+                    help='Folder containing the videos to be labeled.')
+parser.add_argument('--csv_filename', type=str, required=True,
+                    help='Filename of the csv file to be created.')
+args = parser.parse_args()
 
-# Read from json file
-with open("./src/const.json", "r", encoding="utf-8") as f:
-    const = json.load(f)
-
-labeler = VideoLabeler(video_extensions=const["VIDEO_EXTENSIONS"])
-labeler.read_dataframe("labeling.csv")
-labeler.label_videos("3_videos_splitted")
-labeler.update_csv("labeling.csv")
+labeler = VideoLabeler(video_extensions=constants.VIDEO_EXTENSIONS)
+labeler.read_dataframe(args.csv_filename)
+labeler.label_videos(args.folder)
+labeler.update_csv(args.csv_filename)

@@ -26,10 +26,22 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 
 ### Dataset creation pipeline
 
-1. Run the script [`dataset_creation_move_and_split.py`](./dataset_creation_move_and_split.py) to move, rename and split the videos.
-2. Run the script [`dataset_creation_starter_csv.py`](./dataset_creation_starter_csv.py) to create the starter CSV file and facilitate labeling by someone else.
-3. Run the script [`dataset_creation_perform_labeling.py`](./dataset_creation_perform_labeling.py) to actually perform the labeling.
-4. Run the script [`dataset_creation_move_labeled.py`](./dataset_creation_move_labeled.py) to move the labeled videos into the respective class folders according to the CSV file.
+1. Run the following to move, rename and split the videos, making sure to set the `starting_idx` parameter to the starting index to use (i.e. the index of the last video + 1).
+```bash
+python dataset_creation_move_and_split.py --starting_idx 123456
+```
+2. Run the following to create the starter CSV file and facilitate labeling by someone else.
+```bash
+python dataset_creation_starter_csv.py --folder "data/3_videos_splitted" --csv_filename "data/labels.csv"
+```
+3. Run the following to actually perform the labeling.
+```bash
+python dataset_creation_perform_labeling.py --folder "data/3_videos_splitted" --csv_filename "data/labels.csv"
+```
+4. Run the following to move the labeled videos into the respective class folders according to the CSV file.
+```bash
+python dataset_creation_move_labeled.py --source_folder "data/3_videos_splitted" --destination_folder "data/4_videos_labeled" --csv_filename "data/labels.csv"
+```
 
 ### Analyse a dataset
 
