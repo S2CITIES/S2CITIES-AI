@@ -36,7 +36,7 @@ if __name__ == '__main__':
         X,
         y,
         test_size=args.test_size,
-        random_state=42,
+        random_state=constants.SEED,
         shuffle=args.shuffle,
         stratify=y
     )

@@ -39,8 +39,8 @@ if __name__ == '__main__':
     # Subset X and y to have balanced classes
     # minority_class = y.value_counts().min()
     # minority_class_value = y.value_counts().idxmin()
-    # X = X[y == minority_class_value].append(X[y == (1-minority_class_value)].sample(n=minority_class, random_state=42))
-    # y = y[y == minority_class_value].append(y[y == (1-minority_class_value)].sample(n=minority_class, random_state=42))
+    # X = X[y == minority_class_value].append(X[y == (1-minority_class_value)].sample(n=minority_class, random_state=constants.SEED))
+    # y = y[y == minority_class_value].append(y[y == (1-minority_class_value)].sample(n=minority_class, random_state=constants.SEED))
 
     # Compute class weights
     class_weights = class_weight.compute_class_weight(

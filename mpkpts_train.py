@@ -73,7 +73,7 @@ param_grid = {
     'max_depth': [None, 8, 16, 24],
     'min_samples_split': [1, 8, 16, 24],
     'min_samples_leaf': [1, 8, 16, 24],
-    'random_state': [42]
+    'random_state': [constants.SEED]
 }
 rf = RandomForestClassifier()
 
@@ -97,7 +97,7 @@ param_grid = {
     'C': [1],
     'gamma': ['scale'],
     'kernel': ['rbf'],
-    'random_state': [42]
+    'random_state': [constants.SEED]
 }
 svc = SVC(probability=True)
 
@@ -122,7 +122,7 @@ param_grid = {
     'penalty': ['l1', 'l2'],
     'solver': ['liblinear'],
     'max_iter': [1000],
-    'random_state': [42],
+    'random_state': [constants.SEED],
 }
 lr = LogisticRegression()
 
