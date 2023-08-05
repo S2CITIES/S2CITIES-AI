@@ -11,7 +11,6 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
   - [Dataset creation pipeline](#dataset-creation-pipeline)
   - [Analyse a dataset](#analyse-a-dataset)
   - [mpkpts pipeline](#mpkpts-pipeline)
-- [Installing TensorFlow + MediaPipe on Apple Silicon](#installing-tensorflow--mediapipe-on-apple-silicon)
 - [Resources](#resources)
   - [Mediapipe](#mediapipe)
   - [General computer vision](#general-computer-vision)
@@ -128,16 +127,6 @@ python mpkpts_train.py --folder "data/7_timeseries_features_extracted"
 ```bash
 python mpkpts_evaluate.py --folder "data/7_timeseries_features_extracted"
 ```
-
-## Installing TensorFlow + MediaPipe on Apple Silicon
-
-**DEPRECATED**: This is probably not needed anymore, since the latest version of MediaPipe now supports macOS natively.
-
-1. ~~Install `pip install mediapipe-silicon` which installs `protobuf==3.20.3`.~~
-2. ~~Take the `builder.py` from the installed version and copy it somewhere else `~/.pyenv/versions/s2cities/lib/python3.10/site-packages/google/protobuf/internal`.~~
-3. ~~Install `pip install tensorflow-macos tensorflow-metal` which installs `protobuf==3.19.6`. TensorFlow has priority, so keep this version, but overwrite the `builder.py` with the one you took earlier.~~
-
-https://stackoverflow.com/questions/71759248/importerror-cannot-import-name-builder-from-google-protobuf-internal
 
 ## Resources
 
