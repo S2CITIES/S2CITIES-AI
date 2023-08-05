@@ -29,7 +29,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     
-    input_path = args.input_path
+    input_path = Path(args.input_path)
 
     # Define empty lists
     list_0 = []
