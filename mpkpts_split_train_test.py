@@ -20,9 +20,11 @@ if __name__ == '__main__':
                         help='Test size for train_test_split.')
     parser.add_argument('--shuffle', type=bool, default=True,
                         help='Shuffle for train_test_split.')
+    parser.add_argument('--folder', type=str, required=True,
+                        help='Folder containing the extracted features.')
     args = parser.parse_args()
 
-    path_data = Path(constants.TIMESERIES_FEATURES_EXTRACTED)
+    path_data = Path(args.folder)
 
     if not Path(path_data / 'X.pkl').is_file() or not Path(path_data / 'y.pkl').is_file():
         raise FileNotFoundError('X.pkl or y.pkl not found in {}'.format(path_data))

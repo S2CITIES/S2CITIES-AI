@@ -16,15 +16,17 @@ if __name__ == '__main__':
 
     # Read arguments with argparse: n_jobs
     parser = argparse.ArgumentParser()
-    parser.add_argument('--n_jobs', type=int, default=8,
+    parser.add_argument('--n_jobs', type=int, default=1,
                         help='Number of jobs for parallelization.')
+    parser.add_argument('--folder', type=str, required=True,
+                        help='Folder containing the extracted features.')
     args = parser.parse_args()
 
     # Define seed for reproducibility
     os.environ['PYTHONHASHSEED'] = str(constants.SEED)
     np.random.seed(constants.SEED)
 
-    path_data = Path(constants.TIMESERIES_FEATURES_EXTRACTED)
+    path_data = Path(args.folder)
 
     # Read data
     X = pd.read_pickle(path_data / 'X.pkl')

@@ -36,7 +36,12 @@ def build_grid_search(estimator, param_grid):
                                scoring='accuracy')
     return grid_search
 
-path_data = path_data = Path(constants.TIMESERIES_FEATURES_EXTRACTED)
+parser = argparse.ArgumentParser()
+parser.add_argument('--folder', type=str, required=True,
+                    help='Folder containing the extracted features.')
+args = parser.parse_args()
+
+path_data = Path(args.folder)
 
 # Read data
 X_train = pd.read_pickle(path_data / 'X_train.pkl')

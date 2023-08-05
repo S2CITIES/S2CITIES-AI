@@ -16,7 +16,6 @@ class VideoProcessor:
                  videos_raw_folder,
                  videos_raw_processed_folder,
                  videos_splitted_folder,
-                 videos_labeled_folder,
                  video_extensions,
                  subclip_duration,
                  shift_duration,
@@ -31,12 +30,11 @@ class VideoProcessor:
         self.VIDEOS_RAW = videos_raw_folder
         self.VIDEOS_RAW_PROCESSED = videos_raw_processed_folder
         self.VIDEOS_SPLITTED = videos_splitted_folder
-        self.VIDEOS_LABELED = videos_labeled_folder
 
         self.VIDEO_EXTENSIONS = tuple(video_extensions)
 
         # Create folders if necessary
-        folders = [self.VIDEOS_SPLITTED, self.VIDEOS_ARRIVED, self.VIDEOS_RAW, self.VIDEOS_RAW_PROCESSED, self.VIDEOS_LABELED]
+        folders = [self.VIDEOS_SPLITTED, self.VIDEOS_ARRIVED, self.VIDEOS_RAW, self.VIDEOS_RAW_PROCESSED]
         for folder in folders:
             os.makedirs(folder, exist_ok=True)
 

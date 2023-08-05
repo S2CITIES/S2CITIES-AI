@@ -14,7 +14,6 @@ from tsfresh.feature_extraction import (
     MinimalFCParameters,
 )
 from tsfresh.utilities.dataframe_functions import impute
-from src import constants
 import argparse
 
 if __name__ == "__main__":
@@ -22,14 +21,20 @@ if __name__ == "__main__":
     # Read input path
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--input_path",
+        "--input",
         type=str,
-        default=constants.FEATURES_EXTRACTED,
+        required=True,
         help="Path to the extracted time series",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        required=True,
+        help="Path to the extracted features",
     )
     args = parser.parse_args()
     
-    input_path = Path(args.input_path)
+    input_path = Path(args.input)
 
     # Define empty lists
     list_0 = []
@@ -77,7 +82,7 @@ if __name__ == "__main__":
     y = pd.Series(y)
 
     # Create output directory
-    output_path = constants.TIMESERIES_FEATURES_EXTRACTED
+    output_path = Path(args.output)
     output_path.mkdir(parents=True, exist_ok=True)
 
     # Save X and y as pickle files

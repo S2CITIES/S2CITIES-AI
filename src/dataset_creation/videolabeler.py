@@ -72,9 +72,16 @@ class VideoLabeler:
     # Read the csv and move files to the corresponding folder based on the label
     def move_files(self, source_folder, destination_folder):
 
+        # Create destination folder if it doesn't exist
+        destination_folder = Path(destination_folder)
+        destination_folder.mkdir(parents=True, exist_ok=True)
+
+        # Convert to Path object
+        source_folder = Path(source_folder)
+
         # Define the destination folders
-        VIDEOS_LABEL_0_FOLDER = Path(destination_folder) / "0"
-        VIDEOS_LABEL_1_FOLDER = Path(destination_folder) / "1"
+        VIDEOS_LABEL_0_FOLDER = destination_folder / "0"
+        VIDEOS_LABEL_1_FOLDER = destination_folder / "1"
         
         # Create folders if they don't exist
         VIDEOS_LABEL_0_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -82,8 +89,8 @@ class VideoLabeler:
 
         for index, video in self.dataframe.iterrows():
             if video["label"] == 1:
-                move_file(str(Path(source_folder) / video['file']), str(VIDEOS_LABEL_1_FOLDER / video['file']))
+                move_file(str(source_folder / video['file']), str(VIDEOS_LABEL_1_FOLDER / video['file']))
             elif video["label"] == 0:
-                move_file(str(Path(source_folder) / video['file']), str(VIDEOS_LABEL_0_FOLDER / video['file']))
+                move_file(str(source_folder / video['file']), str(VIDEOS_LABEL_0_FOLDER / video['file']))
             else:
                 print("File {} has no label".format(video["file"]))

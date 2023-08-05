@@ -28,20 +28,34 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 
 1. Run the following to move, rename and split the videos, making sure to set the `starting_idx` parameter to the starting index to use (i.e. the index of the last video + 1).
 ```bash
-python dataset_creation_move_and_split.py --starting_idx 123456
+python dataset_creation_move_and_split.py \
+--starting_idx 123 \
+--path_videos_arrived "data/0_videos_arrived" \
+--path_videos_raw "data/1_videos_raw" \
+--path_videos_raw_processed "data/2_videos_raw_processed" \
+--path_videos_splitted "data/3_videos_splitted"
 ```
 2. Run the following to create the starter CSV file and facilitate labeling by someone else.
 ```bash
-python dataset_creation_starter_csv.py --folder "data/3_videos_splitted" --csv_filename "data/labels.csv"
+python dataset_creation_starter_csv.py \
+--folder "data/3_videos_splitted" \
+--csv_filename "data/labels.csv"
 ```
 3. Run the following to actually perform the labeling.
 ```bash
-python dataset_creation_perform_labeling.py --folder "data/3_videos_splitted" --csv_filename "data/labels.csv"
+python dataset_creation_perform_labeling.py \
+--folder "data/3_videos_splitted" \
+--csv_filename "data/labels.csv"
 ```
 4. Run the following to move the labeled videos into the respective class folders according to the CSV file.
 ```bash
-python dataset_creation_move_labeled.py --source_folder "data/3_videos_splitted" --destination_folder "data/4_videos_labeled" --csv_filename "data/labels.csv"
+python dataset_creation_move_labeled.py \
+--source_folder "data/3_videos_splitted" \
+--destination_folder "data/4_videos_labeled" \
+--csv_filename "data/labels.csv"
 ```
+
+Now `data/4_videos_labeled` should contain the labeled videos, under the `1` and `0` folders.
 
 ### Analyse a dataset
 
@@ -53,51 +67,67 @@ python analyse_dataset.py --dataset_path "/Users/teo/Library/CloudStorage/OneDri
 
 ### mpkpts pipeline
 
-To subsample the videos use the following command
+1. To subsample the videos use the following command
 
 ```bash
-python dataset_creation_subsample_videos.py --input "/Users/teo/My Drive (s2cities.project@gmail.com)/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" --output "data/5_videos_labeled_subsampled"
+python dataset_creation_subsample_videos.py \
+--input "data/4_videos_labeled" \
+--output "data/5_videos_labeled_subsampled"
 ```
 
-To extract the keypoints from the videos use the following command
+Remember that if the dataset has been modified or moved, for example on a mounted drive, you can easily replace the input folder:
 
 ```bash
-python mpkpts_extract_keypoints.py --input "data/5_videos_labeled_subsampled" --output "data/6_features_extracted"
+python dataset_creation_subsample_videos.py \
+--input "/Users/teo/My Drive (s2cities.project@gmail.com)/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" \
+--output "data/5_videos_labeled_subsampled"
 ```
 
-To extract the timeseries features from the keypoints use the following command
+2. To extract the keypoints from the videos use the following command
 
 ```bash
-python mpkpts_extract_timeseries_features.py
+python mpkpts_extract_keypoints.py \
+--input "data/5_videos_labeled_subsampled" \
+--output "data/6_features_extracted"
 ```
 
-To perfrom the train test split use the following command
+3. To extract the timeseries features from the keypoints use the following command
 
 ```bash
-python mpkpts_split_train_test.py
+python mpkpts_extract_timeseries_features.py \
+--input "data/6_features_extracted" \
+--output "data/7_timeseries_features_extracted"
 ```
 
-To perform the feature selection use the following command
+4. To perfrom the train test split use the following command
 
 ```bash
-python mpkpts_feature_selection.py
+python mpkpts_split_train_test.py --folder "data/7_timeseries_features_extracted"
 ```
+
+optionally, you can specify the `--test_size` parameter to change the size of the test set (default is 0.2) and the `--shuffle` parameter to shuffle the dataset before splitting (default is `True`).
+
+5. To perform the feature selection use the following command
+
+```bash
+python mpkpts_feature_selection.py --folder "data/7_timeseries_features_extracted"
+```
+
+optionally, you can specify the `--n_jobs` parameter to change the number of jobs to run in parallel (default is 1).
 
 After running the feature selection, you have to choose the best features eyeballing the plot by inspecting and running the `mpkpts_visualize.ipynb` notebook.
 
-To train the model use the following command
+6. To train the model use the following command
 
 ```bash
-python mpkpts_train.py
+python mpkpts_train.py --folder "data/7_timeseries_features_extracted"
 ```
 
-To evaluate the model use the following command
+7. To evaluate the model use the following command
 
 ```bash
-python mpkpts_evaluate.py
+python mpkpts_evaluate.py --folder "data/7_timeseries_features_extracted"
 ```
-
-
 
 ## Installing TensorFlow + MediaPipe on Apple Silicon
 
