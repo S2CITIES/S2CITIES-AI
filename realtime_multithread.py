@@ -12,6 +12,7 @@ See also:
 https://stackoverflow.com/questions/19790570/using-a-global-variable-with-a-thread
 """
 
+import argparse
 import threading
 import time
 
@@ -20,7 +21,7 @@ import joblib
 import mediapipe as mp
 import numpy as np
 
-from models.model import Model
+from models.model_mpkpts import Model
 from src.keypointsextractor import KeypointsExtractor
 
 # Set up the feature extractor
@@ -85,7 +86,7 @@ def thread_extract_keypoints():
                     timeseries[:-1] = timeseries[1:]
                     timeseries[-1] = keypoints
             elif results.multi_hand_landmarks and len(results.multi_hand_landmarks) > 1:
-                print("Multiple hands detected. Fuck you")
+                print("Multiple hands detected. Ignoring.")
             elif not results.multi_hand_landmarks:
                 # if there are not regognized keypoints, reset the timeseries
                 timeseries = []
@@ -133,24 +134,70 @@ def thread_extract_keypoints():
             break
 
 
-def thread_predict(stop_event, predict_event):
+def thread_predict(
+        stop_event,
+        predict_event,
+        training_results,
+        model_choice,
+        threshold,
+        tsfresh_parameters,
+        scaler,
+        final_features,
+        ):
 
     # Load the random forest model
-    model = Model(threshold=0.9)
+    model = Model(
+        training_results=training_results,
+        model_choice=model_choice,
+        tsfresh_parameters=tsfresh_parameters,
+        scaler=scaler,
+        final_features=final_features,
+        )
 
     while not stop_event.is_set():
 
         predict_event.wait()
 
         # Predict the output using the model
-        output = model.predict(timeseries)
+        proba = model.predict(timeseries)
 
-        print(f"Predicted output: {output}")
+        output = (proba[:,1] >= threshold).astype(bool)
+
+        print(f"Predicted output: {output} [{proba[:,1]}]")
 
         # Reset the predict event
         predict_event.clear()
 
 if __name__ == '__main__':
+
+    # Argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--training_results',
+                        type=str,
+                        required=True,
+                        help='Path to the training results file')
+    parser.add_argument('--tsfresh_parameters',
+                        type=str,
+                        required=True,
+                        help='Path to the tsfresh parameters file')
+    parser.add_argument('--scaler',
+                        type=str,
+                        required=True,
+                        help='Path to the scaler file')
+    parser.add_argument('--model_choice',
+                        type=str,
+                        choices=['RF', 'SVM', 'LR'],
+                        required=True,
+                        help='Name of the model to load')
+    parser.add_argument('--threshold',
+                        type=float,
+                        default=0.5,
+                        help='Threshold for the classification')
+    parser.add_argument('--final_features',
+                        type=str,
+                        required=True,
+                        help='Path to the final features file')
+    args = parser.parse_args()
 
     # Set up the timeseries
     timeseries = []
@@ -162,7 +209,20 @@ if __name__ == '__main__':
     predict_event = threading.Event()
 
     # Start the predict thread
-    predict_process = threading.Thread(name='predict', target=thread_predict, args=(stop_event,predict_event))
+    predict_process = threading.Thread(
+        name='predict',
+        target=thread_predict,
+        args=(
+            stop_event,
+            predict_event,
+            args.training_results,
+            args.model_choice,
+            args.threshold,
+            args.tsfresh_parameters,
+            args.scaler,
+            args.final_features,
+            )
+        )
     predict_process.start()
 
     # Start the extract keypoints thread which is the main thread

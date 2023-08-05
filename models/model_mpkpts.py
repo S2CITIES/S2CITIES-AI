@@ -11,22 +11,33 @@ from tsfresh.utilities.dataframe_functions import impute
 
 
 class Model:
-    def __init__(self, threshold=0.5):
-        self.threshold = threshold
-        self.model = joblib.load('./models/model.pkl')
-
-        with open("./src/const.json", "r", encoding="utf-8") as f:
-            const = json.load(f)
+    def __init__(self,
+                 training_results,
+                 model_choice,
+                 tsfresh_parameters,
+                 scaler,
+                 final_features,
+                 ):
         
-        # Read the settings from pkl file
-        features_path = Path(const["DATA_PATH"]) / const["TIMESERIES_FEATURES_EXTRACTED"]
-        with open(str(features_path / 'kind_to_fc_parameters.pkl'), "rb") as f:
+        with open(training_results, 'rb') as handle:
+            self.training_results = pickle.load(handle)
+
+        self.model = self.training_results[model_choice].get('model')
+
+        with open(tsfresh_parameters, "rb") as f:
             self.kind_to_fc_parameters = pickle.load(f)
+
+        with open(scaler, 'rb') as handle:
+            self.scaler = pickle.load(handle)
+
+        self.final_features = pd.read_pickle(final_features)
 
     def predict(self, features):
 
         features = pd.DataFrame(features)
         features['id'] = 1
+        # save features
+        features.to_pickle('features.pkl')
         X = extract_features(
             features,
             column_id='id',
@@ -35,11 +46,18 @@ class Model:
             impute_function=impute,
             n_jobs=1
             )
-        
+
+        # Reorder columns to match the training set        
+        X = X[self.final_features]
+
+        # Scale the features
+        X = pd.DataFrame(self.scaler.transform(X), columns=X.columns)
+
+        # Predict the output
         proba = self.model.predict_proba(X)
 
         # Select based on threshold
-        return (proba[:,1] >= self.threshold).astype(bool)
+        return proba
 
 # model = Model()
 

@@ -11,6 +11,7 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
   - [Dataset creation pipeline](#dataset-creation-pipeline)
   - [Analyse a dataset](#analyse-a-dataset)
   - [mpkpts pipeline](#mpkpts-pipeline)
+  - [Real-time testing](#real-time-testing)
 - [Resources](#resources)
   - [Mediapipe](#mediapipe)
   - [General computer vision](#general-computer-vision)
@@ -126,6 +127,20 @@ python mpkpts_train.py --folder "data/7_timeseries_features_extracted"
 
 ```bash
 python mpkpts_evaluate.py --folder "data/7_timeseries_features_extracted"
+```
+
+### Real-time testing
+
+To test the model in real-time, run the following command
+
+```bash
+python realtime_multithread.py \
+--training_results "data/7_timeseries_features_extracted/training_results.pkl" \
+--tsfresh_parameters "data/7_timeseries_features_extracted/kind_to_fc_parameters.pkl" \
+--scaler "data/7_timeseries_features_extracted/scaler.pkl" \
+--final_features "data/7_timeseries_features_extracted/final_features.pkl" \
+--model_choice RF \
+--threshold 0.5
 ```
 
 ## Resources
