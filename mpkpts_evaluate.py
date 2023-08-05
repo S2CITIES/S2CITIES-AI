@@ -12,8 +12,8 @@ with open(str(path_data / 'training_results.pkl'), 'rb') as handle:
 
 
 y_proba_dict = {
-    model_name: model_details.get('y_proba_test')[:, 1]
-    for model_name, model_details in training_results.items()
+    classifier_name: model_details.get('y_proba_test')[:, 1]
+    for classifier_name, model_details in training_results.items()
     }
 
 

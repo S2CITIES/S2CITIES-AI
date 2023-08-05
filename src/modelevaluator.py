@@ -72,8 +72,8 @@ class ModelEvaluator:
         self.y_proba_dict = y_proba_dict
         self.threshold = threshold
         self.y_pred_dict = {
-            model_name: np.where(y_proba > self.threshold, 1, 0)
-            for model_name, y_proba in self.y_proba_dict.items()
+            classifier_name: np.where(y_proba > self.threshold, 1, 0)
+            for classifier_name, y_proba in self.y_proba_dict.items()
         }
         self.metrics_df = pd.DataFrame(
             columns=[
@@ -85,12 +85,12 @@ class ModelEvaluator:
                 "F1 score",
             ]
         )
-        for model_name, y_pred in self.y_pred_dict.items():
+        for classifier_name, y_pred in self.y_pred_dict.items():
             # Calculate accuracy
             accuracy = accuracy_score(self.y_true, y_pred)
 
             # Calculate AUC
-            auc = roc_auc_score(self.y_true, self.y_proba_dict[model_name])
+            auc = roc_auc_score(self.y_true, self.y_proba_dict[classifier_name])
 
             # Calculate precision
             precision = precision_score(self.y_true, y_pred)
@@ -106,7 +106,7 @@ class ModelEvaluator:
                 [
                     self.metrics_df,
                     pd.DataFrame({
-                        "Model": [model_name],
+                        "Model": [classifier_name],
                         "Accuracy": [accuracy],
                         "AUC": [auc],
                         "Precision": [precision],
@@ -138,7 +138,7 @@ class ModelEvaluator:
             filename (str): Filename for exported file.
         """
         fig, ax = plt.subplots(figsize=(10, 10))
-        for model_name, y_proba in self.y_proba_dict.items():
+        for classifier_name, y_proba in self.y_proba_dict.items():
             # Calculate ROC curve
             fpr, tpr, thresholds = roc_curve(self.y_true, y_proba)
 
@@ -149,7 +149,7 @@ class ModelEvaluator:
             ax.plot(
                 fpr,
                 tpr,
-                label=f"{model_name} (AUC = {auc:.4f})",
+                label=f"{classifier_name} (AUC = {auc:.4f})",
             )
 
         ax.plot([0, 1], [0, 1], linestyle="--", label="Random Classifier")
@@ -168,10 +168,10 @@ class ModelEvaluator:
             filename (str): Filename for exported file.
         """
 
-        for model_name, y_pred in self.y_pred_dict.items():
+        for classifier_name, y_pred in self.y_pred_dict.items():
             fig, ax = plt.subplots(figsize=(10, 10))
             cm = confusion_matrix(self.y_true, y_pred)
-            ax.set_title(f"{model_name} Confusion Matrix")
+            ax.set_title(f"{classifier_name} Confusion Matrix")
             plot_confusion_matrix(
                 conf_mat=cm,
                 show_absolute=True,
@@ -187,7 +187,7 @@ class ModelEvaluator:
             if export is not None and export not in ["save", "show", "both"]:
                 raise ValueError("Invalid export option")
             if export in ["save", "both"]:
-                plt.savefig(f"{filename}_{model_name}.pdf", bbox_inches='tight')
+                plt.savefig(f"{filename}_{classifier_name}.pdf", bbox_inches='tight')
             if export in ["show", "both"]:
                 plt.show()
     
@@ -202,7 +202,7 @@ class ModelEvaluator:
         """
         
         fig, ax = plt.subplots(figsize=(10, 10))
-        for model_name, y_proba in self.y_proba_dict.items():
+        for classifier_name, y_proba in self.y_proba_dict.items():
             # Calculate precision-recall curve
             precision, recall, thresholds = precision_recall_curve(
                 self.y_true, y_proba
@@ -212,7 +212,7 @@ class ModelEvaluator:
             ax.plot(
                 recall,
                 precision,
-                label=f"{model_name}",
+                label=f"{classifier_name}",
             )
 
         # Compute the zero skill model line

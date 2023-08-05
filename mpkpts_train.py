@@ -148,13 +148,13 @@ with open(str(path_data / 'training_results.pkl'), 'wb') as handle:
 # Evaluate performance on wandb
 
 # Iterate on training_results
-for model_name, model_details in training_results.items():
+for classifier_name, model_details in training_results.items():
 
     # start a new wandb run and add your model hyperparameters
     wandb.init(
         project=constants.MODEL_NAME,
         config=model_details.get('config'),
-        name=model_name,
+        name=classifier_name+"_ext_neg_teo",
         )
 
     # log additional visualisations to wandb
