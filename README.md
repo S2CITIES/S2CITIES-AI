@@ -1,9 +1,21 @@
+<!-- omit from toc -->
 # S2CITIES-AI
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
 
 Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Dataset creation pipeline](#dataset-creation-pipeline)
+  - [Analyse a dataset](#analyse-a-dataset)
+  - [mpkpts pipeline](#mpkpts-pipeline)
+- [Installing TensorFlow + MediaPipe on Apple Silicon](#installing-tensorflow--mediapipe-on-apple-silicon)
+- [Resources](#resources)
+  - [Mediapipe](#mediapipe)
+  - [General computer vision](#general-computer-vision)
+- [Authors](#authors)
 
 ## Installation
 
