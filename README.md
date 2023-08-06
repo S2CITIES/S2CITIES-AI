@@ -173,7 +173,7 @@ This script will update the file `info.json` and write (**over-write**) the file
 
 Statistics will be saved on file `info.json` for future reference. This file will also contain other useful information, such as the train set *mean* and *standard deviation*. 
 
-### Training the model
+### Fine-tuning on custom dataset
 Now you have all the ingredients that you need to start training/fine-tuning a 3D-CNN model. 
 To start your fine-tuning procedure, run:
 
@@ -191,9 +191,9 @@ python train_SFH_3dcnn.py \
 --lr_patience 40
 ```
 
-The command above will start to fine-tune a MobileNet-v2 model, pre-trained on the Jester dataset.
-Available models to fine-tune are (up-to-now): *MobileNet*, *MobileNet-v2*, *SqueezeNet*.
-You can specify the path to your pre-trained weights with `--pretrained_path`.
+The command above will start to fine-tune a MobileNet-v2 model, pre-trained on the Jester dataset. \
+Available models to fine-tune are (up-to-now): *MobileNet*, *MobileNet-v2*, *SqueezeNet*. \
+You can specify the path to your pre-trained weights with `--pretrained_path`. \
 You also may want to have a look at the script `train_args.py` to know all the possible parameters that you can specify.
 Alternatively, you can simply run a `python train_SFH_3dcnn.py -h|--help`.
 
