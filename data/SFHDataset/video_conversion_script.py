@@ -1,5 +1,13 @@
 import cv2
 import os
+import argparse
+
+parser = argparse.ArgumentParser(
+    prog = 'Script to generate SignalForHelp dataset pre-processed videos.'
+)
+parser.add_argument('--source_path', default='dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_raw', type=str, help='Path for train/test/val video files.')
+parser.add_argument('--target_width', default=112, type=int, help='Target width for pre-processed train/test/val videos.')
+parser.add_argument('--target_height', default=112, type=int, help='Target height for pre-processed train/test/val videos.')
 
 def convert_ratio(target_ratio, source_video_path, dest_video_path):
 
@@ -82,18 +90,21 @@ def resize_frames(target_width, target_height, source_video_path, dest_video_pat
             output_video.release()
 
 if __name__ == '__main__':
+    args = parser.parse_args()
 
-    source_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives'
-    dest_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1'
+    source_video_path = args.source_path
+    dest_video_path = f"{source_video_path}_ratio1"
     
     convert_ratio(target_ratio=1, 
                   source_video_path=source_video_path,
                   dest_video_path=dest_video_path)
 
-    source_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1'
-    dest_video_path = './dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_new_negatives_ratio1_224x224'
+    source_video_path = f"{source_video_path}_ratio1"
+    dest_video_path = f"{source_video_path}_ratio1_{args.target_width}x{args.target_height}"
 
-    resize_frames(target_width=224, 
-                  target_height=224, 
+    resize_frames(target_width=args.target_width, 
+                  target_height=args.target_height, 
                   source_video_path=source_video_path,
                   dest_video_path=dest_video_path)
+    
+    print(f"Generated pre-processed videos at path {dest_video_path}")
