@@ -55,6 +55,10 @@ def parse_args():
     parser.set_defaults(recompute_mean_std=False)
     parser.add_argument('--num_workers', default=4, type=int, help='Number of working threads for loaders')
 
+    # Wandb setup
+    parser.add_argument('--wandb_team', help='Wanbd team name - Look at wandb.init.', type=str, default='s2cities-ai')
+    parser.add_argument('--wandb_project', help='Wanbd project name - Look at wandb.init.', type=str, default='3d-cnn-training')
+
     args = parser.parse_args()
     return args
 
