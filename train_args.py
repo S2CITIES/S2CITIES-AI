@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--lr', default=0.04, type=float, help='Initial learning rate (divided by 10 while training by lr scheduler)')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum parameter for SGD')
     parser.add_argument('--dampening', default=0.9, type=float, help='Dampening paremeter for SGD')
-    parser.add_argument('--wd', default=1e-3, type=float, help='Weight Decay parameter for SGD')
+    parser.add_argument('--wd', default=1e-5, type=float, help='Weight Decay parameter for SGD')
     parser.add_argument('--nesterov', action='store_true', help='If true, use nesterov momentum in SGD.')
     parser.set_defaults(nesterov=False)
 

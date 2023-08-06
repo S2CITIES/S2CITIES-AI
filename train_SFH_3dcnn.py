@@ -323,7 +323,7 @@ if __name__ == '__main__':
                                                     weight_decay=args.wd,
                                                     nesterov=args.nesterov)
     elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=1e-3)
+        optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=args.wd)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
