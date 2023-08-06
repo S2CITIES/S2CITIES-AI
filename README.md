@@ -159,7 +159,19 @@ python data/SFHDataset/video_conversion_script.py \
 --target_height 112
 ```
 
-Depending on the size of your dataset stored in location *--source_path*, this may require a while.
+Depending on the size of your dataset stored in location `--source_path`, this may require a while.
+
+### Generating annotations
+After pre-processing your data, you can generate annotations files by simply running:
+
+```bash
+python data/SFHDataset/gen_annotations.py \
+--data_path "dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_raw_ratio1_112x112"
+```
+
+This script will update the file `info.json` and write (**over-write**) the files `(train|test|val)_annotations.txt` in `data/SFHDataset`. It will also print some statistics regarding label (positive/negative) distributions on the train/test/val sets.
+
+Statistics will be saved on file `info.json` for future reference. This file will also contain other useful information, such as the train set *mean* and *standard deviation*. 
 
 ## Resources
 
