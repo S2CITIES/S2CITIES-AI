@@ -182,7 +182,7 @@ python train_SFH_3dcnn.py \
 --exp "mn2-sgd-nesterov-no-decay" \
 --optimizer "SGD" \
 --model "mobilenetv2" \
---data_path "dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_test_raw_ratio1_112x112" \ 
+--data_path "dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_raw_ratio1_112x112" \ 
 --early_stop_patience 20 \
 --epochs 1000 \
 --lr 1e-3 \
