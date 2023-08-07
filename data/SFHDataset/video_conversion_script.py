@@ -9,8 +9,14 @@ parser.add_argument('--source_path', default='dataset/SFHDataset/SFH/SFH_Dataset
 parser.add_argument('--target_width', default=112, type=int, help='Target width for pre-processed train/test/val videos.')
 parser.add_argument('--target_height', default=112, type=int, help='Target height for pre-processed train/test/val videos.')
 parser.add_argument('--target_fps', type=float, default=6.4, help='Target frame rate for train/test/val videos.')
+parser.add_argument('--step', type=str, default='all', help='Video conversion step.', choices=['ratio', 'resize', 'fps', 'all'])
 
 def convert_ratio(target_ratio, source_video_path, dest_video_path):
+
+    if not os.path.exists(dest_video_path):
+        os.makedirs(dest_video_path)
+        os.makedirs(os.path.join(dest_video_path, '0'))
+        os.makedirs(os.path.join(dest_video_path, '1'))
 
     for label in os.listdir(source_video_path):
 
@@ -60,6 +66,11 @@ def convert_ratio(target_ratio, source_video_path, dest_video_path):
 
 def resize_frames(target_width, target_height, source_video_path, dest_video_path):
 
+    if not os.path.exists(dest_video_path):
+        os.makedirs(dest_video_path)
+        os.makedirs(os.path.join(dest_video_path, '0'))
+        os.makedirs(os.path.join(dest_video_path, '1'))
+
     for label in os.listdir(source_video_path):
 
         label_path = os.path.join(source_video_path, label)
@@ -92,6 +103,11 @@ def resize_frames(target_width, target_height, source_video_path, dest_video_pat
 
 
 def convert_framerate(target_fps, source_video_path, dest_video_path):
+
+    if not os.path.exists(dest_video_path):
+        os.makedirs(dest_video_path)
+        os.makedirs(os.path.join(dest_video_path, '0'))
+        os.makedirs(os.path.join(dest_video_path, '1'))
 
     for label in os.listdir(source_video_path):
 
@@ -132,29 +148,18 @@ def convert_framerate(target_fps, source_video_path, dest_video_path):
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    source_video_path = args.source_path
-    dest_video_path = f"{args.source_path}_ratio1"
+    if args.step in ['all', 'ratio']:
+        convert_ratio(target_ratio=1, 
+                    source_video_path=args.source_path,
+                    dest_video_path=f"{args.source_path}_ratio1")
+
+    if args.step in ['all', 'resize']:
+        resize_frames(target_width=args.target_width, 
+                    target_height=args.target_height, 
+                    source_video_path=f"{args.source_path}_ratio1",
+                    dest_video_path=f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}")
     
-    if not os.path.exists(dest_video_path):
-        os.makedirs(dest_video_path)
-        os.makedirs(os.path.join(dest_video_path, '0'))
-        os.makedirs(os.path.join(dest_video_path, '1'))
-
-    convert_ratio(target_ratio=1, 
-                  source_video_path=source_video_path,
-                  dest_video_path=dest_video_path)
-
-    source_video_path = f"{args.source_path}_ratio1"
-    dest_video_path = f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}"
-
-    if not os.path.exists(dest_video_path):
-        os.makedirs(dest_video_path)
-        os.makedirs(os.path.join(dest_video_path, '0'))
-        os.makedirs(os.path.join(dest_video_path, '1'))
-
-    resize_frames(target_width=args.target_width, 
-                  target_height=args.target_height, 
-                  source_video_path=source_video_path,
-                  dest_video_path=dest_video_path)
-    
-    print(f"Generated pre-processed videos at path {dest_video_path}")
+    if args.step in ['all', 'fps']:
+        convert_framerate(target_fps=args.target_fps,
+                          source_video_path=f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}",
+                          dest_video_path=f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}_fps{args.target_fps}")
