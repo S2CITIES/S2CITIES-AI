@@ -198,7 +198,6 @@ def thread_predict(stop_event, predict_event, model, spatial_transform, temporal
 
         video_writer.release()
 
-
         # Reset the predict event
         predict_event.clear()
 

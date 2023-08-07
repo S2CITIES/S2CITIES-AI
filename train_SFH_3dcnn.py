@@ -80,8 +80,6 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
 
-        torch.save(model.state_dict(), os.path.join(args.model_save_path, f'model_{args.exp}_epoch_{epoch}.h5'))
-
         avg_train_loss = np.array(epoch_loss).mean()
         train_accuracy = 100 * corrects / totals
 
