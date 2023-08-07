@@ -24,7 +24,8 @@ def parse_args():
     parser.add_argument('--n_scales', default=1, type=int, help='Number of scales for multiscale cropping')
     parser.add_argument('--scale_step', default=0.84089641525, type=float, help='Scale step for multiscale cropping')
     parser.add_argument('--train_crop', default='corner', type=str, choices=train_crop_choices, help='Spatial cropping method in training. random is uniform. corner is selection from 4 corners and 1 center.  (random | corner | center)')
-    
+    parser.add_argument('--temp_transform', action='store_true', help='If true, use temporal transforms to subsample videos.')
+    parser.set_defaults(temp_transform=False)
     ### SGD algorithm parameters ###
     parser.add_argument('--lr', default=0.04, type=float, help='Initial learning rate (divided by 10 while training by lr scheduler)')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum parameter for SGD')
@@ -49,8 +50,7 @@ def parse_args():
     parser.add_argument('--model_save_path', help='Absolute/Relative path for saving trained weights', type=str, dest='model_save_path', default='./models/saves')
     ### Was used with tensorboard
     parser.add_argument('--exp_path', help='Absolute/Relative path for saving experiment logs', type=str, dest='exp_path', default='./experiments')
-    ### 
-    parser.add_argument('--manual_seed', default=1, type=int, help='Manually set random seed')
+    ###
     parser.add_argument('--recompute_mean_std', action='store_true', help='If true, compute from scratch mean and std.')
     parser.set_defaults(recompute_mean_std=False)
     parser.add_argument('--num_workers', default=4, type=int, help='Number of working threads for loaders')

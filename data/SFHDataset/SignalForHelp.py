@@ -17,25 +17,39 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
         # TODO: Make it faster by only loading the sampled frames and save the total number of frames in the annotation file
         while cap.isOpened():
             ret, frame = cap.read()
+
             if not ret:
                 break
-            # Convert frame to a PIL Image
-            frame = Image.fromarray(frame)
+
             # print(frame.size)
             clip.append(frame)
 
         cap.release()
 
-        print(len(clip))
-
+        n_frames = len(clip)
         # Apply Temporal Transform
         if temporal_transform is not None:
-            n_frames = len(clip)
             # print(f"Clip lenght: {n_frames}")
+            clip = [Image.fromarray(frame) for frame in clip]
             frame_indices = list(range(1, n_frames+1))
             frame_indices = temporal_transform(frame_indices)
-            # print(frame_indices)
+
+            print(frame_indices)
             clip = [clip[i-1] for i in frame_indices]
+        else:
+            # If there are less then sample_duration frames, repeat the last one
+            if n_frames < sample_duration:
+                num_black_frames = sample_duration - n_frames
+                for _ in range(num_black_frames):
+                    clip.append(np.zeros_like(clip[0]))
+            # If there are more than sample_duration, take the ones in the middle
+            else:
+                start_idx = (n_frames-sample_duration) // 2
+                end_idx = start_idx + sample_duration
+                clip = clip[start_idx:end_idx]
+
+            # Convert every frame to PIL Image
+            clip = [Image.fromarray(frame) for frame in clip]
 
         if spatial_transform is not None:
             # Apply Spatial Transform
@@ -62,8 +76,6 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
 
         clip = torch.stack(clip, dim=0) # Tensor with shape TCHW
         clip = clip.permute(1, 0, 2, 3) # Tensor with shape CTHW
-
-        print(clip.shape)
 
         return clip
 
