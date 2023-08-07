@@ -132,13 +132,8 @@ dmypy.json
 # macOS hidden files
 *.DS_Store
 
-# Dataset Folder
-dataset/UCF101
-reduced_dataset/UCF101
-dataset/NVGesture/Video_data
-dataset/SFHDataset/SFH
-dataset/Jester
-dataset/Jester_videos
+# Dataset Folder(s)
+dataset/*
 
 # Trained Models
 models/saves
