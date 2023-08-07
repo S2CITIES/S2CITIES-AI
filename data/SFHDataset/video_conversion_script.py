@@ -102,7 +102,7 @@ def resize_frames(target_width, target_height, source_video_path, dest_video_pat
             output_video.release()
 
 
-def convert_framerate(target_fps, source_video_path, dest_video_path):
+def convert_frame_rate(target_frame_rate, source_video_path, dest_video_path):
 
     if not os.path.exists(dest_video_path):
         os.makedirs(dest_video_path)
@@ -119,6 +119,9 @@ def convert_framerate(target_fps, source_video_path, dest_video_path):
 
             input_video = cv2.VideoCapture(current_video_path)
 
+            frame_rate = int(input_video.get(cv2.CAP_PROP_FPS))
+            frame_interval = int(round(frame_rate / target_frame_rate))
+
             width = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
             height = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -127,9 +130,10 @@ def convert_framerate(target_fps, source_video_path, dest_video_path):
 
             output_video = cv2.VideoWriter(current_video_path_dest,
                                         cv2.VideoWriter_fourcc(*'mp4v'),
-                                        target_fps,
+                                        target_frame_rate,
                                         (width, height))
 
+            frame_count = 0
             # Process each frame of the input video, apply cropping, and write to the output video
             while True:
                 ret, frame = input_video.read()
@@ -137,10 +141,10 @@ def convert_framerate(target_fps, source_video_path, dest_video_path):
                 if not ret:
                     break
                 
-                output_video.write(frame)
-                cv2.imshow('Frame', frame)  # Display the frame if needed
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                if frame_count % frame_interval == 0:
+                    output_video.write(frame)
+
+                frame_count += 1
 
             input_video.release()
             output_video.release()
@@ -160,6 +164,6 @@ if __name__ == '__main__':
                     dest_video_path=f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}")
     
     if args.step in ['all', 'fps']:
-        convert_framerate(target_fps=args.target_fps,
+        convert_frame_rate(target_frame_rate=args.target_fps,
                           source_video_path=f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}",
                           dest_video_path=f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}_fps{args.target_fps}")

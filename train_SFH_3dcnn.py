@@ -242,7 +242,8 @@ if __name__ == '__main__':
     # TODO: Add variable downsample factor depending on the number of frames in a video
     # The idea is that a video with an higher frame rate should have an higher downsample factor in order to span
     # a longer temporal window.
-    train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    # train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    train_temporal_transform = None
 
     # Initialize spatial and temporal transforms (validation versions)
     val_spatial_transform = SPtransforms.Compose([
@@ -252,7 +253,8 @@ if __name__ == '__main__':
         SPtransforms.Normalize(mean=mean, std=std)
     ])
 
-    val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
+    # val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
+    val_temporal_transform = None
 
     # Initialize spatial and temporal transforms (test versions)
     test_spatial_transform = SPtransforms.Compose([
@@ -262,7 +264,8 @@ if __name__ == '__main__':
         SPtransforms.Normalize(mean=mean, std=std)
     ])
 
-    test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    # test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    test_temporal_transform = None
 
     # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 

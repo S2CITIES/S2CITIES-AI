@@ -26,6 +26,8 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
 
         cap.release()
 
+        print(len(clip))
+
         # Apply Temporal Transform
         if temporal_transform is not None:
             n_frames = len(clip)
@@ -61,6 +63,8 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
         clip = torch.stack(clip, dim=0) # Tensor with shape TCHW
         clip = clip.permute(1, 0, 2, 3) # Tensor with shape CTHW
 
+        print(clip.shape)
+
         return clip
 
 class Signal4HelpDataset(Dataset):
@@ -78,84 +82,6 @@ class Signal4HelpDataset(Dataset):
             video_path = ' '.join(fields[:-1])
             label = int(fields[-1])
             self.videos.append((video_path, label))
-
-    # def extract_hand_bb(self, frame, frame_width, frame_height, first_only=True):
-    #     # Apparently the process() function is not thread-safe. With multiple workers, the code gets stuck here.
-    #     results = self.hands_model.process(frame)
-    #     #print("Hands Detector Model is ending processing for this frame.")
-    #     ROIs = []
-
-    #     if results.multi_hand_landmarks:
-    #         for hand_landmarks in results.multi_hand_landmarks:
-    #             x_min = y_min = float("inf")
-    #             x_max = y_max = float("-inf")
-    #             for landmark in hand_landmarks.landmark:
-    #                 x, y = int(landmark.x * frame_width), int(landmark.y * frame_height)
-    #                 # print(f"Landmarks: {x, y}")
-    #                 if x < x_min:
-    #                     x_min = x
-    #                 if x > x_max:
-    #                     x_max = x
-    #                 if y < y_min:
-    #                     y_min = y
-    #                 if y > y_max:
-    #                     y_max = y
-
-    #             # print(y_min, y_max, x_min, x_max)
-    #             # Define the desired aspect ratio
-    #             aspect_ratio = 1  # Example: 16:9 aspect ratio
-
-    #             # Calculate the center coordinates of the hand landmarks
-    #             x_center = (x_min + x_max) // 2
-    #             y_center = (y_min + y_max) // 2
-
-    #             # print(f"Frame dims: {frame_width, frame_height}")
-    #             # print(f"Center: {x_center, y_center}")
-
-    #             # Calculate the width and height of the bounding box
-    #             width = max(x_max - x_min, (y_max - y_min) * aspect_ratio)
-    #             height = max(y_max - y_min, (x_max - x_min) / aspect_ratio)
-
-    #             # Calculate the new bounding box coordinates based on the center, width, and height
-    #             x_min = int(x_center - width / 2)
-    #             x_max = int(x_center + width / 2)
-    #             y_min = int(y_center - height / 2)
-    #             y_max = int(y_center + height / 2)
-
-    #             # Check if one between x_min or y_min becomes negative
-    #             if x_min < 0:
-    #                 x_min = 0
-    #             if y_min < 0:
-    #                 y_min = 0
-                
-    #             # Check if one between x_max or y_max is higher than frame_width or frame_height
-    #             if x_max > frame_width:
-    #                 x_max = frame_width
-    #             if y_max > frame_height:
-    #                 y_max = frame_height
-
-    #             # Crop the ROI box from the frame
-    #             # print(frame.shape)
-    #             roi = frame[y_min:y_max, x_min:x_max]
-    #             # print(y_min, y_max, x_min, x_max)
-    #             # print(f"Roi shape before reshaping: {roi.shape}")
-    #             # print(roi.shape)
-
-    #             # Padding to reach the desired resolution
-    #             pad_width = ((0, int(height - roi.shape[0])), (0, int(width - roi.shape[1])), (0,0))
-    #             # print(pad_width)
-    #             roi = np.pad(roi, pad_width, mode='constant')
-    #             roi = cv2.resize(roi, (self.image_height, self.image_width))
-    #             # print(f"Roi shape after reshaping: {roi.shape}")
-    #             # print(roi.shape)
-    #             ROIs.append(roi)
-    #     else:
-    #         return None
-        
-    #     if first_only:
-    #         return ROIs[0]
-    #     else:
-    #         return ROIs
 
     def __len__(self):
         return len(self.videos)
