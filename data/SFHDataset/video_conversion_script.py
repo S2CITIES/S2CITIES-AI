@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--source_path', default='dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_raw', type=str, help='Path for train/test/val video files.')
 parser.add_argument('--target_width', default=112, type=int, help='Target width for pre-processed train/test/val videos.')
 parser.add_argument('--target_height', default=112, type=int, help='Target height for pre-processed train/test/val videos.')
+parser.add_argument('--target_fps', type=float, default=6.4, help='Target frame rate for train/test/val videos.')
 
 def convert_ratio(target_ratio, source_video_path, dest_video_path):
 
@@ -89,11 +90,50 @@ def resize_frames(target_width, target_height, source_video_path, dest_video_pat
             input_video.release()
             output_video.release()
 
+
+def convert_framerate(target_fps, source_video_path, dest_video_path):
+
+    for label in os.listdir(source_video_path):
+
+        label_path = os.path.join(source_video_path, label)
+
+        for video_file in os.listdir(label_path):
+
+            current_video_path = os.path.join(label_path, video_file)
+
+            input_video = cv2.VideoCapture(current_video_path)
+
+            width = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+            # Create an output video writer using OpenCV's VideoWriter class
+            current_video_path_dest = os.path.join(dest_video_path, label, video_file)
+
+            output_video = cv2.VideoWriter(current_video_path_dest,
+                                        cv2.VideoWriter_fourcc(*'mp4v'),
+                                        target_fps,
+                                        (width, height))
+
+            # Process each frame of the input video, apply cropping, and write to the output video
+            while True:
+                ret, frame = input_video.read()
+
+                if not ret:
+                    break
+                
+                output_video.write(frame)
+                cv2.imshow('Frame', frame)  # Display the frame if needed
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+            input_video.release()
+            output_video.release()
+
 if __name__ == '__main__':
     args = parser.parse_args()
 
     source_video_path = args.source_path
-    dest_video_path = f"{source_video_path}_ratio1"
+    dest_video_path = f"{args.source_path}_ratio1"
     
     if not os.path.exists(dest_video_path):
         os.makedirs(dest_video_path)
@@ -104,8 +144,8 @@ if __name__ == '__main__':
                   source_video_path=source_video_path,
                   dest_video_path=dest_video_path)
 
-    source_video_path = f"{source_video_path}_ratio1"
-    dest_video_path = f"{source_video_path}_ratio1_{args.target_width}x{args.target_height}"
+    source_video_path = f"{args.source_path}_ratio1"
+    dest_video_path = f"{args.source_path}_ratio1_{args.target_width}x{args.target_height}"
 
     if not os.path.exists(dest_video_path):
         os.makedirs(dest_video_path)
