@@ -95,12 +95,22 @@ if __name__ == '__main__':
     source_video_path = args.source_path
     dest_video_path = f"{source_video_path}_ratio1"
     
+    if not os.path.exists(dest_video_path):
+        os.makedirs(dest_video_path)
+        os.makedirs(os.path.join(dest_video_path, '0'))
+        os.makedirs(os.path.join(dest_video_path, '1'))
+
     convert_ratio(target_ratio=1, 
                   source_video_path=source_video_path,
                   dest_video_path=dest_video_path)
 
     source_video_path = f"{source_video_path}_ratio1"
     dest_video_path = f"{source_video_path}_ratio1_{args.target_width}x{args.target_height}"
+
+    if not os.path.exists(dest_video_path):
+        os.makedirs(dest_video_path)
+        os.makedirs(os.path.join(dest_video_path, '0'))
+        os.makedirs(os.path.join(dest_video_path, '1'))
 
     resize_frames(target_width=args.target_width, 
                   target_height=args.target_height, 
