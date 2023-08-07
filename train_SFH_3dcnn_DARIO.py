@@ -12,15 +12,15 @@ from train_args import parse_args
 import transforms.spatial_transforms as SPtransforms
 import transforms.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
-from torch.utils.tensorboard import SummaryWriter
+
+# Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
+import wandb
+
+# Silent warnings about TypedStorage deprecations that appear on the cluster
+import warnings
+warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
 
 args = parse_args()
-
-# Create exp_path if it doesn't exist yet
-if not os.path.exists(args.exp_path):
-    os.makedirs(args.exp_path)
-
-writer = SummaryWriter(log_dir=os.path.join(args.exp_path, args.exp))
 
 # "Collate" function for our dataloaders
 # def collate_fn(batch, transform):
@@ -84,17 +84,14 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
 
         avg_train_loss = np.array(epoch_loss).mean()
         train_accuracy = 100 * corrects / totals
+
         print("[Epoch {}] Avg Loss: {}".format(epoch, avg_train_loss))
         print("[Epoch {}] Train Accuracy {:.2f}%".format(epoch, train_accuracy))
-        
-        writer.add_scalars(main_tag='train_accuracy', tag_scalar_dict={
-                    'accuracy': train_accuracy,
-                }, global_step=epoch)
-        writer.add_scalars(main_tag='avg_train_loss', tag_scalar_dict={
-                    'loss': avg_train_loss,
-                }, global_step=epoch)
 
-        # NOTE: test function validates the model, when it takes in input the loader for the validation set
+        # commit = false because I want commit to happen after validation (so that the step is incremented once per epoch)
+        wandb.log({"train_accuracy": train_accuracy, "train_loss": avg_train_loss}, commit=False)
+
+        # NOTE: test function validates the model when it takes in input the loader for the validation set
         val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
         scheduler.step(val_loss)
 
@@ -153,16 +150,13 @@ def test(loader, model, criterion, device, epoch=None):
     val_loss = np.array(val_loss).mean()
 
     if epoch is not None:
-        # Save metrics with tensorboard
-        writer.add_scalars(main_tag='val_accuracy', tag_scalar_dict={
-            'accuracy': val_accuracy
-        }, global_step=epoch)
-        writer.add_scalars(main_tag='val_loss', tag_scalar_dict={
-            'loss': val_loss
-        }, global_step=epoch)
+        # Save metrics with wandb
+        wandb.log({"val_accuracy": val_accuracy, "val_loss": val_loss}, commit=True)
 
         print('[Epoch {}] Validation Accuracy: {:.2f}%'.format(epoch, val_accuracy))
     else:
+        wandb.log({"test_accuracy": val_accuracy, "test_loss": val_loss}, commit=True)
+
         print('Test Accuracy: {:.2f}%'.format(val_accuracy))
 
     return val_accuracy, val_loss
@@ -172,15 +166,46 @@ if __name__ == '__main__':
     batch_size=args.batch
     num_epochs=args.epochs
 
+    # start a new wandb run to track this script
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project=args.wandb_project,
+        entity=args.wandb_team,
+        name=args.exp,  
+        # track hyperparameters and run metadata
+        config={
+        "optimizer": args.optimizer,
+        "lr": args.lr,
+        "lr_patience": args.lr_patience,
+        "momentum": args.momentum,
+        "dampening": args.dampening if not args.nesterov else 0.,
+        "nesterov": args.nesterov,
+        "weight_decay": args.wd, 
+        "architecture": args.model,
+        "dataset": args.data_path.split("/")[-1],
+        "epochs": num_epochs,
+        "batch": batch_size,
+        "sample_size": args.sample_size,
+        "sample_duration": args.sample_duration,
+        "train_crop": args.train_crop,
+        "early_stop_patience": args.early_stop_patience,
+        "no_norm": args.no_norm
+        }
+    )
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
     # Set torch manual seed for reproducibility
     torch.manual_seed(args.manual_seed)
+
     # Init different scales for random scaling
-    args.scales = [args.initial_scale]
-    for i in range(1, args.n_scales):
-        args.scales.append(args.scales[-1] * args.scale_step)
+    # args.scales = [args.initial_scale]
+    # for i in range(1, args.n_scales):
+    #     args.scales.append(args.scales[-1] * args.scale_step)
+
+    # No erandom scaling - Just original scale
+    args.scales = [1.]
 
     # Initialize spatial and temporal transforms (training versions)
     if args.train_crop == 'random':
@@ -200,7 +225,10 @@ if __name__ == '__main__':
     else:
         mean = [0, 0, 0]
         std = [1, 1, 1]
-        
+
+    # Log normalization mean and std for future reference
+    wandb.log({"norm_mean": mean, "norm_std": std})
+    
     print(f"Train mean: {mean}")
     print(f"Train std.: {std}")
 
@@ -284,21 +312,24 @@ if __name__ == '__main__':
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
 
-    classifier = model.module.get_submodule('classifier')
+    if args.nesterov:
+        args.dampening = 0.
 
     if args.optimizer == 'SGD':
-        optimizer = torch.optim.SGD(list(classifier.parameters()), 
+        optimizer = torch.optim.SGD(list(model.parameters()), 
                                                     lr=args.lr, 
-                                                    momentum=0.9, 
-                                                    dampening=0.9,
-                                                    weight_decay=1e-3)
+                                                    momentum=args.momentum, 
+                                                    dampening=args.dampening,
+                                                    weight_decay=args.wd,
+                                                    nesterov=args.nesterov)
     elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=1e-3)
+        optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=args.wd)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
     criterion = nn.CrossEntropyLoss()
 
+    # Initialize tqdm progress bar for tracking training steps
     pbar = tqdm(total=len(train_dataset))
 
     # Create model saves path if it doesn't exist yet
@@ -323,3 +354,6 @@ if __name__ == '__main__':
          model=model,
          criterion=criterion,
          device=device)
+    
+    # [optional] finish the wandb run, necessary in notebooks
+    wandb.finish()
