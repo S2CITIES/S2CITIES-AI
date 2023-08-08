@@ -318,13 +318,12 @@ if __name__ == '__main__':
         # User provided entire path for pre-trained weights
         base_model_path = args.pretrained_path 
 
-    output_features = 1
     model = build_model(model_path=base_model_path, 
                         type=args.model, 
                         gpus=list(range(0, num_gpus)),
                         sample_size=args.sample_size,
                         sample_duration=args.sample_duration,
-                        output_neurons=output_features,
+                        output_features=args.output_features,
                         finetune=True)
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
@@ -346,7 +345,7 @@ if __name__ == '__main__':
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
-    if output_features == 1:
+    if args.output_features == 1:
         # NOTE: nn.BCEWithLogitsLoss already contains the Sigmoid layer inside
         criterion = nn.BCEWithLogitsLoss()
     else:
@@ -366,7 +365,7 @@ if __name__ == '__main__':
           train_loader=train_dataloader,
           val_loader=val_dataloader, 
           num_epochs=num_epochs,
-          output_features=output_features, 
+          output_features=args.output_features, 
           device=device, 
           pbar=pbar)
 
@@ -377,7 +376,7 @@ if __name__ == '__main__':
     test(loader=test_dataloader, 
          model=model,
          criterion=criterion,
-         output_features=output_features,
+         output_features=args.output_features,
          device=device)
     
     # [optional] finish the wandb run, necessary in notebooks

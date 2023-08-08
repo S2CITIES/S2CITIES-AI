@@ -26,6 +26,8 @@ def parse_args():
     parser.add_argument('--train_crop', default='corner', type=str, choices=train_crop_choices, help='Spatial cropping method in training. random is uniform. corner is selection from 4 corners and 1 center.  (random | corner | center)')
     parser.add_argument('--temp_transform', action='store_true', help='If true, use temporal transforms to subsample videos.')
     parser.set_defaults(temp_transform=False)
+    parser.add_argument('--output_features', help='Number of output features for FC layers or FCNs (1: sigmoid-activated, 2: softmax-activated).', choices=[1, 2], type=int, default=1)
+
     ### SGD algorithm parameters ###
     parser.add_argument('--lr', default=0.04, type=float, help='Initial learning rate (divided by 10 while training by lr scheduler)')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum parameter for SGD')
