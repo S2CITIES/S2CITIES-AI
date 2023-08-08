@@ -10,6 +10,9 @@ from models.mobilenet import (
 from models.squeezenet import (
     get_model as get_model_squeezenet
 )
+from models.mobilenetv2_cam import (
+    get_model as get_model_cam
+)
 
 def useless_func():
     pass
@@ -22,6 +25,8 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
         model=get_model_mobilenetv2(num_classes=num_classes, sample_size=sample_size, width_mult=width_mult)
     elif type=='squeezenet':
         model=get_model_squeezenet(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
+    elif type=="CAM":
+        model=get_model_cam(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
     else:
         print("Unknown model type. Select between: mobilenet, mobilenetv2, squeezenet.")
         return None

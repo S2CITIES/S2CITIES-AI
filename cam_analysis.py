@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, random_split
-from data.SFHDataset.SignalForHelp import Signal4HelpDataset, load_video
+from data.SFHDataset.SignalForHelp import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
 import functools
