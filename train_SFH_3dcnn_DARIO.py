@@ -80,8 +80,6 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
 
-        torch.save(model.state_dict(), os.path.join(args.model_save_path, f'model_{args.exp}_epoch_{epoch}.h5'))
-
         avg_train_loss = np.array(epoch_loss).mean()
         train_accuracy = 100 * corrects / totals
 
@@ -196,9 +194,6 @@ if __name__ == '__main__':
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
-    # Set torch manual seed for reproducibility
-    torch.manual_seed(args.manual_seed)
-
     # Init different scales for random scaling
     # args.scales = [args.initial_scale]
     # for i in range(1, args.n_scales):
@@ -242,7 +237,9 @@ if __name__ == '__main__':
     # TODO: Add variable downsample factor depending on the number of frames in a video
     # The idea is that a video with an higher frame rate should have an higher downsample factor in order to span
     # a longer temporal window.
-    train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    train_temporal_transform = None
+    if args.temp_transform:
+        train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (validation versions)
     val_spatial_transform = SPtransforms.Compose([
@@ -252,7 +249,9 @@ if __name__ == '__main__':
         SPtransforms.Normalize(mean=mean, std=std)
     ])
 
-    val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
+    val_temporal_transform = None
+    if args.temp_transform:
+        val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (test versions)
     test_spatial_transform = SPtransforms.Compose([
@@ -262,7 +261,9 @@ if __name__ == '__main__':
         SPtransforms.Normalize(mean=mean, std=std)
     ])
 
-    test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    test_temporal_transform = None
+    if args.temp_transform:
+        test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
     # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
