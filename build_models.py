@@ -10,7 +10,7 @@ from models.squeezenet import (
     get_model as get_model_squeezenet
 )
 
-def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_size=112, sample_duration=16, width_mult=1., finetune=True, state_dict=False):
+def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_size=112, sample_duration=16, width_mult=1., output_neurons=2, finetune=True, state_dict=False):
     # All models pretrained on Jester (27 classes)
     if type == 'mobilenet':
         model=get_model_mobilenet(num_classes=num_classes, sample_size=sample_size, width_mult=width_mult)
@@ -46,7 +46,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
             last_size = model.module.last_size
             new_classifier = nn.Sequential(
                 nn.Dropout(p=0.5),
-                nn.Conv3d(512, 2, kernel_size=1),
+                nn.Conv3d(512, output_neurons, kernel_size=1),
                 nn.ReLU(inplace=True),
                 nn.AvgPool3d((last_duration, last_size, last_size), stride=1)
             )
@@ -54,7 +54,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
         else:
             new_classifier = nn.Sequential(
                 nn.Dropout(p=0.5, inplace=False),
-                nn.Linear(in_features=model.module.last_channel, out_features=2, bias=True)
+                nn.Linear(in_features=model.module.last_channel, out_features=output_neurons, bias=True)
             )
 
         # Init weights of the linear layer
@@ -69,7 +69,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
     # Test the model
     x = torch.randn((2, 3, sample_duration, sample_size, sample_size))
     out = model(x)
-    print(f"Testing the model - Obtained: {out.shape}, Expected: torch.Size([2,2])")
+    print(f"Testing the model - Obtained: {out.shape}, Expected: torch.Size([2,{output_neurons}])")
 
     return model
 

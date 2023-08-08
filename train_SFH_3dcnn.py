@@ -36,7 +36,7 @@ args = parse_args()
 #     return videos, labels
 
 # TODO: Implement custom scheduler to manual adjust learning rate after N epochs
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, output_features, device, pbar=None):
 
     # Set up early stopping criteria
     patience = args.early_stop_patience
@@ -64,6 +64,10 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
 
             logits = model(videos)
 
+            if output_features == 1:
+                logits = logits.reshape((-1, ))
+                labels = labels.float()
+
             labels = labels.to(device)
 
             loss = criterion(logits, labels)
@@ -76,7 +80,11 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             if pbar:
                 pbar.update(videos.shape[0])
 
-            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+            if output_features == 1:
+                y_preds = (torch.sigmoid(logits) > 0.5) * 1
+            else:
+                y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
 
@@ -90,7 +98,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
         wandb.log({"train_accuracy": train_accuracy, "train_loss": avg_train_loss}, commit=False)
 
         # NOTE: test function validates the model when it takes in input the loader for the validation set
-        val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
+        val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, output_features=output_features, device=device, epoch=epoch)
         scheduler.step(val_loss)
 
         # Checking early-stopping criteria
@@ -110,7 +118,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
     
     print("--- END Training. Results - Best Val. Loss: {:.2f}, Best Val. Accuracy: {:.2f}".format(best_loss, best_accuracy))
 
-def test(loader, model, criterion, device, epoch=None):
+def test(loader, model, criterion, output_features, device, epoch=None):
     totals = 0
     corrects = 0
     y_pred = []
@@ -126,7 +134,11 @@ def test(loader, model, criterion, device, epoch=None):
             videos = videos.to(device)
 
             logits = model(videos)
-            
+
+            if output_features == 1:
+                logits = logits.reshape((-1, ))
+                labels = labels.float()
+
             labels = labels.to(device)
             val_loss_batch = criterion(logits, labels)
 
@@ -134,7 +146,11 @@ def test(loader, model, criterion, device, epoch=None):
 
             y_true.append(labels)
 
-            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+            if output_features == 1:
+                y_preds = (torch.sigmoid(logits) > 0.5) * 1
+            else:
+                y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
 
@@ -302,11 +318,13 @@ if __name__ == '__main__':
         # User provided entire path for pre-trained weights
         base_model_path = args.pretrained_path 
 
+    output_features = 1
     model = build_model(model_path=base_model_path, 
                         type=args.model, 
                         gpus=list(range(0, num_gpus)),
                         sample_size=args.sample_size,
                         sample_duration=args.sample_duration,
+                        output_neurons=output_features,
                         finetune=True)
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
@@ -328,7 +346,11 @@ if __name__ == '__main__':
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
-    criterion = nn.CrossEntropyLoss()
+    if output_features == 1:
+        # NOTE: nn.BCEWithLogitsLoss already contains the Sigmoid layer inside
+        criterion = nn.BCEWithLogitsLoss()
+    else:
+        criterion = nn.CrossEntropyLoss()
 
     # Initialize tqdm progress bar for tracking training steps
     pbar = tqdm(total=len(train_dataset))
@@ -343,7 +365,8 @@ if __name__ == '__main__':
           criterion=criterion, 
           train_loader=train_dataloader,
           val_loader=val_dataloader, 
-          num_epochs=num_epochs, 
+          num_epochs=num_epochs,
+          output_features=output_features, 
           device=device, 
           pbar=pbar)
 
@@ -354,6 +377,7 @@ if __name__ == '__main__':
     test(loader=test_dataloader, 
          model=model,
          criterion=criterion,
+         output_features=output_features,
          device=device)
     
     # [optional] finish the wandb run, necessary in notebooks
