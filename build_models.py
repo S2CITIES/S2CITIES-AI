@@ -11,6 +11,9 @@ from models.squeezenet import (
     get_model as get_model_squeezenet
 )
 
+def useless_func():
+    pass
+
 def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_size=112, sample_duration=16, width_mult=1., finetune=True, state_dict=False):
     # All models pretrained on Jester (27 classes)
     if type == 'mobilenet':
