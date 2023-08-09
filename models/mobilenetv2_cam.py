@@ -16,7 +16,7 @@ class PrintLayer(nn.Module):
     
     def forward(self, x):
         # Do your print / debug stuff here
-        print("In print layer")
+        #print("In print layer")
         return x
 
 def conv_bn(inp, oup, stride):
@@ -130,10 +130,11 @@ class MobileNetV2CAM(nn.Module):
         #Shape of x: torch.Size([1, 3, 16, 224, 224])
         #for s in x:
         #    print(f"Sample shape: {s.shape}")
-        #if self.temp:
-        #    for s in x:
-        #        self.show_video(s)
-        #        self.temp = False
+        if self.temp:
+            for s in x:
+                self.show_video(s)
+                self.temp = False
+                
         if self.checked:
             x = self.print(x)
         x = self.features(x)
