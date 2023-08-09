@@ -137,10 +137,9 @@ class MobileNetV2CAM(nn.Module):
 
         if self.temp:
             print(f"Layer shape: {x.shape}")
+            print(f"x[0] shape: {x[0].shape}")
         if False:#self.checked:
             x = self.print(x)
-        if self.temp:
-            print(f"Layer shape: {x.shape}")
         x = self.features(x)
         if self.temp:
             print(f"Layer shape: {x.shape}")
