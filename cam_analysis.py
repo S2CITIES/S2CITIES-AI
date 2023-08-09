@@ -81,7 +81,7 @@ def test(loader, model, criterion, device, epoch=None):
             y_pred.append(y_preds)
 
             input = input.to(torch.device("cpu"))
-            to_gif(input.numpy())
+            #to_gif(input.numpy())
             show_video(input)
             input("Press a button")
 
