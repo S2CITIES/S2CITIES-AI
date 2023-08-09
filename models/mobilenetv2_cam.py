@@ -135,6 +135,8 @@ class MobileNetV2CAM(nn.Module):
                 self.show_video(s)
                 self.temp = False'''
 
+        if self.temp:
+            print(f"Layer shape: {x.shape}")
         if self.checked:
             x = self.print(x)
         if self.temp:
