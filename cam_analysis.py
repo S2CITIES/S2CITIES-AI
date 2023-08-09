@@ -36,7 +36,7 @@ def show_video(video):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    ani.to_html5_video()
+    ani.save("/gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video1")
     #print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
 
 
@@ -203,20 +203,20 @@ if __name__ == '__main__':
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
+
+    show_video(input)
+    '''
     print(f"Video type: {type(input)}")
     video_input = input.permute(1, 2, 3, 0).numpy().copy()  # Permute to (T, H, W, C) for visualization
-
-    #show_video(input)
     video_src = """
     <video width="224" height="224" controls>
     <source src="data:video/mp4;base64,{0}" type="video/mp4">
     Your browser does not support the video tag.
     </video>
     """
-
     # Convert the video numpy array to a base64-encoded mp4 video
     video_base64 = base64.b64encode(video_input).decode('utf-8')
     video_html = video_src.format(video_base64)
-
     # Display the video player
     HTML(video_html)
+    '''
