@@ -151,7 +151,9 @@ class MobileNetV2CAM(nn.Module):
         video = video.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
         print(f"video shape after permute: {video.shape}")
 
-        frames = [[ax.imshow(video[i])] for i in range(len(video))]
+        video_cpu = video.cpu().numpy()
+
+        frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
         ani = animation.ArtistAnimation(fig, frames)
         ani
