@@ -94,8 +94,8 @@ if __name__ == '__main__':
     batch_size=args.batch
     num_epochs=args.epochs
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    #device = "cpu"
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     print("Running on device {}".format(device))
 
     # No erandom scaling - Just original scale
