@@ -19,6 +19,7 @@ import matplotlib.animation as animation
 from matplotlib import rc
 rc('animation', html='jshtml')
 
+input = None
 def show_video(video):
     print("Show video")
     fig, ax = plt.subplots()
@@ -59,12 +60,12 @@ def test(loader, model, criterion, device, epoch=None):
     with torch.no_grad():
         model.eval()
 
-        for _, data in enumerate(loader):
+        for i, data in enumerate(loader):
             videos, labels = data
             videos = videos.float()
             videos = videos.to(device)
 
-            logits, input = model(videos)
+            logits, inp = model(videos)
             
             labels = labels.to(device)
             val_loss_batch = criterion(logits, labels)
@@ -80,10 +81,11 @@ def test(loader, model, criterion, device, epoch=None):
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
 
-            input = input.to(torch.device("cpu"))
-            #to_gif(input.numpy())
-            show_video(input)
-            #input("Press a button")
+            if i==0:
+                inp = inp.to(torch.device("cpu"))
+                global input
+                input = inp
+
 
     y_true = torch.cat(y_true, dim=0)
     y_pred = torch.cat(y_pred, dim=0)
@@ -197,3 +199,6 @@ if __name__ == '__main__':
     #print(cam_model)
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
+
+    print(f"Video type: {type(input)}")
+    show_video(input)
