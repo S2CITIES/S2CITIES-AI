@@ -16,6 +16,9 @@ from tensorflow_docs.vis import embed
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from IPython.display import HTML
+import base64
+
 from matplotlib import rc
 rc('animation', html='jshtml')
 
@@ -201,4 +204,19 @@ if __name__ == '__main__':
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
     print(f"Video type: {type(input)}")
+    input = input.permute(1, 2, 3, 0).numpy()  # Permute to (T, H, W, C) for visualization
+
     show_video(input)
+    video_src = """
+    <video width="224" height="224" controls>
+    <source src="data:video/mp4;base64,{0}" type="video/mp4">
+    Your browser does not support the video tag.
+    </video>
+    """
+
+    # Convert the video numpy array to a base64-encoded mp4 video
+    video_base64 = base64.b64encode(input).decode('utf-8')
+    video_html = video_src.format(video_base64)
+
+    # Display the video player
+    HTML(video_html)
