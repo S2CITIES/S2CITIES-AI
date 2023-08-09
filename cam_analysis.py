@@ -171,4 +171,4 @@ if __name__ == '__main__':
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
-    print(f"Input print: {type(cam_model.module.print.module.input)}")
+    print(f"Input print: {type(cam_model.module.get_submodule('print').module.input)}")
