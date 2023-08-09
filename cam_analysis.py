@@ -195,6 +195,6 @@ if __name__ == '__main__':
 
     print(f"video shape before permute: {input.shape}")
     input = input.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
-    inpu = input[...,[2,1,0]]
+    input = input[...,[2,1,0]]
     print(f"video shape after permute: {input.shape}")
     save_video(input)
