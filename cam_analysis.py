@@ -23,13 +23,10 @@ from matplotlib import rc
 rc('animation', html='jshtml')
 
 input = None
-def show_video(video):
-    print("Show video")
-    fig, ax = plt.subplots()
 
-    print(f"video shape before permute: {video.shape}")
-    video = video.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
-    print(f"video shape after permute: {video.shape}")
+def save_video(video):
+    print("Saving video..")
+    fig, ax = plt.subplots()
 
     video_cpu = video.cpu().numpy()
 
@@ -38,13 +35,6 @@ def show_video(video):
     ani = animation.ArtistAnimation(fig, frames)
     ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video1.mp4")
     
-
-def to_gif(images):
-  print(f"To gif")
-  converted_images = np.clip(images, 0, 255).astype(np.uint8)
-  imageio.mimsave('./animation.gif', converted_images, fps=6.4)
-  return embed.embed_file('./animation.gif')
-
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
 import warnings
@@ -203,19 +193,8 @@ if __name__ == '__main__':
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
 
-    show_video(input)
-    '''
-    print(f"Video type: {type(input)}")
-    video_input = input.permute(1, 2, 3, 0).numpy().copy()  # Permute to (T, H, W, C) for visualization
-    video_src = """
-    <video width="224" height="224" controls>
-    <source src="data:video/mp4;base64,{0}" type="video/mp4">
-    Your browser does not support the video tag.
-    </video>
-    """
-    # Convert the video numpy array to a base64-encoded mp4 video
-    video_base64 = base64.b64encode(video_input).decode('utf-8')
-    video_html = video_src.format(video_base64)
-    # Display the video player
-    HTML(video_html)
-    '''
+    print(f"video shape before permute: {input.shape}")
+    input = input.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+    inpu = input[...,[2,1,0]]
+    print(f"video shape after permute: {input.shape}")
+    save_video(input)
