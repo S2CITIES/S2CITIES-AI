@@ -30,7 +30,7 @@ def save_video(video):
 
     video_cpu = video.cpu().numpy()
 
-    frames = [[ax.imshow(video_cpu[i].astype('uint8'))] for i in range(len(video_cpu))]
+    frames = [[ax.imshow((video_cpu[i]*255).astype('uint8'))] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
     ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video2.mp4")
