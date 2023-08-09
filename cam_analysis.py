@@ -100,17 +100,6 @@ if __name__ == '__main__':
         mean = [0, 0, 0]
         std = [1, 1, 1]
 
-    train_spatial_transform = SPtransforms.Compose([
-        SPtransforms.RandomHorizontalFlip(),
-        crop_method,
-        SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
-    ])
-
-    train_temporal_transform = None
-    if args.temp_transform:
-        train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
-
     # Initialize spatial and temporal transforms (validation versions)
     val_spatial_transform = SPtransforms.Compose([
         SPtransforms.Scale(args.sample_size),
@@ -123,19 +112,14 @@ if __name__ == '__main__':
     if args.temp_transform:
         val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
 
-    # Initialize spatial and temporal transforms (test versions)
-    test_spatial_transform = SPtransforms.Compose([
-        SPtransforms.Scale(args.sample_size),
-        SPtransforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
-        SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
-    ])
+    val_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
+                                 spatial_transform=val_spatial_transform,
+                                 temporal_transform=val_temporal_transform)
+    
+    print('Size of Validation Set: {}'.format(len(val_dataset)))
 
-    test_temporal_transform = None
-    if args.temp_transform:
-        test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
 
- 
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
 
@@ -155,6 +139,7 @@ if __name__ == '__main__':
                 sample_size=args.sample_size,
                 sample_duration=args.sample_duration,
                 finetune=True)
+    
     print(f"Total parameters: {sum(p.numel() for p in cam_model.parameters())}")
     trainable_params = sum(p.numel() for p in cam_model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
@@ -180,12 +165,5 @@ if __name__ == '__main__':
     best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
     cam_model.load_state_dict(best_checkpoint)
 
-    # LOAD 1 VIDEO
-    video0 = load_video("'../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives_ratio1_224x224/0/vid_00817_00133.mp4", 
-                    temporal_transform=test_temporal_transform,
-                    spatial_transform=test_spatial_transform,
-                    save_output=False)
-    video1 = load_video("'../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives_ratio1_224x224/1/vid_00246_00009.mov", 
-                    temporal_transform=test_temporal_transform,
-                    spatial_transform=test_spatial_transform,
-                    save_output=False)
+
+    val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=epoch)
