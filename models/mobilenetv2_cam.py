@@ -110,8 +110,12 @@ class MobileNetV2CAM(nn.Module):
         self.temp = True
 
     def forward(self, x):
-        #Layer shape: torch.Size([2, 3, 16, 224, 224])
-        #Layer shape: torch.Size([2, 1280, 1, 7, 7])
+        #Input shape:          torch.Size([2, 3, 16, 224, 224])
+        #Feature Maps shape:   torch.Size([2, 1280, 1, 7, 7])
+        #Avg Pooling shape:    torch.Size([2, 1280, 1, 1, 1])
+        #View shape:           torch.Size([2, 1280])
+        #Classifier out shape: torch.Size([2, 2])
+        
         if self.temp: print(f"Layer shape: {x.shape}")
 
         input = x[0]
