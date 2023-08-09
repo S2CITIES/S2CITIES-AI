@@ -120,7 +120,7 @@ class MobileNetV2CAM(nn.Module):
             nn.Linear(self.last_channel, num_classes),
         )
 
-        self.print = nn.Sequential(PrintLayer())
+        self.print = PrintLayer()
 
         self._initialize_weights()
 
