@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
-    print(feat_maps)
+    print(feat_maps.squeeze(dim=1))
 
     print(f"video shape before permute: {input.shape}")
     input = input.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
