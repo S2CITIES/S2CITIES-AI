@@ -36,7 +36,7 @@ def show_video(video):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    ani.save("./Artificial Intelligence/input_video1")
+    ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video1")
     
 
 def to_gif(images):
