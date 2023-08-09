@@ -7,6 +7,8 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 
 def conv_bn(inp, oup, stride):
@@ -107,13 +109,20 @@ class MobileNetV2CAM(nn.Module):
 
         self._initialize_weights()
 
+        self.temp = True
+
     def forward(self, x):
         #print(f"Type of x: {type(x)}")
         #print(f"Shape of x: {x.shape}")
         #Type of x: <class 'torch.Tensor'>
         #Shape of x: torch.Size([1, 3, 16, 224, 224])
-        for s in x:
-            print(f"Sample shape: {s.shape}")
+        #for s in x:
+        #    print(f"Sample shape: {s.shape}")
+        if temp:
+            for s in x:
+                self.show_video(s)
+                temp = False
+
         x = self.features(x)
         x = F.avg_pool3d(x, x.data.size()[-3:])
         x = x.view(x.size(0), -1)
@@ -134,6 +143,16 @@ class MobileNetV2CAM(nn.Module):
                 n = m.weight.size(1)
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
+
+    def show_video(self, video):
+        fig, ax = plt.subplots()
+
+        imgs = torch.rand(10,3,128,128)
+        video = imgs.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+        frames = [[ax.imshow(video[i])] for i in range(len(video))]
+
+        ani = animation.ArtistAnimation(fig, frames)
+        ani
 
 
 def get_fine_tuning_parameters(model, ft_portion):
