@@ -36,10 +36,8 @@ def show_video(video):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    #ani.save("./Artificial Intelligence/input_video1")
+    ani.save("./Artificial Intelligence/input_video1")
     
-    print(f"Folder current: {os.getcwd()}")
-
 
 def to_gif(images):
   print(f"To gif")
