@@ -26,7 +26,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
     elif type=='squeezenet':
         model=get_model_squeezenet(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
     elif type=="CAM":
-        model=get_model_cam(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
+        model=get_model_cam(num_classes=num_classes, sample_size=sample_size, width_mult=width_mult)
     else:
         print("Unknown model type. Select between: mobilenet, mobilenetv2, squeezenet.")
         return None
