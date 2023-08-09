@@ -59,13 +59,8 @@ def test(loader, model, criterion, device, epoch=None):
     val_loss = np.array(val_loss).mean()
 
     if epoch is not None:
-        # Save metrics with wandb
-        wandb.log({"val_accuracy": val_accuracy, "val_loss": val_loss}, commit=True)
-
         print('[Epoch {}] Validation Accuracy: {:.2f}%'.format(epoch, val_accuracy))
     else:
-        wandb.log({"test_accuracy": val_accuracy, "test_loss": val_loss}, commit=True)
-
         print('Test Accuracy: {:.2f}%'.format(val_accuracy))
 
     return val_accuracy, val_loss
@@ -166,4 +161,4 @@ if __name__ == '__main__':
     cam_model.load_state_dict(best_checkpoint)
 
 
-    val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=epoch)
+    val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
