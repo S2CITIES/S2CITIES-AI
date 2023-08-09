@@ -115,6 +115,8 @@ class MobileNetV2CAM(nn.Module):
             nn.Linear(self.last_channel, num_classes),
         )
 
+        self.print = nn.Sequential(PrintLayer())
+
         self._initialize_weights()
 
         self.temp = True
@@ -133,7 +135,7 @@ class MobileNetV2CAM(nn.Module):
         #        self.show_video(s)
         #        self.temp = False
         if self.checked:
-            x = PrintLayer(x)
+            x = self.print(x)
         x = self.features(x)
         x = F.avg_pool3d(x, x.data.size()[-3:])
         x = x.view(x.size(0), -1)

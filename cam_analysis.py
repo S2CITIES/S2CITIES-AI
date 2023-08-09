@@ -1,7 +1,6 @@
 import os
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, random_split
 from data.SFHDataset.SignalForHelp import Signal4HelpDataset, load_video
 from build_models import build_model
@@ -159,6 +158,8 @@ if __name__ == '__main__':
     # Load the best checkpoint obtained until now
     best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
     cam_model.load_state_dict(best_checkpoint)
+    print(f"cam model checked: {cam_model.checked}")
     cam_model.checked = True
+    print(f"cam model checked: {cam_model.checked}")
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
