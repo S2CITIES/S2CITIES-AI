@@ -96,7 +96,7 @@ class MobileNetV2CAM(nn.Module):
         assert sample_size % 16 == 0.
         input_channel = int(input_channel * width_mult)
         self.last_channel = int(last_channel * width_mult) if width_mult > 1.0 else last_channel
-        self.features = [PrintLayer(), conv_bn(3, input_channel, (1,2,2))]
+        self.features = [conv_bn(3, input_channel, (1,2,2))]
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
             output_channel = int(c * width_mult)
@@ -119,6 +119,7 @@ class MobileNetV2CAM(nn.Module):
 
         self.temp = True
         self.animation = None
+        self.checked = False
 
     def forward(self, x):
         #print(f"Type of x: {type(x)}")
@@ -131,7 +132,8 @@ class MobileNetV2CAM(nn.Module):
         #    for s in x:
         #        self.show_video(s)
         #        self.temp = False
-
+        if self.checked:
+            x = PrintLayer(x)
         x = self.features(x)
         x = F.avg_pool3d(x, x.data.size()[-3:])
         x = x.view(x.size(0), -1)
