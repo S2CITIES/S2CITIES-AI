@@ -83,7 +83,7 @@ def test(loader, model, criterion, device, epoch=None):
             input = input.to(torch.device("cpu"))
             #to_gif(input.numpy())
             show_video(input)
-            input("Press a button")
+            #input("Press a button")
 
     y_true = torch.cat(y_true, dim=0)
     y_pred = torch.cat(y_pred, dim=0)
