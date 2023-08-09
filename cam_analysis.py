@@ -17,6 +17,7 @@ import numpy as np
 
 
 def to_gif(images):
+  print(f"To gif")
   converted_images = np.clip(images, 0, 255).astype(np.uint8)
   imageio.mimsave('./animation.gif', converted_images, fps=6.4)
   return embed.embed_file('./animation.gif')
@@ -169,7 +170,11 @@ if __name__ == '__main__':
     cam_model.load_state_dict(best_checkpoint)
     cam_model.module.checked = True
 
+    print(cam_model)
+    
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
     print(f"Input print: {type(cam_model.module.get_submodule('print').input)}")
-    to_gif((cam_model.module.get_submodule('print').input).cpu().numpy())
+    
+     
+    # to_gif((cam_model.module.get_submodule('print').input).cpu().numpy())
