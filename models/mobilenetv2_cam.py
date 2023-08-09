@@ -151,7 +151,7 @@ class MobileNetV2CAM(nn.Module):
         x = self.classifier(x)
         if self.temp:
             print(f"Layer shape: {x.shape}")
-            temp = False
+            self.temp = False
         return x
 
     def _initialize_weights(self):
