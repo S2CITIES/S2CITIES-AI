@@ -113,7 +113,7 @@ if __name__ == '__main__':
     
     print('Size of Validation Set: {}'.format(len(val_dataset)))
 
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
+    val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=args.num_workers)
 
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
