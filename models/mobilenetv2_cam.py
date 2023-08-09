@@ -10,13 +10,18 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+
 class PrintLayer(nn.Module):
     def __init__(self):
         super(PrintLayer, self).__init__()
+        self.input = None
+        self.check = True
     
     def forward(self, x):
         # Do your print / debug stuff here
-        #print("In print layer")
+        if self.check:
+            self.input = x[0]
+            self.check = False
         return x
 
 def conv_bn(inp, oup, stride):
@@ -131,14 +136,12 @@ class MobileNetV2CAM(nn.Module):
         #for s in x:
         #    print(f"Sample shape: {s.shape}")
         '''if self.temp:
-            for s in x:
-                self.show_video(s)
-                self.temp = False'''
+            self.show_video(x[0])
+            self.temp = False'''
 
         if self.temp:
             print(f"Layer shape: {x.shape}")
-            print(f"x[0] shape: {x[0].shape}")
-        if False:#self.checked:
+        if self.checked:
             x = self.print(x)
         x = self.features(x)
         if self.temp:

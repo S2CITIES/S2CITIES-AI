@@ -11,6 +11,15 @@ from train_args import parse_args
 import transforms.spatial_transforms as SPtransforms
 import transforms.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
+import imageio
+from tensorflow_docs.vis import embed
+import numpy as np
+
+
+def to_gif(images):
+  converted_images = np.clip(images, 0, 255).astype(np.uint8)
+  imageio.mimsave('./animation.gif', converted_images, fps=6.4)
+  return embed.embed_file('./animation.gif')
 
 # Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
 
@@ -162,4 +171,4 @@ if __name__ == '__main__':
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
-    cam_model.module.animation
+    print(f"Input print: {type(cam_model.module.print.module.input)}")
