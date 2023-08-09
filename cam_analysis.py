@@ -206,7 +206,7 @@ if __name__ == '__main__':
     print(f"Video type: {type(input)}")
     input = input.permute(1, 2, 3, 0).numpy()  # Permute to (T, H, W, C) for visualization
 
-    show_video(input)
+    #show_video(input)
     video_src = """
     <video width="224" height="224" controls>
     <source src="data:video/mp4;base64,{0}" type="video/mp4">
