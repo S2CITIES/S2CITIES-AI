@@ -32,7 +32,7 @@ def show_video(video):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    ani
+    ani.to_html5_video()
     #print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
 
 
@@ -194,11 +194,6 @@ if __name__ == '__main__':
     cam_model.load_state_dict(best_checkpoint)
     cam_model.module.checked = True
 
-    print(cam_model)
+    #print(cam_model)
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
-
-    print(f"Input print: {type(cam_model.module.get_submodule('print').input)}")
-    
-     
-    # to_gif((cam_model.module.get_submodule('print').input).cpu().numpy())
