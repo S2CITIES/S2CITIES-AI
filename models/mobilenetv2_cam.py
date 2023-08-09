@@ -118,10 +118,10 @@ class MobileNetV2CAM(nn.Module):
         #Shape of x: torch.Size([1, 3, 16, 224, 224])
         #for s in x:
         #    print(f"Sample shape: {s.shape}")
-        if temp:
+        if self.temp:
             for s in x:
                 self.show_video(s)
-                temp = False
+                self.temp = False
 
         x = self.features(x)
         x = F.avg_pool3d(x, x.data.size()[-3:])
