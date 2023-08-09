@@ -215,7 +215,7 @@ if __name__ == '__main__':
     """
 
     # Convert the video numpy array to a base64-encoded mp4 video
-    video_base64 = base64.b64encode(input).decode('utf-8')
+    video_base64 = base64.b64encode(video_input).decode('utf-8')
     video_html = video_src.format(video_base64)
 
     # Display the video player
