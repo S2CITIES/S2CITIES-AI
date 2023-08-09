@@ -74,12 +74,12 @@ def test(loader, model, criterion, device, epoch=None):
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
 
-            print(f"logits: {logits}, y_pred: {y_preds}, labels: {labels}")
             if save and labels[0]==1:
                 inp = inp.to(torch.device("cpu"))
                 global input, feat_maps
                 input = inp
                 feat_maps = f_maps
+                print(f"logits: {logits}, y_pred: {y_preds}, labels: {labels}")
                 save = False
 
 
@@ -197,6 +197,7 @@ if __name__ == '__main__':
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
+    print(feat_maps)
 
     print(f"video shape before permute: {input.shape}")
     input = input.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
