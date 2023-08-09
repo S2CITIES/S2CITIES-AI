@@ -20,7 +20,7 @@ class PrintLayer(nn.Module):
     def forward(self, x):
         # Do your print / debug stuff here
         if self.check:
-            self.input = x[0]
+            self.input = x[0].permute(1,2,3,0)
             self.check = False
         return x
 
