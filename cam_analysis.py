@@ -30,10 +30,10 @@ def save_video(video):
 
     video_cpu = video.cpu().numpy()
 
-    frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
+    frames = [[ax.imshow(video_cpu[i].astype('uint8'))] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video1.mp4")
+    ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video2.mp4")
     
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
