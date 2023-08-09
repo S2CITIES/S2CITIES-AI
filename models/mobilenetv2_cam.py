@@ -130,17 +130,28 @@ class MobileNetV2CAM(nn.Module):
         #Shape of x: torch.Size([1, 3, 16, 224, 224])
         #for s in x:
         #    print(f"Sample shape: {s.shape}")
-        if self.temp:
+        '''if self.temp:
             for s in x:
                 self.show_video(s)
-                self.temp = False
-                
+                self.temp = False'''
+
         if self.checked:
             x = self.print(x)
+        if self.temp:
+            print(f"Layer shape: {x.shape}")
         x = self.features(x)
+        if self.temp:
+            print(f"Layer shape: {x.shape}")
         x = F.avg_pool3d(x, x.data.size()[-3:])
+        if self.temp:
+            print(f"Layer shape: {x.shape}")
         x = x.view(x.size(0), -1)
+        if self.temp:
+            print(f"Layer shape: {x.shape}")
         x = self.classifier(x)
+        if self.temp:
+            print(f"Layer shape: {x.shape}")
+            temp = False
         return x
 
     def _initialize_weights(self):
@@ -171,7 +182,7 @@ class MobileNetV2CAM(nn.Module):
 
         ani = animation.ArtistAnimation(fig, frames)
         self.animation = ani
-        print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
+        #print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
 
 
 def get_fine_tuning_parameters(model, ft_portion):
