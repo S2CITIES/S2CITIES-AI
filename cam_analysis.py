@@ -73,7 +73,7 @@ def test(loader, model, criterion, device, epoch=None):
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
 
-            if i==6:
+            if i==18:
                 inp = inp.to(torch.device("cpu"))
                 global input
                 input = inp
