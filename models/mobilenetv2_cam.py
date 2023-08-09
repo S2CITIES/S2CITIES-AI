@@ -147,9 +147,8 @@ class MobileNetV2CAM(nn.Module):
     def show_video(self, video):
         fig, ax = plt.subplots()
 
-        imgs = torch.rand(10,3,128,128)
         print(f"video shape before permute: {video.shape}")
-        video = imgs.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+        video = video.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
         print(f"video shape after permute: {video.shape}")
 
         frames = [[ax.imshow(video[i])] for i in range(len(video))]
