@@ -108,8 +108,12 @@ class MobileNetV2CAM(nn.Module):
         self._initialize_weights()
 
     def forward(self, x):
-        print(f"Type of x: {type(x)}")
-        print(f"Shape of x: {x.shape}")
+        #print(f"Type of x: {type(x)}")
+        #print(f"Shape of x: {x.shape}")
+        #Type of x: <class 'torch.Tensor'>
+        #Shape of x: torch.Size([1, 3, 16, 224, 224])
+        for s in x:
+            print(f"Sample shape: {s.shape}")
         x = self.features(x)
         x = F.avg_pool3d(x, x.data.size()[-3:])
         x = x.view(x.size(0), -1)
