@@ -12,11 +12,10 @@ import transforms.spatial_transforms as SPtransforms
 import transforms.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
 import imageio
-from tensorflow_docs.vis import embed
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from IPython.display import HTML
+#from IPython.display import HTML
 import base64
 
 from matplotlib import rc
@@ -194,6 +193,7 @@ if __name__ == '__main__':
     cam_model.module.checked = True
 
     #print(cam_model)
+    print(cam_model.layer[-1].weight)
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
