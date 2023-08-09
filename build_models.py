@@ -78,7 +78,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
     # Test the model
     x = torch.randn((2, 3, sample_duration, sample_size, sample_size))
     out = model(x)
-    print(f"Testing the model - Obtained: {out.shape}, Expected: torch.Size([2,2])")
+    print(f"Testing the model - Obtained: {out[0].shape}, Expected: torch.Size([2,2])")
 
     return model
 
