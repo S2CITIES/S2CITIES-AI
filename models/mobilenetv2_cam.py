@@ -158,7 +158,7 @@ class MobileNetV2CAM(nn.Module):
 
         ani = animation.ArtistAnimation(fig, frames)
         self.animation = ani
-        plt.show()
+        print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
 
 
 def get_fine_tuning_parameters(model, ft_portion):
