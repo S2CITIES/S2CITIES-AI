@@ -74,7 +74,6 @@ def test(loader, model, criterion, device, epoch=None):
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
 
-            print(labels.shape)
             if save and labels[0]==1:
                 inp = inp.to(torch.device("cpu"))
                 global input
