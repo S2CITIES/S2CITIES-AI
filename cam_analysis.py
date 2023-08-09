@@ -193,7 +193,9 @@ if __name__ == '__main__':
     cam_model.module.checked = True
 
     #print(cam_model)
-    print(cam_model.layer[-1].weight)
+    print(cam_model.module.get_submodule('classifier').layer[0].weight)
+    print(cam_model.module.get_submodule('classifier').layer[1].weight)
+    print(cam_model.module.get_submodule('classifier').layer[2].weight)
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
