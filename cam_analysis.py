@@ -23,6 +23,7 @@ from matplotlib import rc
 rc('animation', html='jshtml')
 
 input = None
+feat_maps = None
 
 def save_video(video):
     print("Saving video..")
@@ -58,7 +59,7 @@ def test(loader, model, criterion, device, epoch=None):
             videos = videos.float()
             videos = videos.to(device)
 
-            logits, inp = model(videos)
+            logits, inp, f_maps = model(videos)
             
             labels = labels.to(device)
             val_loss_batch = criterion(logits, labels)
@@ -76,8 +77,9 @@ def test(loader, model, criterion, device, epoch=None):
 
             if save and labels[0]==1:
                 inp = inp.to(torch.device("cpu"))
-                global input
+                global input, feat_maps
                 input = inp
+                feat_maps = f_maps
                 save = False
 
 

@@ -110,10 +110,13 @@ class MobileNetV2CAM(nn.Module):
         self.temp = True
 
     def forward(self, x):
+        #Layer shape: torch.Size([2, 3, 16, 224, 224])
+        #Layer shape: torch.Size([2, 1280, 1, 7, 7])
         if self.temp: print(f"Layer shape: {x.shape}")
 
         input = x[0]
         x = self.features(x)
+        feat_maps = x[0]
         if self.temp: print(f"Layer shape: {x.shape}")
 
         x = F.avg_pool3d(x, x.data.size()[-3:])
@@ -127,7 +130,7 @@ class MobileNetV2CAM(nn.Module):
             print(f"Layer shape: {x.shape}")
             self.temp = False
 
-        return x, input
+        return x, input, feat_maps
 
     def _initialize_weights(self):
         for m in self.modules():
