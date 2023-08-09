@@ -160,5 +160,5 @@ if __name__ == '__main__':
     best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
     cam_model.load_state_dict(best_checkpoint)
 
-
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
+    cam_model.animation
