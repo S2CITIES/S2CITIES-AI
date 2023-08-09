@@ -204,7 +204,7 @@ if __name__ == '__main__':
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
     print(f"Video type: {type(input)}")
-    input = input.permute(1, 2, 3, 0).numpy()  # Permute to (T, H, W, C) for visualization
+    video_input = input.permute(1, 2, 3, 0).numpy().copy()  # Permute to (T, H, W, C) for visualization
 
     #show_video(input)
     video_src = """
