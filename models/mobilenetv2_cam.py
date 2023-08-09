@@ -10,6 +10,14 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+class PrintLayer(nn.Module):
+    def __init__(self):
+        super(PrintLayer, self).__init__()
+    
+    def forward(self, x):
+        # Do your print / debug stuff here
+        print("In print layer")
+        return x
 
 def conv_bn(inp, oup, stride):
     return nn.Sequential(
@@ -88,7 +96,7 @@ class MobileNetV2CAM(nn.Module):
         assert sample_size % 16 == 0.
         input_channel = int(input_channel * width_mult)
         self.last_channel = int(last_channel * width_mult) if width_mult > 1.0 else last_channel
-        self.features = [conv_bn(3, input_channel, (1,2,2))]
+        self.features = [PrintLayer(), conv_bn(3, input_channel, (1,2,2))]
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
             output_channel = int(c * width_mult)
@@ -119,10 +127,10 @@ class MobileNetV2CAM(nn.Module):
         #Shape of x: torch.Size([1, 3, 16, 224, 224])
         #for s in x:
         #    print(f"Sample shape: {s.shape}")
-        if self.temp:
-            for s in x:
-                self.show_video(s)
-                self.temp = False
+        #if self.temp:
+        #    for s in x:
+        #        self.show_video(s)
+        #        self.temp = False
 
         x = self.features(x)
         x = F.avg_pool3d(x, x.data.size()[-3:])
