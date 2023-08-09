@@ -9,19 +9,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-class PrintLayer(nn.Module):
-    def __init__(self):
-        super(PrintLayer, self).__init__()
-        self.input = None
-        self.check = True
-    
-    def forward(self, x):
-        # Do your print / debug stuff here
-        if self.check:
-            self.input = x[0].permute(1,2,3,0)
-            self.check = False
-        return x
-
 def conv_bn(inp, oup, stride):
     return nn.Sequential(
         nn.Conv3d(inp, oup, kernel_size=3, stride=stride, padding=(1,1,1), bias=False),
@@ -123,32 +110,24 @@ class MobileNetV2CAM(nn.Module):
         self.temp = True
 
     def forward(self, x):
-        #print(f"Type of x: {type(x)}")
-        #print(f"Shape of x: {x.shape}")
-        #Type of x: <class 'torch.Tensor'>
-        #Shape of x: torch.Size([1, 3, 16, 224, 224])
-        #for s in x:
-        #    print(f"Sample shape: {s.shape}")
-        '''if self.temp:
-            self.show_video(x[0])
-            self.temp = False'''
+        if self.temp: print(f"Layer shape: {x.shape}")
 
-        if self.temp:
-            print(f"Layer shape: {x.shape}")
+        input = x[0]
         x = self.features(x)
-        if self.temp:
-            print(f"Layer shape: {x.shape}")
+        if self.temp: print(f"Layer shape: {x.shape}")
+
         x = F.avg_pool3d(x, x.data.size()[-3:])
-        if self.temp:
-            print(f"Layer shape: {x.shape}")
+        if self.temp: print(f"Layer shape: {x.shape}")
+
         x = x.view(x.size(0), -1)
-        if self.temp:
-            print(f"Layer shape: {x.shape}")
+        if self.temp: print(f"Layer shape: {x.shape}")
+
         x = self.classifier(x)
         if self.temp:
             print(f"Layer shape: {x.shape}")
             self.temp = False
-        return x
+
+        return x, input
 
     def _initialize_weights(self):
         for m in self.modules():

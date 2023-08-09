@@ -16,8 +16,11 @@ from tensorflow_docs.vis import embed
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib import rc
+rc('animation', html='jshtml')
 
-def show_video(self, video):
+def show_video(video):
+    print("Show video")
     fig, ax = plt.subplots()
 
     print(f"video shape before permute: {video.shape}")
@@ -29,6 +32,7 @@ def show_video(self, video):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
+    ani
     #print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
 
 
@@ -60,7 +64,7 @@ def test(loader, model, criterion, device, epoch=None):
             videos = videos.float()
             videos = videos.to(device)
 
-            logits = model(videos)
+            logits, input = model(videos)
             
             labels = labels.to(device)
             val_loss_batch = criterion(logits, labels)
@@ -75,6 +79,11 @@ def test(loader, model, criterion, device, epoch=None):
 
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
+
+            input = input.to(torch.device("cpu"))
+            to_gif(input.numpy())
+            show_video(input)
+            input("Press a button")
 
     y_true = torch.cat(y_true, dim=0)
     y_pred = torch.cat(y_pred, dim=0)
@@ -94,8 +103,7 @@ if __name__ == '__main__':
     batch_size=args.batch
     num_epochs=args.epochs
 
-    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    device = torch.device("cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
     # No erandom scaling - Just original scale
