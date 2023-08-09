@@ -110,6 +110,7 @@ class MobileNetV2CAM(nn.Module):
         self._initialize_weights()
 
         self.temp = True
+        self.animation = None
 
     def forward(self, x):
         #print(f"Type of x: {type(x)}")
@@ -156,7 +157,9 @@ class MobileNetV2CAM(nn.Module):
         frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
         ani = animation.ArtistAnimation(fig, frames)
-        ani
+        self.animation = ani
+        
+        self.animation
 
 
 def get_fine_tuning_parameters(model, ft_portion):
