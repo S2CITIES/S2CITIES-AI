@@ -51,6 +51,7 @@ def test(loader, model, criterion, device, epoch=None):
 
     with torch.no_grad():
         model.eval()
+        save = True
 
         for i, data in enumerate(loader):
             videos, labels = data
@@ -73,10 +74,11 @@ def test(loader, model, criterion, device, epoch=None):
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
 
-            if i==18:
+            if save and labels[0]=="1":
                 inp = inp.to(torch.device("cpu"))
                 global input
                 input = inp
+                save = False
 
 
     y_true = torch.cat(y_true, dim=0)
