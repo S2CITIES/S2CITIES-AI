@@ -14,6 +14,22 @@ from data.SFHDataset.compute_mean_std import get_SFH_mean_std
 import imageio
 from tensorflow_docs.vis import embed
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+def show_video(self, video):
+    fig, ax = plt.subplots()
+
+    print(f"video shape before permute: {video.shape}")
+    video = video.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+    print(f"video shape after permute: {video.shape}")
+
+    video_cpu = video.cpu().numpy()
+
+    frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
+
+    ani = animation.ArtistAnimation(fig, frames)
+    #print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
 
 
 def to_gif(images):
@@ -22,7 +38,6 @@ def to_gif(images):
   imageio.mimsave('./animation.gif', converted_images, fps=6.4)
   return embed.embed_file('./animation.gif')
 
-# Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
 import warnings
@@ -40,7 +55,7 @@ def test(loader, model, criterion, device, epoch=None):
     with torch.no_grad():
         model.eval()
 
-        for i, data in enumerate(loader):
+        for _, data in enumerate(loader):
             videos, labels = data
             videos = videos.float()
             videos = videos.to(device)
@@ -79,7 +94,8 @@ if __name__ == '__main__':
     batch_size=args.batch
     num_epochs=args.epochs
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = "cpu"
     print("Running on device {}".format(device))
 
     # No erandom scaling - Just original scale
@@ -171,7 +187,7 @@ if __name__ == '__main__':
     cam_model.module.checked = True
 
     print(cam_model)
-    
+
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
     print(f"Input print: {type(cam_model.module.get_submodule('print').input)}")

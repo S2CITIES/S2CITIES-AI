@@ -7,8 +7,6 @@ import math
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 
 class PrintLayer(nn.Module):
@@ -120,13 +118,9 @@ class MobileNetV2CAM(nn.Module):
             nn.Linear(self.last_channel, num_classes),
         )
 
-        self.print = PrintLayer()
-
         self._initialize_weights()
 
         self.temp = True
-        self.animation = None
-        self.checked = False
 
     def forward(self, x):
         #print(f"Type of x: {type(x)}")
@@ -141,8 +135,6 @@ class MobileNetV2CAM(nn.Module):
 
         if self.temp:
             print(f"Layer shape: {x.shape}")
-        if self.checked:
-            x = self.print(x)
         x = self.features(x)
         if self.temp:
             print(f"Layer shape: {x.shape}")
@@ -172,21 +164,6 @@ class MobileNetV2CAM(nn.Module):
                 n = m.weight.size(1)
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
-
-    def show_video(self, video):
-        fig, ax = plt.subplots()
-
-        print(f"video shape before permute: {video.shape}")
-        video = video.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
-        print(f"video shape after permute: {video.shape}")
-
-        video_cpu = video.cpu().numpy()
-
-        frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
-
-        ani = animation.ArtistAnimation(fig, frames)
-        self.animation = ani
-        #print(f"type ani: {type(ani)}, type animation: {type(self.animation)}")
 
 
 def get_fine_tuning_parameters(model, ft_portion):
