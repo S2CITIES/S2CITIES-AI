@@ -27,15 +27,16 @@ def return_CAM(feature_conv, weight, class_idx):
     size_upsample = (224, 224)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
-    for idx in class_idx:
-        beforeDot =  feature_conv.reshape((nc, h*w))
-        cam = np.matmul(weight[idx], beforeDot)
-        cam = cam.reshape(h, w).numpy()
-        print(f"feature_conv: :{feature_conv.shape}, beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
-        cam = cam - np.min(cam)
-        cam_img = cam / np.max(cam)
-        cam_img = np.uint8(255 * cam_img)
-        output_cam.append(cv2.resize(cam_img, size_upsample))
+    for sample in feature_conv:
+        for idx in class_idx:
+            beforeDot =  sample.reshape((nc, h*w))
+            cam = np.matmul(weight[idx], beforeDot)
+            cam = cam.reshape(h, w).numpy()
+            print(f"feature_conv: :{feature_conv.shape}, sample: :{sample.shape}, beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
+            cam = cam - np.min(cam)
+            cam_img = cam / np.max(cam)
+            cam_img = np.uint8(255 * cam_img)
+            output_cam.append(cv2.resize(cam_img, size_upsample))
     return output_cam
 
 def save_video(video):
