@@ -76,7 +76,7 @@ def save_video_v2(input):
     
     for i, inp in enumerate(input):
         video = inp.permute(1,2,3,0) # Permuting to Tx(HxWxC)
-        #video = video[...,[2,1,0]]
+        video = video[...,[2,1,0]]
         print(f"video shape after permute: {video.shape}")
         video_cpu = video.cpu().numpy()
         print(video_cpu)
