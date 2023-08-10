@@ -80,7 +80,7 @@ def save_video_v2(input):
         video_cpu = video.cpu().numpy()
 
         writer = cv2.VideoWriter(filename=f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/v2_sample{i}.mp4",
-                                 fourcc=cv2.CV_FOURCC('P','I','M','1'), fps=6.4,
+                                 fourcc=cv2.VideoWriter_fourcc(*'XVID'), fps=6.4,
                                  frameSize=cv2.CvSize(args.sample_size, args.sample_size), isColor=True)
 
         if writer.isOpened:
