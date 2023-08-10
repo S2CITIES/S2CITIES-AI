@@ -31,7 +31,7 @@ def return_CAM(feature_conv, weight, class_idx):
         beforeDot =  feature_conv.reshape((nc, h*w))
         cam = np.matmul(weight[idx], beforeDot)
         cam = cam.reshape(h, w).numpy()
-        print(f"beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
+        print(f"feature_conv: :{feature_conv.shape}, beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
         cam = cam - np.min(cam)
         cam_img = cam / np.max(cam)
         cam_img = np.uint8(255 * cam_img)
@@ -47,7 +47,7 @@ def save_video(video):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video2.mp4")
+    ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video.mp4")
     
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
