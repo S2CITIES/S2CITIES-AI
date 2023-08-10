@@ -61,15 +61,12 @@ def save_video(input):
         fig, ax = plt.subplots()
 
         video_cpu = video.cpu().numpy()
-        
-        min_per_frame = np.min(video_cpu, axis=(1, 2, 3))
-        max_per_frame = np.max(video_cpu, axis=(1, 2, 3))
 
         for ind in range(len(video_cpu)):
-            video_cpu[ind] = (video_cpu[ind] * std) + mean
-            video_cpu[ind] = (video_cpu[ind] - min_per_frame[ind]) / max_per_frame[ind]
+            for j in range(len(video_cpu[ind])):
+                video_cpu[ind][j] = (video_cpu[ind][j] * std[j]) + mean[j]
 
-        video_cpu = np.uint8(255 * video_cpu)
+        video_cpu = np.uint8(video_cpu)
 
         frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
