@@ -34,7 +34,7 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
             frame_indices = list(range(1, n_frames+1))
             frame_indices = temporal_transform(frame_indices)
 
-            print(frame_indices)
+            #print(frame_indices)
             clip = [clip[i-1] for i in frame_indices]
         else:
             # If there are less then sample_duration frames, repeat the last one
