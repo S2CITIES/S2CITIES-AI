@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
     weights = cam_model.module.classifier[1].weight
     weights = weights.cpu()
-    weights.require_grad = False
+    weights.requires_grad = False
     out_cams = return_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
     print(f"out_cams len: {len(out_cams)}, out_cams[0].shape: {out_cams[0].shape}")
 
