@@ -41,7 +41,7 @@ def return_CAM(feature_conv, weight, class_idx):
         output_cam.append(sample_cam)
     return output_cam
 
-def save_video(video):
+def save_video(video, i):
     print("Saving video..")
     fig, ax = plt.subplots()
 
@@ -50,7 +50,7 @@ def save_video(video):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    ani.save("../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/input_video.mp4")
+    ani.save(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/sample{i}.mp4")
     
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
@@ -229,8 +229,8 @@ if __name__ == '__main__':
         for j in range(len(out_cams[0])):
             cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/cam_sample{i}_class{j}.jpg", out_cams[i][j])
 
-    #print(f"video shape before permute: {input.shape}")
-    #input = input[0].permute(1,2,3,0) # Permuting to (Bx)HxWxC format
-    #input = input[...,[2,1,0]]
-    #print(f"video shape after permute: {input.shape}")
-    #save_video(input)
+    for i, inp in enumerate(input):
+        vid = inp.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+        vid = vid[...,[2,1,0]]
+        print(f"video shape after permute: {vid.shape}")
+        save_video(vid, i)
