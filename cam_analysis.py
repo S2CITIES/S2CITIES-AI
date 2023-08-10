@@ -211,7 +211,10 @@ if __name__ == '__main__':
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
-    out_cams = return_CAM(feat_maps.squeeze(dim=2), cam_model.module.classifier[1].weight.cpu(), [0,1])
+    weights = cam_model.module.classifier[1].weight
+    weights = weights.cpu()
+    weights.require_grad = False
+    out_cams = return_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
     print(f"out_cams len: {len(out_cams)}, out_cams[0].shape: {out_cams[0].shape}")
 
     #print(f"video shape before permute: {input.shape}")
