@@ -47,7 +47,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
             param.requires_grad = False
 
         classifier = model.module.get_submodule('classifier')
-        print(f"Previous classifier: {classifier}")
+        #print(f"Previous classifier: {classifier}")
 
         if type == 'squeezenet': # Version 1.0 or 1.1
             # Weights of the new classifier will be fine-tunable

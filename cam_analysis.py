@@ -62,6 +62,7 @@ def save_video(input):
         fig, ax = plt.subplots()
 
         video_cpu = video.cpu().numpy()
+        video_cpu = np.uint8(255 * video_cpu)
 
         frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
@@ -78,6 +79,7 @@ def save_video_v2(input):
         video = video[...,[2,1,0]]
         print(f"video shape after permute: {video.shape}")
         video_cpu = video.cpu().numpy()
+        video_cpu = np.uint8(255 * video_cpu)
 
         writer = cv2.VideoWriter(filename=f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/v2_sample{i}.mp4",
                                  fourcc=cv2.VideoWriter_fourcc(*'mp4v'), fps=6.4,
