@@ -30,7 +30,7 @@ def choose_scale(img, scale="grayscale"):
     return img
 
 def save_CAM(feature_conv, weight, class_idx):
-    size_upsample = (224, 224)
+    size_upsample = (args.sample_size, args.sample_size)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
     for sample in feature_conv:
@@ -52,16 +52,21 @@ def save_CAM(feature_conv, weight, class_idx):
             cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/cam_sample{i}_class{j}.png", output_cam[i][j])
     return output_cam
 
-def save_video(video, i):
-    print("Saving video..")
-    fig, ax = plt.subplots()
+def save_video(input):
+    print("Saving videos..")
 
-    video_cpu = video.cpu().numpy()
+    for i, inp in enumerate(input):
+        video = inp.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+        video = video[...,[2,1,0]]
+        print(f"video shape after permute: {video.shape}")
+        fig, ax = plt.subplots()
 
-    frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
+        video_cpu = video.cpu().numpy()
 
-    ani = animation.ArtistAnimation(fig, frames)
-    ani.save(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/sample{i}.mp4")
+        frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
+
+        ani = animation.ArtistAnimation(fig, frames)
+        ani.save(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/sample{i}.mp4")
     
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
@@ -243,10 +248,4 @@ if __name__ == '__main__':
     weights = last_layer.weight.cpu()
 
     out_cams = save_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
-    print(f"out_cams len: {len(out_cams)}, out_cams[0] len: {len(out_cams[0])}, out_cams[0][0].shape: {out_cams[0][0].shape}")
-
-    for i, inp in enumerate(input):
-        vid = inp.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
-        vid = vid[...,[2,1,0]]
-        print(f"video shape after permute: {vid.shape}")
-        save_video(vid, i)
+    save_video(input)
