@@ -73,7 +73,6 @@ def save_video(input):
         ani = animation.ArtistAnimation(fig, frames)
         ani.save(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/sample{i}.mp4")
 
-
 def save_video_v2(input):
     print("Saving videos..")
     
@@ -84,13 +83,11 @@ def save_video_v2(input):
             video_cpu[ind] = (video_cpu[ind] * std[ind]) + mean[ind]
 
         video_cpu = np.transpose(video_cpu, (1,2,3,0)) # Permuting to Tx(HxWxC)
-        video_cpu = video_cpu[...,[2,1,0]]
+        #video_cpu = video_cpu[...,[2,1,0]]
 
         video_cpu = np.uint8(video_cpu)
 
-        print(video_cpu)
-
-        writer = cv2.VideoWriter(filename=f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/v2_sample{i}.mp4",
+        writer = cv2.VideoWriter(filename=f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/sample{i}.mp4",
                                  fourcc=cv2.VideoWriter_fourcc(*'mp4v'), fps=6.4,
                                  frameSize=(int(args.sample_size), int(args.sample_size)), isColor=True)
 
