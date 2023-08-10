@@ -75,23 +75,18 @@ def save_video(input):
 
 
 def save_video_v2(input):
-
     print("Saving videos..")
     
     for i, inp in enumerate(input):
-        video = inp.permute(1,2,3,0) # Permuting to Tx(HxWxC)
-        video = video[...,[2,1,0]]
-        video_cpu = video.cpu().numpy()
-        print(video_cpu)
-                
-        min_per_frame = np.min(video_cpu, axis=(1, 2, 3))
-        max_per_frame = np.max(video_cpu, axis=(1, 2, 3))
+        video_cpu = inp.cpu().numpy()
 
         for ind in range(len(video_cpu)):
-            video_cpu[ind] = (video_cpu[ind] * std) + mean
-            video_cpu[ind] = (video_cpu[ind] - min_per_frame[ind]) / max_per_frame[ind]
+            video_cpu[ind] = (video_cpu[ind] * std[ind]) + mean[ind]
 
-        video_cpu = np.uint8(255 * video_cpu)
+        video_cpu = np.transpose(video_cpu, (1,2,3,0)) # Permuting to Tx(HxWxC)
+        video_cpu = video_cpu[...,[2,1,0]]
+
+        video_cpu = np.uint8(video_cpu)
 
         print(video_cpu)
 
@@ -288,5 +283,5 @@ if __name__ == '__main__':
     weights = last_layer.weight.cpu()
 
     out_cams = save_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
-    save_video(input)
+    #save_video(input)
     save_video_v2(input)
