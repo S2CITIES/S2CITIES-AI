@@ -79,6 +79,7 @@ def save_video_v2(input):
         #video = video[...,[2,1,0]]
         print(f"video shape after permute: {video.shape}")
         video_cpu = video.cpu().numpy()
+        print(video_cpu)
         video_cpu = np.uint8(255 * video_cpu)
 
         writer = cv2.VideoWriter(filename=f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/v2_sample{i}.mp4",
