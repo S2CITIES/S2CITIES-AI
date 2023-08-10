@@ -11,17 +11,22 @@ from train_args import parse_args
 import transforms.spatial_transforms as SPtransforms
 import transforms.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
-import imageio
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import cv2
 
-from matplotlib import rc
-rc('animation', html='jshtml')
+colormap = plt.get_cmap('coolwarm')
 
 input = None
 feat_maps = None
+
+def choose_scale(img, scale="grayscale"):
+    if (scale == "coolwarm"):
+        img = colormap(img)[:, :, :3]
+    else:
+        img = np.uint8(255 * img)
+    return img
 
 def save_CAM(feature_conv, weight, class_idx):
     size_upsample = (224, 224)
@@ -33,13 +38,12 @@ def save_CAM(feature_conv, weight, class_idx):
             beforeDot =  sample.reshape((nc, h*w))
             cam = np.matmul(weight[idx], beforeDot)
             cam = cam.reshape(h, w).numpy()
-            print(f"feature_conv: :{feature_conv.shape}, sample: :{sample.shape}, beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
             cam = cam - np.min(cam)
             cam_img = cam / np.max(cam)
-            cam_img = np.uint8(255 * cam_img)
+            cam_img = choose_scale(cam_img, "coolwarm")
+            print(f"feature_conv: :{feature_conv.shape}, sample: :{sample.shape}, beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
             sample_cam.append(cv2.resize(cam_img, size_upsample))
         output_cam.append(list(sample_cam))
-    
     
     for i in range(len(output_cam)):
         for j in range(len(output_cam[i])):
