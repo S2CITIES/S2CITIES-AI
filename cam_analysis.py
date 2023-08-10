@@ -27,8 +27,8 @@ def save_CAM(feature_conv, weight, class_idx):
     size_upsample = (224, 224)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
-    sample_cam = []
     for sample in feature_conv:
+        sample_cam = []
         for idx in class_idx:
             beforeDot =  sample.reshape((nc, h*w))
             cam = np.matmul(weight[idx], beforeDot)
@@ -38,7 +38,7 @@ def save_CAM(feature_conv, weight, class_idx):
             cam_img = cam / np.max(cam)
             cam_img = np.uint8(255 * cam_img)
             sample_cam.append(cv2.resize(cam_img, size_upsample))
-        output_cam.append(sample_cam)
+        output_cam.append(list(sample_cam))
     
     
     for i in range(len(output_cam)):
