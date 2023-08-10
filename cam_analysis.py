@@ -80,7 +80,14 @@ def save_video_v2(input):
         print(f"video shape after permute: {video.shape}")
         video_cpu = video.cpu().numpy()
         print(video_cpu)
+                
+        min_per_frame = np.min(video_cpu, dim=(1, 2, 3))
+        max_per_frame = np.max(video_cpu, dim=(1, 2, 3))
+
+        video_cpu = (video_cpu - min_per_frame) / max_per_frame
+
         video_cpu = np.uint8(255 * video_cpu)
+        
         print(video_cpu)
 
         writer = cv2.VideoWriter(filename=f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/v2_sample{i}.mp4",
