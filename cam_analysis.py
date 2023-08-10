@@ -55,7 +55,6 @@ def save_video(input):
     print("Saving videos..")
 
     for i, inp in enumerate(input):
-        #video = video[...,[2,1,0]]
 
         fig, ax = plt.subplots()
 
@@ -65,6 +64,7 @@ def save_video(input):
             video_cpu[ind] = (video_cpu[ind] * std[ind]) + mean[ind]
 
         video_cpu = np.transpose(video_cpu, (1,2,3,0)) # Permuting to Tx(HxWxC)
+        video_cpu = video_cpu[...,[2,1,0]]
 
         video_cpu = np.uint8(video_cpu)
 
