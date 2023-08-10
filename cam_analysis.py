@@ -55,16 +55,17 @@ def save_video(input):
     print("Saving videos..")
 
     for i, inp in enumerate(input):
-        video = inp.permute(1,2,3,0) # Permuting to Tx(HxWxC)
         #video = video[...,[2,1,0]]
 
         fig, ax = plt.subplots()
 
-        video_cpu = video.cpu().numpy()
+        video_cpu = inp.cpu().numpy()
 
         for ind in range(len(video_cpu)):
             for j in range(len(video_cpu[ind])):
                 video_cpu[ind][j] = (video_cpu[ind][j] * std[j]) + mean[j]
+
+        video_cpu = video_cpu.permute(1,2,3,0) # Permuting to Tx(HxWxC)
 
         video_cpu = np.uint8(video_cpu)
 
