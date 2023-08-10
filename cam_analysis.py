@@ -31,7 +31,7 @@ def return_CAM(feature_conv, weight, class_idx):
     for idx in class_idx:
         beforeDot =  feature_conv.reshape((nc, h*w))
         cam = np.matmul(weight[idx], beforeDot)
-        cam = cam.reshape(h, w)
+        cam = cam.reshape(h, w).numpy()
         print(f"beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
         cam = cam - np.min(cam)
         cam_img = cam / np.max(cam)
