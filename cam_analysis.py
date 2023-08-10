@@ -64,7 +64,7 @@ def save_video(input):
         for ind in range(len(video_cpu)):
             video_cpu[ind] = (video_cpu[ind] * std[ind]) + mean[ind]
 
-        video_cpu = video_cpu.permute(1,2,3,0) # Permuting to Tx(HxWxC)
+        video_cpu = np.transpose(video_cpu, (1,2,3,0)) # Permuting to Tx(HxWxC)
 
         video_cpu = np.uint8(video_cpu)
 
