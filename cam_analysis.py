@@ -42,7 +42,7 @@ def save_CAM(feature_conv, weight, class_idx):
     
     
     for i in range(len(output_cam)):
-        for j in range(len(output_cam[0])):
+        for j in range(len(output_cam[i])):
             cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/cam_sample{i}_class{j}.jpg", output_cam[i][j])
     return output_cam
 
@@ -75,7 +75,7 @@ def test(loader, model, criterion, device, epoch=None):
         model.eval()
         save = True
 
-        for i, data in enumerate(loader):
+        for _, data in enumerate(loader):
             videos, labels = data
             videos = videos.float()
             videos = videos.to(device)
@@ -96,7 +96,17 @@ def test(loader, model, criterion, device, epoch=None):
             y_preds = y_preds.detach().cpu()
             y_pred.append(y_preds)
 
-            if save and labels[0]==1:
+            # If the batch size is > 1, I want both a positive and a negative
+            if save and labels.shape[0]!=1 and (1 in labels) and (0 in labels):
+                inp = inp.to(torch.device("cpu"))
+                f_maps = f_maps.to(torch.device("cpu"))
+                global input, feat_maps
+                input = inp
+                feat_maps = f_maps
+                print(f"logits: {logits}, y_pred: {y_preds}, labels: {labels}")
+                save = False
+            # Otherwise I want a positive
+            elif save and labels.shape[0]==1 and (1 in labels):
                 inp = inp.to(torch.device("cpu"))
                 f_maps = f_maps.to(torch.device("cpu"))
                 global input, feat_maps

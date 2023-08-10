@@ -72,8 +72,8 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
         new_classifier.cuda()
         model.module.classifier = new_classifier
         classifier = model.module.get_submodule('classifier')
-        print(f"New classifier: {classifier}")
-        print("New model built successfully")
+        #print(f"New classifier: {classifier}")
+        #print("New model built successfully")
 
     # Test the model
     x = torch.randn((2, 3, sample_duration, sample_size, sample_size))
