@@ -62,8 +62,7 @@ def save_video(input):
         video_cpu = inp.cpu().numpy()
 
         for ind in range(len(video_cpu)):
-            for j in range(len(video_cpu[ind])):
-                video_cpu[ind][j] = (video_cpu[ind][j] * std[j]) + mean[j]
+            video_cpu[ind] = (video_cpu[ind] * std[ind]) + mean[ind]
 
         video_cpu = video_cpu.permute(1,2,3,0) # Permuting to Tx(HxWxC)
 
