@@ -23,7 +23,7 @@ rc('animation', html='jshtml')
 input = None
 feat_maps = None
 
-def return_CAM(feature_conv, weight, class_idx):
+def save_CAM(feature_conv, weight, class_idx):
     size_upsample = (224, 224)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
@@ -39,6 +39,11 @@ def return_CAM(feature_conv, weight, class_idx):
             cam_img = np.uint8(255 * cam_img)
             sample_cam.append(cv2.resize(cam_img, size_upsample))
         output_cam.append(sample_cam)
+    
+    
+    for i in range(len(output_cam)):
+        for j in range(len(output_cam[0])):
+            cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/cam_sample{i}_class{j}.jpg", output_cam[i][j])
     return output_cam
 
 def save_video(video, i):
@@ -50,7 +55,7 @@ def save_video(video, i):
     frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
     ani = animation.ArtistAnimation(fig, frames)
-    ani.save(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/sample{i}.mp4")
+    ani.save(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/sample{i}.mp4")
     
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
@@ -222,12 +227,8 @@ if __name__ == '__main__':
         param.requires_grad = False
     weights = last_layer.weight.cpu()
 
-    out_cams = return_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
+    out_cams = save_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
     print(f"out_cams len: {len(out_cams)}, out_cams[0] len: {len(out_cams[0])}, out_cams[0][0].shape: {out_cams[0][0].shape}")
-
-    for i in range(len(out_cams)):
-        for j in range(len(out_cams[0])):
-            cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/cam_sample{i}_class{j}.jpg", out_cams[i][j])
 
     for i, inp in enumerate(input):
         vid = inp.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
