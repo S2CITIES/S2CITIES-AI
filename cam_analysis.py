@@ -15,14 +15,28 @@ import imageio
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-#from IPython.display import HTML
-import base64
+import cv2
 
 from matplotlib import rc
 rc('animation', html='jshtml')
 
 input = None
 feat_maps = None
+
+def return_CAM(feature_conv, weight, class_idx):
+    # generate the class -activation maps upsample to 256x256
+    size_upsample = (256, 256)
+    bz, nc, h, w = feature_conv.shape
+    output_cam = []
+    for idx in class_idx:
+        beforeDot =  feature_conv.reshape((nc, h*w))
+        cam = np.matmul(weight[idx], beforeDot)
+        cam = cam.reshape(h, w)
+        cam = cam - np.min(cam)
+        cam_img = cam / np.max(cam)
+        cam_img = np.uint8(255 * cam_img)
+        output_cam.append(cv2.resize(cam_img, size_upsample))
+    return output_cam
 
 def save_video(video):
     print("Saving video..")
@@ -192,15 +206,15 @@ if __name__ == '__main__':
     cam_model.load_state_dict(best_checkpoint)
     cam_model.module.checked = True
 
-    #print(cam_model)
-    print(cam_model.module.classifier[1].weight.shape)
+    #print(cam_model.module.classifier[1].weight.shape) torch.Size([2, 1280])
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
 
-    print(feat_maps.squeeze(dim=1))
+    out_cams = return_CAM(feat_maps.squeeze(dim=1), cam_model.module.classifier[1].weight.shape, [0,1])
+    print(f"out_cams len: {len(out_cams)}, out_cams[0].shape: {out_cams[0].shape}")
 
-    print(f"video shape before permute: {input.shape}")
-    input = input.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
-    input = input[...,[2,1,0]]
-    print(f"video shape after permute: {input.shape}")
-    save_video(input)
+    #print(f"video shape before permute: {input.shape}")
+    #input = input.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+    #input = input[...,[2,1,0]]
+    #print(f"video shape after permute: {input.shape}")
+    #save_video(input)
