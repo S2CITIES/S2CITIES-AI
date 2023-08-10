@@ -84,7 +84,8 @@ def save_video_v2(input):
         min_per_frame = np.min(video_cpu, axis=(1, 2, 3))
         max_per_frame = np.max(video_cpu, axis=(1, 2, 3))
 
-        video_cpu = (video_cpu - min_per_frame) / max_per_frame
+        for ind in range(len(video_cpu)):
+            video_cpu[ind] = (video_cpu[ind] - min_per_frame[ind]) / max_per_frame[ind]
 
         video_cpu = np.uint8(255 * video_cpu)
 
