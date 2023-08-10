@@ -27,6 +27,7 @@ def return_CAM(feature_conv, weight, class_idx):
     size_upsample = (224, 224)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
+    sample_cam = []
     for sample in feature_conv:
         for idx in class_idx:
             beforeDot =  sample.reshape((nc, h*w))
@@ -36,7 +37,8 @@ def return_CAM(feature_conv, weight, class_idx):
             cam = cam - np.min(cam)
             cam_img = cam / np.max(cam)
             cam_img = np.uint8(255 * cam_img)
-            output_cam.append(cv2.resize(cam_img, size_upsample))
+            sample_cam.append(cv2.resize(cam_img, size_upsample))
+        output_cam.append(sample_cam)
     return output_cam
 
 def save_video(video):
@@ -221,10 +223,11 @@ if __name__ == '__main__':
     weights = last_layer.weight.cpu()
 
     out_cams = return_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
-    print(f"out_cams len: {len(out_cams)}, out_cams[0].shape: {out_cams[0].shape}")
+    print(f"out_cams len: {len(out_cams)}, out_cams[0] len: {len(out_cams[0])}, out_cams[0][0].shape: {out_cams[0][0].shape}")
 
     for i in range(len(out_cams)):
-        cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/image{i}.jpg", out_cams[i])
+        for j in range(len(out_cams[0])):
+            cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/cam_sample{i}_class{j}.jpg", out_cams[i][j])
 
     #print(f"video shape before permute: {input.shape}")
     #input = input[0].permute(1,2,3,0) # Permuting to (Bx)HxWxC format
