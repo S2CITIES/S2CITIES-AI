@@ -48,7 +48,6 @@ def save_CAM(feature_conv, weight, class_idx):
     
     for i in range(len(output_cam)):
         for j in range(len(output_cam[i])):
-            print(output_cam[i][j])
             cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/cam_sample{i}_class{j}.png", output_cam[i][j])
     return output_cam
 
@@ -56,9 +55,10 @@ def save_video(input):
     print("Saving videos..")
 
     for i, inp in enumerate(input):
-        video = inp.permute(1,2,3,0) # Permuting to (Bx)HxWxC format
+        video = inp.permute(1,2,3,0) # Permuting to Tx(HxWxC)
         video = video[...,[2,1,0]]
         print(f"video shape after permute: {video.shape}")
+
         fig, ax = plt.subplots()
 
         video_cpu = video.cpu().numpy()
@@ -67,6 +67,25 @@ def save_video(input):
 
         ani = animation.ArtistAnimation(fig, frames)
         ani.save(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/sample{i}.mp4")
+
+
+def save_video_v2(input):
+
+    print("Saving videos..")
+    
+    for i, inp in enumerate(input):
+        video = inp.permute(1,2,3,0) # Permuting to Tx(HxWxC)
+        video = video[...,[2,1,0]]
+        print(f"video shape after permute: {video.shape}")
+        video_cpu = video.cpu().numpy()
+
+        writer = cv2.VideoWriter(filename=f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/v2_sample{i}.mp4",
+                                 fourcc=cv2.CV_FOURCC('P','I','M','1'), fps=6.4,
+                                 frameSize=cv2.CvSize(args.sample_size, args.sample_size), isColor=True)
+
+        for i in range(len(video_cpu)):
+            writer.write(video_cpu[i])
+
     
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
@@ -249,3 +268,4 @@ if __name__ == '__main__':
 
     out_cams = save_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
     save_video(input)
+    save_video_v2(input)
