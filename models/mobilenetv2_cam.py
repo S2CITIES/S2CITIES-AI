@@ -118,9 +118,9 @@ class MobileNetV2CAM(nn.Module):
         
         if self.temp: print(f"Layer shape: {x.shape}")
 
-        input = x[0]
+        input = x
         x = self.features(x)
-        feat_maps = x[0]
+        feat_maps = x
         if self.temp: print(f"Layer shape: {x.shape}")
 
         x = F.avg_pool3d(x, x.data.size()[-3:])
