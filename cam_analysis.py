@@ -24,8 +24,7 @@ input = None
 feat_maps = None
 
 def return_CAM(feature_conv, weight, class_idx):
-    # generate the class -activation maps upsample to 256x256
-    size_upsample = (256, 256)
+    size_upsample = (224, 224)
     bz, nc, h, w = feature_conv.shape
     output_cam = []
     for idx in class_idx:
@@ -222,6 +221,9 @@ if __name__ == '__main__':
 
     out_cams = return_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
     print(f"out_cams len: {len(out_cams)}, out_cams[0].shape: {out_cams[0].shape}")
+
+    for i in range(len(out_cams)):
+        cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/image{i}.jpg", out_cams[i])
 
     #print(f"video shape before permute: {input.shape}")
     #input = input[0].permute(1,2,3,0) # Permuting to (Bx)HxWxC format
