@@ -56,7 +56,7 @@ def save_video(input):
 
     for i, inp in enumerate(input):
         video = inp.permute(1,2,3,0) # Permuting to Tx(HxWxC)
-        video = video[...,[2,1,0]]
+        #video = video[...,[2,1,0]]
 
         fig, ax = plt.subplots()
 
@@ -66,9 +66,10 @@ def save_video(input):
         max_per_frame = np.max(video_cpu, axis=(1, 2, 3))
 
         for ind in range(len(video_cpu)):
+            video_cpu[ind] = (video_cpu[ind] * std) + mean
             video_cpu[ind] = (video_cpu[ind] - min_per_frame[ind]) / max_per_frame[ind]
 
-        #video_cpu = np.uint8(255 * video_cpu)
+        video_cpu = np.uint8(255 * video_cpu)
 
         frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
@@ -90,6 +91,7 @@ def save_video_v2(input):
         max_per_frame = np.max(video_cpu, axis=(1, 2, 3))
 
         for ind in range(len(video_cpu)):
+            video_cpu[ind] = (video_cpu[ind] * std) + mean
             video_cpu[ind] = (video_cpu[ind] - min_per_frame[ind]) / max_per_frame[ind]
 
         video_cpu = np.uint8(255 * video_cpu)
