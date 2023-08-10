@@ -32,6 +32,7 @@ def return_CAM(feature_conv, weight, class_idx):
         beforeDot =  feature_conv.reshape((nc, h*w))
         cam = np.matmul(weight[idx], beforeDot)
         cam = cam.reshape(h, w)
+        print(f"beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
         cam = cam - np.min(cam)
         cam_img = cam / np.max(cam)
         cam_img = np.uint8(255 * cam_img)
@@ -210,6 +211,9 @@ if __name__ == '__main__':
     #print(cam_model.module.classifier[1].weight.shape) torch.Size([2, 1280])
 
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
+
+
+
 
     last_layer = cam_model.module.classifier[1]
     for param in last_layer.parameters():
