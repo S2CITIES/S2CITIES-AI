@@ -47,7 +47,8 @@ def save_CAM(feature_conv, weight, class_idx):
     
     for i in range(len(output_cam)):
         for j in range(len(output_cam[i])):
-            cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/cam_sample{i}_class{j}.jpg", output_cam[i][j])
+            print(output_cam[i][j])
+            cv2.imwrite(f"../gdrive/MyDrive/DRIVE S2CITIES/Artificial Intelligence/CAM Analysis/cam_sample{i}_class{j}.png", output_cam[i][j])
     return output_cam
 
 def save_video(video, i):
@@ -180,7 +181,7 @@ if __name__ == '__main__':
     
     print('Size of Validation Set: {}'.format(len(val_dataset)))
 
-    val_dataloader = DataLoader(val_dataset, batch_size=3, shuffle=False, num_workers=args.num_workers)
+    val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=args.num_workers)
 
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
