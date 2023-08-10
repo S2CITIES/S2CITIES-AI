@@ -97,19 +97,18 @@ def test(loader, model, criterion, device, epoch=None):
             y_pred.append(y_preds)
 
             # If the batch size is > 1, I want both a positive and a negative
+            # Otherwise I want a positive
+            global input, feat_maps
             if save and labels.shape[0]!=1 and (1 in labels) and (0 in labels):
                 inp = inp.to(torch.device("cpu"))
                 f_maps = f_maps.to(torch.device("cpu"))
-                global input, feat_maps
                 input = inp
                 feat_maps = f_maps
                 print(f"logits: {logits}, y_pred: {y_preds}, labels: {labels}")
                 save = False
-            # Otherwise I want a positive
             elif save and labels.shape[0]==1 and (1 in labels):
                 inp = inp.to(torch.device("cpu"))
                 f_maps = f_maps.to(torch.device("cpu"))
-                global input, feat_maps
                 input = inp
                 feat_maps = f_maps
                 print(f"logits: {logits}, y_pred: {y_preds}, labels: {labels}")
