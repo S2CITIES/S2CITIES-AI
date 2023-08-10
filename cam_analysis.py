@@ -83,8 +83,13 @@ def save_video_v2(input):
                                  fourcc=cv2.CV_FOURCC('P','I','M','1'), fps=6.4,
                                  frameSize=cv2.CvSize(args.sample_size, args.sample_size), isColor=True)
 
-        for i in range(len(video_cpu)):
-            writer.write(video_cpu[i])
+        if writer.isOpened:
+            for i in range(len(video_cpu)):
+                writer.write(video_cpu[i])
+
+            writer.release()
+        else:
+            print("Error opening the file!")
 
     
 
