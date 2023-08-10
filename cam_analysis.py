@@ -67,8 +67,8 @@ def save_video(input):
 
         for ind in range(len(video_cpu)):
             video_cpu[ind] = (video_cpu[ind] - min_per_frame[ind]) / max_per_frame[ind]
-            
-        video_cpu = np.uint8(255 * video_cpu)
+
+        #video_cpu = np.uint8(255 * video_cpu)
 
         frames = [[ax.imshow(video_cpu[i])] for i in range(len(video_cpu))]
 
