@@ -24,6 +24,7 @@ feat_maps = None
 def choose_scale(img, scale="grayscale"):
     if (scale == "coolwarm"):
         img = colormap(img)[:, :, :3]
+        img = np.uint8(255 * img)
     else:
         img = np.uint8(255 * img)
     return img
