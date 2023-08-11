@@ -35,8 +35,8 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
             mx = torch.amax(video, dim=(1, 2, 3))
             mn = torch.amin(video, dim=(1, 2, 3))
             print(channel_max)
-            print(mn)
-            for c in range(len(mx)):
+            print(mx)
+            for c in range(mx.shape[0]):
                 if channel_max[c]<mx[c]:
                     channel_max = mx[c]
                 if channel_min[c]>mn[c]:
