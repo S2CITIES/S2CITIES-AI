@@ -23,7 +23,8 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
             lines = annotation_file.readlines()
         
         for line in tqdm(lines, ascii=True, desc='Computing Mean/Std.'):
-            video_path, _ = line.strip().split(' ')
+            #video_path, _ = line.strip().split(' ')
+            video_path = line.strip()[:-2]
 
             spatial_transform = Compose([
                 Scale(image_size),
