@@ -12,6 +12,8 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
         info = json.load(file)
         min = 0
         max = 255
+        print(f"before if id: {id(min)}")
+
 
     if force_compute:
         channel_max = 0
@@ -42,6 +44,9 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
 
         min = channel_min
         max = channel_max
+        print(f"Inside if id: {id(min)}")
+    
+    print(f"after if id: {id(min)}")
 
     return min, max
 
