@@ -4,7 +4,7 @@ import torch
 import json
 from tqdm import tqdm
 
-def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_compute=False):
+def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_compute=True):
 
     info_file = 'data/SFHDataset/info.json'
 
@@ -12,7 +12,6 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
         info = json.load(file)
 
     if force_compute:
-        n_frames = 0
         channel_max = 0
         channel_min = 255
 
@@ -31,7 +30,7 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
             if channel_max<torch.max(video, dim=(1, 2, 3)):
                 channel_max = torch.max(video, dim=(1, 2, 3))
             if channel_min>torch.min(video, dim=(1, 2, 3)):
-                channel_min += torch.min(video, dim=(1, 2, 3))
+                channel_min = torch.min(video, dim=(1, 2, 3))
 
         #info[target_dataset]["max"] = channel_max.tolist()
         #info[target_dataset]["min"] = channel_min.tolist()
