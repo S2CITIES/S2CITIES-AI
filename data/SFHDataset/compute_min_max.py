@@ -16,8 +16,8 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
 
 
     if force_compute:
-        channel_max = 0
-        channel_min = 255
+        channel_max = [0, 0, 0]
+        channel_min = [255, 255, 255]
 
         with open('data/SFHDataset/train_annotations.txt', 'r') as annotation_file:
             lines = annotation_file.readlines()
