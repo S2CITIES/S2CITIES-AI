@@ -42,7 +42,8 @@ def save_CAM(feature_conv, weight, class_idx):
             cam = cam - np.min(cam)
             cam_img = cam / np.max(cam)
             cam_img = choose_scale(cam_img, "coolwarm")
-            print(f"feature_conv: :{feature_conv.shape}, sample: :{sample.shape}, beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
+            # print(f"feature_conv: :{feature_conv.shape}, sample: :{sample.shape}, beforeDot: :{beforeDot.shape}, weight[{idx}]: {weight.shape}, cam: {cam.shape}")
+            # feature_conv: :torch.Size([3, 1280, 7, 7]), sample: :torch.Size([1280, 7, 7]), beforeDot: :torch.Size([1280, 49]), weight[0]: torch.Size([2, 1280]), cam: (7, 7)
             sample_cam.append(cv2.resize(cam_img, size_upsample))
         output_cam.append(list(sample_cam))
     
@@ -83,7 +84,6 @@ def save_video_v2(input):
             video_cpu[ind] = (video_cpu[ind] * std[ind]) + mean[ind]
 
         video_cpu = np.transpose(video_cpu, (1,2,3,0)) # Permuting to Tx(HxWxC)
-        #video_cpu = video_cpu[...,[2,1,0]]
 
         video_cpu = np.uint8(video_cpu)
 
@@ -99,7 +99,6 @@ def save_video_v2(input):
         else:
             print("Error opening the file!")
 
-    
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
 import warnings
@@ -267,11 +266,7 @@ if __name__ == '__main__':
     cam_model.load_state_dict(best_checkpoint)
     cam_model.module.checked = True
 
-    #print(cam_model.module.classifier[1].weight.shape) torch.Size([2, 1280])
-
     val_accuracy, val_loss = test(loader=val_dataloader, model=cam_model, criterion=criterion, device=device, epoch=None)
-
-
 
 
     last_layer = cam_model.module.classifier[1]
@@ -280,5 +275,4 @@ if __name__ == '__main__':
     weights = last_layer.weight.cpu()
 
     out_cams = save_CAM(feat_maps.squeeze(dim=2), weights, [0,1])
-    #save_video(input)
     save_video_v2(input)
