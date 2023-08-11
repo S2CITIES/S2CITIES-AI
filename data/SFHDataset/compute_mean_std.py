@@ -20,7 +20,9 @@ def get_SFH_mean_std(target_dataset, image_size=112, norm_value=1.0, force_compu
             lines = annotation_file.readlines()
         
         for line in tqdm(lines, ascii=True, desc='Computing Mean/Std.'):
-            video_path, _ = line.strip().split(' ')
+            l0 = line.strip()
+            print(l0)
+            video_path, _ = l0.split(' ')
 
             spatial_transform = Compose([
                 Scale(image_size),
