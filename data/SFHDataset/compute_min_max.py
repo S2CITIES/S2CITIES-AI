@@ -10,6 +10,8 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
 
     with open(info_file, 'r') as file:
         info = json.load(file)
+        min = 0
+        max = 255
 
     if force_compute:
         channel_max = 0
@@ -38,7 +40,10 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
         with open(info_file, 'w') as file:
             json.dump(info, file, indent=4)  # indent=4 for pretty formatting
 
-    return channel_min, channel_max
+        min = channel_min
+        max = channel_max
+
+    return min, max
 
 if __name__ == '__main__':
     get_SFH_min_max(force_compute=True)
