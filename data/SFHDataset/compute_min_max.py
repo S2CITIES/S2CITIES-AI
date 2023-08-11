@@ -10,8 +10,8 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
 
     with open(info_file, 'r') as file:
         info = json.load(file)
-        min = 0
-        max = 255
+        min = [0, 0, 0]
+        max = [1, 1, 1]
         print(f"before if id: {id(min)}")
 
 
