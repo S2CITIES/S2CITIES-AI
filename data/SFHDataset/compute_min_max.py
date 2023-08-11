@@ -12,7 +12,6 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
         info = json.load(file)
         min = [0, 0, 0]
         max = [1, 1, 1]
-        print(f"before if id: {id(min)}")
 
 
     if force_compute:
@@ -34,15 +33,11 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
             video = load_video(video_path, spatial_transform=spatial_transform) # video shape CTHW
             mx = torch.amax(video, dim=(1, 2, 3))
             mn = torch.amin(video, dim=(1, 2, 3))
-            print(channel_max)
-            print(mx)
-            print(mx.shape[0])
             for c in range(mx.shape[0]):
-                print(channel_max[c])
                 if channel_max[c]<mx[c]:
-                    channel_max = mx[c]
+                    channel_max[c] = mx[c]
                 if channel_min[c]>mn[c]:
-                    channel_min = mn[c]
+                    channel_min[c] = mn[c]
 
         #info[target_dataset]["max"] = channel_max.tolist()
         #info[target_dataset]["min"] = channel_min.tolist()
@@ -52,9 +47,7 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
 
         min = channel_min
         max = channel_max
-        print(f"Inside if id: {id(min)}")
     
-    print(f"after if id: {id(min)}")
 
     return min, max
 
