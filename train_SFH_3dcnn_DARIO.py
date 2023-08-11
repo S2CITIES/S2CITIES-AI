@@ -212,10 +212,10 @@ if __name__ == '__main__':
     if not args.no_norm:
         target_dataset = args.data_path.split('/')[-1]
         # Compute channel-wise mean and std. on the training set
-        #mean, std = get_SFH_mean_std(target_dataset=target_dataset,
-        #                            image_size=args.sample_size, 
-        #                            norm_value=args.norm_value, 
-        #                            force_compute=args.recompute_mean_std)
+        mean, std = get_SFH_mean_std(target_dataset=target_dataset,
+                                    image_size=args.sample_size, 
+                                    norm_value=args.norm_value, 
+                                    force_compute=False)#args.recompute_mean_std)
         # Compute channel-wise min and max on the training set
         min, max = get_SFH_min_max(target_dataset=target_dataset,
                                     image_size=args.sample_size, 
@@ -230,8 +230,8 @@ if __name__ == '__main__':
     # Log normalization mean and std for future reference
     wandb.log({"norm_mean": mean, "norm_std": std})
     
-    #print(f"Train mean: {mean}")
-    #print(f"Train std.: {std}")
+    print(f"Train mean: {mean}")
+    print(f"Train std.: {std}")
     print(f"Train min: {min}")
     print(f"Train max.: {max}")
 
