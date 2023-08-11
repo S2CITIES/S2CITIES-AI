@@ -32,8 +32,8 @@ def get_SFH_min_max(target_dataset, image_size=112, norm_value=1.0, force_comput
             ])
 
             video = load_video(video_path, spatial_transform=spatial_transform) # video shape CTHW
-            mx = torch.max(video, dim=(1, 2, 3))
-            mn = torch.min(video, dim=(1, 2, 3))
+            mx = torch.amax(video, dim=(1, 2, 3))
+            mn = torch.amin(video, dim=(1, 2, 3))
             
             for c in range(len(mx)):
                 if channel_max[c]<mx[c]:
