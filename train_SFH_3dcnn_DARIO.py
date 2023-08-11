@@ -230,8 +230,8 @@ if __name__ == '__main__':
     # Log normalization mean and std for future reference
     wandb.log({"norm_mean": mean, "norm_std": std})
     
-    print(f"Train mean: {mean}")
-    print(f"Train std.: {std}")
+    #print(f"Train mean: {mean}")
+    #print(f"Train std.: {std}")
     print(f"Train min: {min}")
     print(f"Train max.: {max}")
 
