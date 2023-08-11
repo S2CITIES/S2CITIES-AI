@@ -123,6 +123,36 @@ class Normalize(object):
         pass
 
 
+class MinMaxNormalize(object):
+    """Normalize an tensor image with min and max.
+    Given min: (R, G, B) and max: (R, G, B),
+    will normalize each channel of the torch.*Tensor, i.e.
+    channel = (channel - min) / (max - min)
+    Args:
+        min (sequence): Sequence of mins for R, G, B channels respectively.
+        max (sequence): Sequence of maxs for R, G, B channels respectively.
+    """
+
+    def __init__(self, min, max):
+        self.min = min
+        self.max = max
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
+        """
+        # TODO: make efficient
+        for t, m, s in zip(tensor, self.min, self.max):
+            t.sub_(m).div_(s-m)
+        return tensor
+
+    def randomize_parameters(self):
+        pass
+
+
 class Scale(object):
     """Rescale the input PIL.Image to the given size.
     Args:

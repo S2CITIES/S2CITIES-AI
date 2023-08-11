@@ -1,7 +1,6 @@
 import os
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, random_split
 from data.SFHDataset.SignalForHelp import Signal4HelpDataset, load_video
 from build_models import build_model
@@ -12,10 +11,10 @@ from train_args import parse_args
 import transforms.spatial_transforms as SPtransforms
 import transforms.temporal_transforms as TPtransforms
 from data.SFHDataset.compute_mean_std import get_SFH_mean_std
+from data.SFHDataset.compute_min_max import get_SFH_min_max
 
 # Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
 import wandb
-
 # Silent warnings about TypedStorage deprecations that appear on the cluster
 import warnings
 warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is deprecated')
@@ -217,21 +216,31 @@ if __name__ == '__main__':
                                     image_size=args.sample_size, 
                                     norm_value=args.norm_value, 
                                     force_compute=args.recompute_mean_std)
+        # Compute channel-wise min and max on the training set
+        min, max = get_SFH_min_max(target_dataset=target_dataset,
+                                    image_size=args.sample_size, 
+                                    norm_value=args.norm_value, 
+                                    force_compute=args.recompute_mean_std)
     else:
         mean = [0, 0, 0]
         std = [1, 1, 1]
+        min = [0, 0, 0]
+        max = [1, 1, 1]
 
     # Log normalization mean and std for future reference
     wandb.log({"norm_mean": mean, "norm_std": std})
     
     print(f"Train mean: {mean}")
     print(f"Train std.: {std}")
+    print(f"Train min: {min}")
+    print(f"Train max.: {max}")
 
     train_spatial_transform = SPtransforms.Compose([
         SPtransforms.RandomHorizontalFlip(),
         crop_method,
         SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
+        SPtransforms.MinMaxNormalize(min=min, max=max),
+        #SPtransforms.Normalize(mean=mean, std=std)
     ])
 
     # TODO: Add variable downsample factor depending on the number of frames in a video
@@ -246,7 +255,8 @@ if __name__ == '__main__':
         SPtransforms.Scale(args.sample_size),
         SPtransforms.CenterCrop(args.sample_size),
         SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
+        SPtransforms.MinMaxNormalize(min=min, max=max),
+        #SPtransforms.Normalize(mean=mean, std=std)
     ])
 
     val_temporal_transform = None
@@ -258,7 +268,8 @@ if __name__ == '__main__':
         SPtransforms.Scale(args.sample_size),
         SPtransforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
         SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
+        SPtransforms.MinMaxNormalize(min=min, max=max),
+        #SPtransforms.Normalize(mean=mean, std=std)
     ])
 
     test_temporal_transform = None
