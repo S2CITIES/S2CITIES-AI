@@ -64,6 +64,8 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
 
             logits = model(videos)
 
+            print(torch.sigmoid(logits))
+
             if output_features == 1:
                 logits = logits.reshape((-1, ))
                 labels = labels.float()
@@ -245,7 +247,7 @@ if __name__ == '__main__':
 
     train_spatial_transform = SPtransforms.Compose([
         SPtransforms.RandomHorizontalFlip(),
-        crop_method,
+        # crop_method,
         SPtransforms.ToTensor(args.norm_value),
         SPtransforms.Normalize(mean=mean, std=std)
     ])
@@ -259,8 +261,8 @@ if __name__ == '__main__':
 
     # Initialize spatial and temporal transforms (validation versions)
     val_spatial_transform = SPtransforms.Compose([
-        SPtransforms.Scale(args.sample_size),
-        SPtransforms.CenterCrop(args.sample_size),
+        # SPtransforms.Scale(args.sample_size),
+        # SPtransforms.CenterCrop(args.sample_size),
         SPtransforms.ToTensor(args.norm_value),
         SPtransforms.Normalize(mean=mean, std=std)
     ])
@@ -271,8 +273,8 @@ if __name__ == '__main__':
 
     # Initialize spatial and temporal transforms (test versions)
     test_spatial_transform = SPtransforms.Compose([
-        SPtransforms.Scale(args.sample_size),
-        SPtransforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
+        # SPtransforms.Scale(args.sample_size),
+        # SPtransforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
         SPtransforms.ToTensor(args.norm_value),
         SPtransforms.Normalize(mean=mean, std=std)
     ])

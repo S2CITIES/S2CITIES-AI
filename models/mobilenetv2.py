@@ -26,7 +26,6 @@ def conv_1x1x1_bn(inp, oup):
         nn.ReLU6(inplace=True)
     )
 
-
 class InvertedResidual(nn.Module):
     def __init__(self, inp, oup, stride, expand_ratio):
         super(InvertedResidual, self).__init__()
@@ -67,10 +66,65 @@ class InvertedResidual(nn.Module):
             return self.conv(x)
 
 
+def conv_bn2(inp, oup, stride):
+    return nn.Sequential(
+        nn.Conv3d(inp, oup, kernel_size=3, stride=stride, padding=(1,1,1), bias=False),
+        nn.BatchNorm3d(oup),
+        nn.Tanh()
+    )
+
+
+def conv_1x1x1_bn2(inp, oup):
+    return nn.Sequential(
+        nn.Conv3d(inp, oup, 1, 1, 0, bias=False),
+        nn.BatchNorm3d(oup),
+        nn.Tanh()
+    )
+
+class InvertedResidual2(nn.Module):
+    def __init__(self, inp, oup, stride, expand_ratio):
+        super(InvertedResidual2, self).__init__()
+        self.stride = stride
+
+        hidden_dim = round(inp * expand_ratio)
+        self.use_res_connect = self.stride == (1,1,1) and inp == oup
+
+        if expand_ratio == 1:
+            self.conv = nn.Sequential(
+                # dw
+                nn.Conv3d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
+                nn.BatchNorm3d(hidden_dim),
+                nn.Tanh(),
+                # pw-linear
+                nn.Conv3d(hidden_dim, oup, 1, 1, 0, bias=False),
+                nn.BatchNorm3d(oup),
+            )
+        else:
+            self.conv = nn.Sequential(
+                # pw
+                nn.Conv3d(inp, hidden_dim, 1, 1, 0, bias=False),
+                nn.BatchNorm3d(hidden_dim),
+                nn.Tanh(),
+                # dw
+                nn.Conv3d(hidden_dim, hidden_dim, 3, stride, 1, groups=hidden_dim, bias=False),
+                nn.BatchNorm3d(hidden_dim),
+                nn.Tanh(),
+                # pw-linear
+                nn.Conv3d(hidden_dim, oup, 1, 1, 0, bias=False),
+                nn.BatchNorm3d(oup),
+            )
+
+    def forward(self, x):
+        if self.use_res_connect:
+            return x + self.conv(x)
+        else:
+            return self.conv(x)
+
+
 class MobileNetV2(nn.Module):
     def __init__(self, num_classes=1000, sample_size=224, width_mult=1.):
         super(MobileNetV2, self).__init__()
-        block = InvertedResidual
+        block = InvertedResidual2
         input_channel = 32
         last_channel = 1280
         interverted_residual_setting = [
@@ -88,7 +142,7 @@ class MobileNetV2(nn.Module):
         assert sample_size % 16 == 0.
         input_channel = int(input_channel * width_mult)
         self.last_channel = int(last_channel * width_mult) if width_mult > 1.0 else last_channel
-        self.features = [conv_bn(3, input_channel, (1,2,2))]
+        self.features = [conv_bn2(3, input_channel, (1,2,2))]
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
             output_channel = int(c * width_mult)
@@ -97,7 +151,7 @@ class MobileNetV2(nn.Module):
                 self.features.append(block(input_channel, output_channel, stride, expand_ratio=t))
                 input_channel = output_channel
         # building last several layers
-        self.features.append(conv_1x1x1_bn(input_channel, self.last_channel))
+        self.features.append(conv_1x1x1_bn2(input_channel, self.last_channel))
         # make it nn.Sequential
         self.features = nn.Sequential(*self.features)
 
@@ -161,13 +215,11 @@ def get_model(**kwargs):
     model = MobileNetV2(**kwargs)
     return model
 
-
 if __name__ == "__main__":
     model = get_model(num_classes=600, sample_size=112, width_mult=1.)
     model = model.cuda()
     model = nn.DataParallel(model, device_ids=None)
     print(model)
-
 
     input_var = Variable(torch.randn(8, 3, 16, 112, 112))
     output = model(input_var)

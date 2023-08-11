@@ -30,6 +30,19 @@ class Block(nn.Module):
         out = F.relu(self.bn2(self.conv2(out)))
         return out
 
+class Block2(nn.Module):
+    '''Depthwise conv + Pointwise conv'''
+    def __init__(self, in_planes, out_planes, stride=1):
+        super(Block2, self).__init__()
+        self.conv1 = nn.Conv3d(in_planes, in_planes, kernel_size=3, stride=stride, padding=1, groups=in_planes, bias=False)
+        self.bn1 = nn.BatchNorm3d(in_planes)
+        self.conv2 = nn.Conv3d(in_planes, out_planes, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn2 = nn.BatchNorm3d(out_planes)
+
+    def forward(self, x):
+        out = F.tanh(self.bn1(self.conv1(x)))
+        out = F.tanh(self.bn2(self.conv2(out)))
+        return out
 
 class MobileNet(nn.Module):
     def __init__(self, num_classes=600, sample_size=224, width_mult=1.):
@@ -55,7 +68,7 @@ class MobileNet(nn.Module):
             output_channel = int(c * width_mult)
             for i in range(n):
                 stride = s if i == 0 else 1
-                self.features.append(Block(input_channel, output_channel, stride))
+                self.features.append(Block2(input_channel, output_channel, stride))
                 input_channel = output_channel
         # make it nn.Sequential
         self.features = nn.Sequential(*self.features)

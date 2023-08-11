@@ -47,13 +47,12 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
             new_classifier = nn.Sequential(
                 nn.Dropout(p=0.5),
                 nn.Conv3d(512, output_features, kernel_size=1),
-                nn.ReLU(inplace=True),
                 nn.AvgPool3d((last_duration, last_size, last_size), stride=1)
             )
             torch.nn.init.kaiming_normal_(new_classifier[1].weight, mode='fan_out')
         else:
             new_classifier = nn.Sequential(
-                nn.Dropout(p=0.5, inplace=False),
+                nn.Dropout(p=0.2, inplace=False),
                 nn.Linear(in_features=model.module.last_channel, out_features=output_features, bias=True)
             )
 

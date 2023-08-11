@@ -160,7 +160,7 @@ def get_model(**kwargs):
 
 
 if __name__ == '__main__':
-    model = SqueezeNet(version=1.1, sample_size = 112, sample_duration = 16, num_classes=600)
+    model = SqueezeNet(version=1.1, sample_size = 112, sample_duration = 16, num_classes=1)
     model = model.cuda()
     model = nn.DataParallel(model, device_ids=None)
     print(model)
