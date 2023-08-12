@@ -22,8 +22,9 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
         print("Unknown model type. Select between: mobilenet, mobilenetv2, squeezenet.")
         return None
         
-    model=model.cuda()
     model=nn.DataParallel(model, device_ids=gpus)
+    model=model.cuda()
+
     checkpoint=torch.load(model_path)
     if not state_dict: 
         # Not a state_dict, but the entire model dictionary
@@ -34,8 +35,8 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
 
     if finetune:
         # Freeze model weights
-        for param in list(model.parameters()):
-            param.requires_grad = False
+        # for param in list(model.parameters()):
+        #     param.requires_grad = False
 
         classifier = model.module.get_submodule('classifier')
         print(f"Previous classifier: {classifier}")
@@ -56,13 +57,10 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
                 nn.Linear(in_features=model.module.last_channel, out_features=output_features, bias=True)
             )
 
-        # Init weights of the linear layer
-        # nn.init.normal_(tensor=new_classifier[1].weight, mean=0.0, std=1.0)
-
         new_classifier.cuda()
         model.module.classifier = new_classifier
-        classifier = model.module.get_submodule('classifier')
-        print(f"New classifier: {classifier}")
+
+        print(f"New classifier: {new_classifier}")
         print("New model built successfully")
 
     # Test the model
