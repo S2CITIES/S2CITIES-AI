@@ -25,7 +25,7 @@ def load_video(video_path, temporal_transform=None, spatial_transform=None, samp
             clip.append(frame)
 
         cap.release()
-
+        
         n_frames = len(clip)
         # Apply Temporal Transform
         if temporal_transform is not None:

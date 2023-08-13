@@ -124,7 +124,7 @@ def thread_collect_frames(hand_detector=True):
                 frames_to_next_prediction -= 1
 
         # print("Showing the frame...")
-        cv2.imshow('frame', frame)
+        # cv2.imshow('frame', frame)
         # Check if the user has pressed the 'q' key to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             # Perform the last prediction so that the thread can stop
@@ -212,7 +212,7 @@ def thread_predict(stop_event, predict_event, model, spatial_transform, threshol
         print(f"Total inference time: {end_time-start_time}")
 
         codec = cv2.VideoWriter_fourcc(*"mp4v")  # Video codec (e.g., "mp4v", "XVID")
-        output_file = os.path.join('real_time_test', f'test_output_step{inference_steps}_result{result}.mp4')  # Output video file name
+        output_file = os.path.join('real_time_test', f'test_output_step{inference_steps}_result{result}_{torch.sigmoid(logits).item()}.mp4')  # Output video file name
         inference_steps += 1
         frame_size = (112, 112)  # Frame size (width, height)
         fps = 16/2.5
@@ -238,7 +238,7 @@ if __name__ == '__main__':
     inference_steps = 0
     print("Building gesture recognition model...")
     model_type = 'mobilenetv2' # Make the model type an argument through argparse
-    model_path = 'checkpoints/best_model_mn2-dataset-no-temp-trans-no-norm255-size112.h5'
+    model_path = 'checkpoints/best_model_mn2-dataset-no-temp-trans-no-norm255-size112-complete.h5'
     threshold = 0.5
     # Load 3DCNN model
     model = build_model(model_path=model_path,

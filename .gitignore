@@ -134,9 +134,13 @@ dmypy.json
 
 # Dataset Folder(s)
 dataset/*
+data/20bn-jester-download-package-labels
 
 # Trained Models
 models/saves
+
+# Misc. Tests
+test_WLASL
 
 # Videos and temporary files
 *.mp4

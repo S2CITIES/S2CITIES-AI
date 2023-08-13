@@ -37,7 +37,7 @@ def parse_args():
     parser.set_defaults(nesterov=False)
 
     ### lr scheduler parameters ### 
-    parser.add_argument('--lr_steps', default=[40, 55, 65, 70, 200, 250], type=float, nargs="+", metavar='LRSteps', help='epochs to decay learning rate by 10')
+    parser.add_argument('--lr_steps', default=[20, 40, 55, 65], type=float, nargs="+", metavar='LRSteps', help='epochs to decay learning rate by 10')
     parser.add_argument('--lr_patience', default=10, type=int, help='Patience of LR scheduler. See documentation of ReduceLROnPlateau.')
     
     parser.add_argument('--norm_value', default=1, type=int, help='If 1, range of inputs is [0-255]. If 255, range of inputs is [0-1].')
