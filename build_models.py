@@ -25,43 +25,45 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
     model=nn.DataParallel(model, device_ids=gpus)
     model=model.cuda()
 
-    checkpoint=torch.load(model_path)
-    if not state_dict: 
-        # Not a state_dict, but the entire model dictionary
-        model.load_state_dict(checkpoint['state_dict'])
-    else:
-        # Only state_dict was saved, so checkpoint is already a state_dict
-        model.load_state_dict(checkpoint)
-
-    if finetune:
-        # Freeze model weights
-        # for param in list(model.parameters()):
-        #     param.requires_grad = False
-
-        classifier = model.module.get_submodule('classifier')
-        print(f"Previous classifier: {classifier}")
-
-        if type == 'squeezenet': # Version 1.0 or 1.1
-            # Weights of the new classifier will be fine-tunable
-            last_duration = model.module.last_duration
-            last_size = model.module.last_size
-            new_classifier = nn.Sequential(
-                nn.Dropout(p=0.5),
-                nn.Conv3d(512, output_features, kernel_size=1),
-                nn.AvgPool3d((last_duration, last_size, last_size), stride=1)
-            )
-            torch.nn.init.kaiming_normal_(new_classifier[1].weight, mode='fan_out')
+    if model_path:
+        
+        checkpoint=torch.load(model_path)
+        if not state_dict: 
+            # Not a state_dict, but the entire model dictionary
+            model.load_state_dict(checkpoint['state_dict'])
         else:
-            new_classifier = nn.Sequential(
-                nn.Dropout(p=0.2, inplace=False),
-                nn.Linear(in_features=model.module.last_channel, out_features=output_features, bias=True)
-            )
+            # Only state_dict was saved, so checkpoint is already a state_dict
+            model.load_state_dict(checkpoint)
 
-        new_classifier.cuda()
-        model.module.classifier = new_classifier
+        if finetune:
+            # Freeze model weights
+            # for param in list(model.parameters()):
+            #     param.requires_grad = False
 
-        print(f"New classifier: {new_classifier}")
-        print("New model built successfully")
+            classifier = model.module.get_submodule('classifier')
+            print(f"Previous classifier: {classifier}")
+
+            if type == 'squeezenet': # Version 1.0 or 1.1
+                # Weights of the new classifier will be fine-tunable
+                last_duration = model.module.last_duration
+                last_size = model.module.last_size
+                new_classifier = nn.Sequential(
+                    nn.Dropout(p=0.5),
+                    nn.Conv3d(512, output_features, kernel_size=1),
+                    nn.AvgPool3d((last_duration, last_size, last_size), stride=1)
+                )
+                torch.nn.init.kaiming_normal_(new_classifier[1].weight, mode='fan_out')
+            else:
+                new_classifier = nn.Sequential(
+                    nn.Dropout(p=0.2, inplace=False),
+                    nn.Linear(in_features=model.module.last_channel, out_features=output_features, bias=True)
+                )
+
+            new_classifier.cuda()
+            model.module.classifier = new_classifier
+
+            print(f"New classifier: {new_classifier}")
+            print("New model built successfully")
 
     # Test the model
     x = torch.randn((2, 3, sample_duration, sample_size, sample_size))
