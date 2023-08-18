@@ -1,10 +1,10 @@
 from enum import Enum
 
 from torch import randint
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 from pathlib import Path
-
+from torchvideotransforms.volume_transforms import ClipToTensor
 
 class JesterDataset(Dataset):
     class FrameSelectStrategy(Enum):
@@ -116,7 +116,16 @@ class JesterDataset(Dataset):
 
 
 
+if __name__ == '__main__':
+    train_set = JesterDataset(csv_file='./jester_data/jester-v1-train.csv',
+                              video_dir='./jester_data/20bn-jester-v1',
+                              number_of_frames=16, 
+                              video_transform=ClipToTensor())
+    train_loader = DataLoader(train_set, batch_size=4, shuffle=True, num_workers=4)
 
-
-
-
+    print(len(train_set))
+    print(len(train_loader))
+    
+    # for i_batch, sample_batched in enumerate(train_loader):
+    #     print(sample_batched)
+    #     break

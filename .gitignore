@@ -165,3 +165,6 @@ client_secret.json
 # Wandb run tracking (look at results on the online dashboard)
 wandb/
 note.txt
+
+# Jester video data
+data/Jester/jester_data/*

@@ -22,6 +22,35 @@ warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is
 
 args = parse_args()
 
+def compute_video_accuracy(ground_truth, predictions, top_k=3):
+    # Inspired by evaluation performed in Karpathy et al. CVPR14
+    # Other evaluations are also possible
+
+    # ground_truth: df with fields ['video-id', 'label']
+    # predictions: df with fields ['video-id', 'label', 'score']
+    # Takes the first top-k predicted labels (in ascending order), compare them with the ground-truth labels
+    # and compute the average number of hits per video.
+    # Number of hits = Number of steps in which one the top-k predicted labels is equal to the ground-truth.
+    video_ids = np.unique(ground_truth['video-id'].values)
+    avg_hits_per_video = np.zeros(video_ids.size)
+    for i, video in enumerate(video_ids):
+        pred_idx = predictions['video-id'] == video
+        if not pred_idx.any():
+            continue
+        this_pred = predictions.loc[pred_idx].reset_index(drop=True)
+        # Get top K predictions sorted by decreasing score.
+        sort_idx = this_pred['score'].values.argsort()[::-1][:top_k]
+        this_pred = this_pred.loc[sort_idx].reset_index(drop=True)
+        # Get top K labels and compare them against ground truth.
+        pred_label = this_pred['label'].tolist()
+        gt_idx = ground_truth['video-id'] == video
+        gt_label = ground_truth.loc[gt_idx]['label'].tolist()
+        avg_hits_per_video[i] = np.mean([1 if this_label in pred_label else 0
+                                         for this_label in gt_label])
+        
+    return float(avg_hits_per_video.mean())
+
+
 # "Collate" function for our dataloaders
 # def collate_fn(batch, transform):
 #     # NOTE (IMPORTANT): Normalize (pytorchvideo.transforms) from PyTorchVideo wants a volume with shape CTHW, 
@@ -255,9 +284,9 @@ if __name__ == '__main__':
     # TODO: Add variable downsample factor depending on the number of frames in a video
     # The idea is that a video with an higher frame rate should have an higher downsample factor in order to span
     # a longer temporal window.
-    train_temporal_transform = None
-    if args.temp_transform:
-        train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+
+    # Extract a Random Clip from the Input Video
+    train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (validation versions)
     val_spatial_transform = SPtransforms.Compose([
@@ -267,9 +296,8 @@ if __name__ == '__main__':
         SPtransforms.Normalize(mean=mean, std=std)
     ])
 
-    val_temporal_transform = None
-    if args.temp_transform:
-        val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
+    # Evaluate with Central Crops (Clip Accuracy, not Video Accuracy)
+    val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (test versions)
     test_spatial_transform = SPtransforms.Compose([
@@ -279,9 +307,15 @@ if __name__ == '__main__':
         SPtransforms.Normalize(mean=mean, std=std)
     ])
 
-    test_temporal_transform = None
-    if args.temp_transform:
-        test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    # Test again with Random Crops on videos from the test set.
+    # NOTE: Pay attention - both in train, test and validation, Clip accuracy is computed, not Video accuracy.
+    # To compute Video accuracy, we need to traverse the entire video while extracting clips and doing inference with our models.
+    # Then, predicted logits should be averaged and the results after the softmax layer should be used to make a prediction 
+    # for the entire video.
+    # TODO: A good idea would be to plot the logits (better class predictions) produced at each step, and see how
+    # they evolve during time. 
+
+    test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
     # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
