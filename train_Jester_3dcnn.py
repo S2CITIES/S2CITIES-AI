@@ -10,7 +10,7 @@ import functools
 from tqdm import tqdm
 from train_args import parse_args
 from torchvideotransforms.volume_transforms import ClipToTensor
-from torchvideotransforms.video_transforms import Compose, RandomHorizontalFlip, Resize
+from torchvideotransforms.video_transforms import Compose, RandomHorizontalFlip, Resize, RandomResizedCrop, RandomRotation
 
 # Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
 import wandb
@@ -249,8 +249,8 @@ if __name__ == '__main__':
 
     train_clip_transform = Compose([
         RandomHorizontalFlip(),
-        Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
-        # crop_method,
+        RandomRotation(degrees=(-180, 180)),
+        RandomResizedCrop(size=(frame_size, frame_size, 3), scale=(0.4, 1), ratio=(3./4., 4./3.)),
         ClipToTensor()
     ])
 
