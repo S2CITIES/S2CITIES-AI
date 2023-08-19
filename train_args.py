@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--batch', help='Batch size for training with minibatch SGD', type=int, dest='batch', default=32)
     parser.add_argument('--optimizer', help='Optimizer for Model Training', type=str, choices=['SGD', 'Adam'], default='SGD')
     parser.add_argument('--early_stop_patience', help='Patience for early stopping criteria', type=int, default=5)
-    parser.add_argument('--sample_size', default=224, type=int, help='Height and width of inputs')
+    parser.add_argument('--sample_size', default=112, type=int, help='Height and width of inputs')
     parser.add_argument('--sample_duration', default=16, type=int, help='Temporal duration of inputs')
     parser.add_argument('--downsample', default=1, type=int, help='Downsampling. Selecting 1 frame out of N')
     parser.add_argument('--initial_scale', default=1.0, type=float, help='Initial scale for multiscale cropping')

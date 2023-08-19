@@ -25,7 +25,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
     model=nn.DataParallel(model, device_ids=gpus)
     model=model.cuda()
 
-    if model_path:
+    if model_path: # If a model_path is provided, load the trained checkpoint for finetuning or resuming training.
         
         checkpoint=torch.load(model_path)
         if not state_dict: 
@@ -37,8 +37,8 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
 
         if finetune:
             # Freeze model weights
-            # for param in list(model.parameters()):
-            #     param.requires_grad = False
+            for param in list(model.parameters()):
+                param.requires_grad = False
 
             classifier = model.module.get_submodule('classifier')
             print(f"Previous classifier: {classifier}")
