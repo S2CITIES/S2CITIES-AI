@@ -55,12 +55,12 @@ class JesterDataset(Dataset):
         self.video_transform = video_transform
         self.data_description = self._read_csv(csv_file)
 
-    def _read_csv(self, path):
+    def _read_csv(self, path, split='train'):
         df = pd.read_csv(path)
         result = []
         for index, row in df.iterrows():
             result.append({
-                'video_id': row['video_id'],
+                'video_id': row['video_id'] if split in ['train', 'val'] else row['id'],
                 'label_id': row['label_id'],
                 'frames': row['frames'],
                 'shape': row['shape'],

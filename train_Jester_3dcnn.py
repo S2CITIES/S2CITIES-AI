@@ -66,7 +66,7 @@ def compute_video_accuracy(ground_truth, predictions, top_k=3):
 #     return clips, labels
 
 # TODO: Implement custom scheduler to manual adjust learning rate after N epochs
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, output_features, device, pbar=None):
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
 
     # Set up early stopping criteria
     patience = args.early_stop_patience
@@ -94,12 +94,6 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
 
             logits = model(clips)
 
-            print(torch.sigmoid(logits))
-
-            if output_features == 1:
-                logits = logits.reshape((-1, ))
-                labels = labels.float()
-
             labels = labels.to(device)
 
             loss = criterion(logits, labels)
@@ -112,10 +106,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             if pbar:
                 pbar.update(clips.shape[0])
 
-            if output_features == 1:
-                y_preds = (torch.sigmoid(logits) > 0.5) * 1
-            else:
-                y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
 
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
@@ -150,7 +141,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
     
     print("--- END Training. Results - Best Val. Loss: {:.2f}, Best Val. Accuracy: {:.2f}".format(best_loss, best_accuracy))
 
-def test(loader, model, criterion, output_features, device, epoch=None):
+def test(loader, model, criterion, device, epoch=None):
     totals = 0
     corrects = 0
     y_pred = []
@@ -169,10 +160,6 @@ def test(loader, model, criterion, output_features, device, epoch=None):
 
             # TODO: Extend evaluation to top-k rather than just top-1
 
-            if output_features == 1:
-                logits = logits.reshape((-1, ))
-                labels = labels.float()
-
             labels = labels.to(device)
             val_loss_batch = criterion(logits, labels)
 
@@ -180,10 +167,7 @@ def test(loader, model, criterion, output_features, device, epoch=None):
 
             y_true.append(labels)
 
-            if output_features == 1:
-                y_preds = (torch.sigmoid(logits) > 0.5) * 1
-            else:
-                y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
 
             corrects += (y_preds == labels).sum().item()
             totals += y_preds.shape[0]
@@ -262,10 +246,10 @@ if __name__ == '__main__':
     ])
 
     # Initialize spatial and temporal transforms (test versions)
-    test_clip_transform = Compose([
-        Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
-        ClipToTensor()
-    ])
+    # test_clip_transform = Compose([
+    #     Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
+    #     ClipToTensor()
+    # ])
 
     # Test again with Random Crops on clips from the test set.
     # NOTE: Pay attention - both in train, test and validation, Clip accuracy is computed, not Video accuracy.
@@ -276,26 +260,26 @@ if __name__ == '__main__':
     # they evolve during time. 
 
     # Load Train/Val/Test Jester splits (20bn-version)
-    train_set = JesterDataset(csv_file='./jester_data/Train.csv',
-                              video_dir='./jester_data/20bn-jester-v1/Train',
+    train_set = JesterDataset(csv_file='data/Jester/jester_data/Train.csv',
+                              video_dir='data/Jester/jester_data/20bn-jester-v1/Train',
                               number_of_frames=clip_duration, 
                               video_transform=train_clip_transform)
     
-    val_set = JesterDataset(csv_file='./jester_data/Validation.csv',
-                              video_dir='./jester_data/20bn-jester-v1/Validation',
+    val_set = JesterDataset(csv_file='data/Jester/jester_data/Validation.csv',
+                              video_dir='data/Jester/jester_data/20bn-jester-v1/Validation',
                               number_of_frames=clip_duration, 
                               video_transform=val_clip_transform)
     
-    test_set = JesterDataset(csv_file='./jester_data/Test.csv',
-                              video_dir='./jester_data/20bn-jester-v1/Test',
-                              number_of_frames=clip_duration, 
-                              video_transform=test_clip_transform)
+    # test_set = JesterDataset(csv_file='data/Jester/jester_data/Test.csv',
+    #                           video_dir='data/Jester/jester_data/20bn-jester-v1/Test',
+    #                           number_of_frames=clip_duration, 
+    #                           video_transform=test_clip_transform)
     
     # partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
 
     print('Size of Train Set: {}'.format(len(train_set)))
     print('Size of Validation Set: {}'.format(len(val_set)))
-    print('Size of Test Set: {}'.format(len(test_set)))
+    # print('Size of Test Set: {}'.format(len(test_set)))
 
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
@@ -303,16 +287,20 @@ if __name__ == '__main__':
     # Initialize DataLoaders
     train_dataloader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=args.num_workers)
     val_dataloader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
-    test_dataloader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
+    
+    # test_dataloader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
 
+    num_classes = 27
     model = build_model(model_path=None, 
-                        type=args.model, 
+                        type=args.model,
+                        num_classes=num_classes,
                         gpus=list(range(0, num_gpus)),
                         sample_size=args.sample_size,
                         sample_duration=args.sample_duration,
-                        output_features=args.output_features,
+                        output_features=num_classes,
                         finetune=True)
     
+    print(f"Model: {model}")
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
@@ -331,12 +319,8 @@ if __name__ == '__main__':
         optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=args.wd)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
-
-    if args.output_features == 1:
-        # NOTE: nn.BCEWithLogitsLoss already contains the Sigmoid layer inside
-        criterion = nn.BCEWithLogitsLoss()
-    else:
-        criterion = nn.CrossEntropyLoss()
+    
+    criterion = nn.CrossEntropyLoss()
 
     # Initialize tqdm progress bar for tracking training steps
     pbar = tqdm(total=len(train_set))
@@ -352,19 +336,17 @@ if __name__ == '__main__':
           train_loader=train_dataloader,
           val_loader=val_dataloader, 
           num_epochs=num_epochs,
-          output_features=args.output_features, 
           device=device, 
           pbar=pbar)
 
     # Load the best checkpoint obtained until now
-    best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
-    model.load_state_dict(best_checkpoint)
+    # best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
+    # model.load_state_dict(best_checkpoint)
   
-    test(loader=test_dataloader, 
-         model=model,
-         criterion=criterion,
-         output_features=args.output_features,
-         device=device)
+    # test(loader=test_dataloader, 
+    #      model=model,
+    #      criterion=criterion,
+    #      device=device)
     
     # [optional] finish the wandb run, necessary in notebooks
     wandb.finish()
