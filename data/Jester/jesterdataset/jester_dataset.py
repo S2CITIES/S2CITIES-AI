@@ -1,5 +1,5 @@
 from enum import Enum
-
+import pandas as pd
 from torch import randint
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
@@ -55,18 +55,22 @@ class JesterDataset(Dataset):
         self.data_description = self._read_csv(csv_file)
 
     def _read_csv(self, path):
+        df = pd.read_csv(path)
         result = []
-        with open(path, "r") as f:
-            for line in f:
-                line_contents = line.strip().split(";")
-                if len(line_contents) == 1:
-                    result.append([line_contents[0], None])
-                else:
-                    result.append(line_contents)
-            return result
+        for index, row in df.iterrows():
+            result.append({
+                'video_id': row['video_id'],
+                'label_id': row['label_id'],
+                'frames': row['frames'],
+                'shape': row['shape'],
+                'format': row['format']
+            })
+        return result
 
     def __getitem__(self, index):
-        video_id, label = self.data_description[index]
+        video_id = self.data_description[index]['video_id']
+        label = self.data_description[index]['label_id']
+
         video_directory = Path(self.video_dir) / str(video_id)
         frame_files = list(Path(video_directory).glob(f"*.{self.file_ending}"))
         if len(frame_files) == 0:
@@ -117,15 +121,16 @@ class JesterDataset(Dataset):
 
 
 if __name__ == '__main__':
-    train_set = JesterDataset(csv_file='./jester_data/jester-v1-train.csv',
-                              video_dir='./jester_data/20bn-jester-v1',
+    train_set = JesterDataset(csv_file='./jester_data/Train.csv',
+                              video_dir='./jester_data/20bn-jester-v1/Train',
                               number_of_frames=16, 
                               video_transform=ClipToTensor())
     train_loader = DataLoader(train_set, batch_size=4, shuffle=True, num_workers=4)
-
-    print(len(train_set))
-    print(len(train_loader))
     
+    frames, label = train_set[0]
+    print(frames.shape) # 3, 16, h, w
+    print(label)
+
     # for i_batch, sample_batched in enumerate(train_loader):
     #     print(sample_batched)
     #     break
