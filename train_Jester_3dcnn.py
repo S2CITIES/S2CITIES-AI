@@ -51,6 +51,16 @@ def compute_video_accuracy(ground_truth, predictions, top_k=3):
         
     return float(avg_hits_per_video.mean())
 
+def compute_clip_accuracy(logits, labels, topk=(1,)):
+    batch_size = labels.size(0)
+    _, topk_preds = torch.softmax(logits, dim=1).topk(max(topk), 1, True, True)
+    topk_preds = topk_preds.t()
+    corrects = topk_preds.eq(labels.view(1, -1).expand_as(topk_preds)) 
+    res = []
+    for k in topk:
+        corrects_k = corrects[:k].reshape(-1).float().sum(0)
+        res.append(corrects_k.mul_(100.0 / batch_size))
+    return res
 
 # "Collate" function for our dataloaders
 # def collate_fn(batch, transform):
@@ -65,14 +75,14 @@ def compute_video_accuracy(ground_truth, predictions, top_k=3):
 #     labels = torch.tensor(labels)
 #     return clips, labels
 
-# TODO: Implement custom scheduler to manual adjust learning rate after N epochs
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, pbar=None):
+def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, device, topk=(1,2), pbar=None):
 
     # Set up early stopping criteria
     patience = args.early_stop_patience
     min_delta = 0.001  # Minimum change in validation loss to be considered as improvement
     best_loss = float('inf')  # Initialize the best validation loss
-    best_accuracy = 0.0
+    best_top1_accuracy = 0.0
+    best_top5_accuracy = 0.0
     counter = 0  # Counter to keep track of epochs without improvement
 
     ############### Training ##################
@@ -80,8 +90,10 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
         model.train()
 
         epoch_loss = []
-        corrects = 0
-        totals = 0
+        epoch_top1 = []
+        epoch_top5 = []
+
+        total_samples = 0
 
         if pbar:
             pbar.set_description("[Epoch {}]".format(epoch))
@@ -91,10 +103,10 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             clips, labels = data
             clips = clips.float()
             clips = clips.to(device) # Send inputs to CUDA
+            labels = labels.to(device)
 
             logits = model(clips)
-
-            labels = labels.to(device)
+            acc1, acc5 = compute_clip_accuracy(logits=logits, labels=labels, topk=(1,5))
 
             loss = criterion(logits, labels)
             epoch_loss.append(loss.item())
@@ -106,28 +118,36 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             if pbar:
                 pbar.update(clips.shape[0])
 
-            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+            total_samples += clips.shape[0]
+            epoch_top1.append((acc1, clips.shape[0]))
+            epoch_top5.append((acc5, clips.shape[0]))
 
-            corrects += (y_preds == labels).sum().item()
-            totals += y_preds.shape[0]
-
-        avg_train_loss = np.array(epoch_loss).mean()
-        train_accuracy = 100 * corrects / totals
+        epoch_top1_accuracy = 0
+        epoch_top5_accuracy = 0
+        for idx, _ in enumerate(epoch_top1):
+            epoch_top1_accuracy += epoch_top1[idx][0] * epoch_top1[idx][1]
+            epoch_top5_accuracy += epoch_top5[idx][0] * epoch_top5[idx][1]
+        
+        avg_train_loss = np.mean(epoch_loss)
+        avg_top1_accuracy = epoch_top1_accuracy / total_samples
+        avg_top5_accuracy = epoch_top5_accuracy / total_samples
 
         print("[Epoch {}] Avg Loss: {}".format(epoch, avg_train_loss))
-        print("[Epoch {}] Train Accuracy {:.2f}%".format(epoch, train_accuracy))
+        print("[Epoch {}] Top1 Train Accuracy {:.2f}%".format(epoch, avg_top1_accuracy))
+        print("[Epoch {}] Top5 Train Accuracy {:.2f}%".format(epoch, avg_top5_accuracy))
 
         # commit = false because I want commit to happen after validation (so that the step is incremented once per epoch)
-        wandb.log({"train_accuracy": train_accuracy, "train_loss": avg_train_loss}, commit=False)
+        wandb.log({"train_top1_accuracy": avg_top1_accuracy, "train_top5_accuracy": avg_top5_accuracy, "train_loss": avg_train_loss}, commit=False)
 
         # NOTE: test function validates the model when it takes in input the loader for the validation set
-        val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, output_features=output_features, device=device, epoch=epoch)
+        (top1_accuracy, top5_accuracy), val_loss = test(loader=val_loader, model=model, criterion=criterion, device=device, epoch=epoch)
         scheduler.step(val_loss)
 
         # Checking early-stopping criteria
         if val_loss + min_delta < best_loss:
             best_loss = val_loss
-            best_accuracy = val_accuracy
+            best_top1_accuracy = top1_accuracy
+            best_top5_accuracy = top5_accuracy
             counter = 0 # Reset the counter since there is improvement
             # Save the improved model
             torch.save(model.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
@@ -139,13 +159,13 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             print(f"Early-stopping the training phase at epoch {epoch}")
             break
     
-    print("--- END Training. Results - Best Val. Loss: {:.2f}, Best Val. Accuracy: {:.2f}".format(best_loss, best_accuracy))
+    print("--- END Training. Results - Best Val. Loss: {:.2f}, Best Val. Top1 Accuracy: {:.2f}, Best Val. Top5 Accuracy: {:.2f}"\
+          .format(best_loss, best_top1_accuracy, best_top5_accuracy))
 
 def test(loader, model, criterion, device, epoch=None):
     totals = 0
-    corrects = 0
-    y_pred = []
-    y_true = []
+    top1 = []
+    top5 = []
     val_loss = []
 
     with torch.no_grad():
@@ -155,43 +175,38 @@ def test(loader, model, criterion, device, epoch=None):
             clips, labels = data
             clips = clips.float()
             clips = clips.to(device)
+            labels = labels.to(device)
 
             logits = model(clips)
+            acc1, acc5 = compute_clip_accuracy(logits=logits, labels=labels, topk=(1,5))
 
-            # TODO: Extend evaluation to top-k rather than just top-1
-
-            labels = labels.to(device)
             val_loss_batch = criterion(logits, labels)
-
             val_loss.append(val_loss_batch.item())
+            
+            totals += clips.shape[0]
+            top1.append((acc1, clips.shape[0]))
+            top5.append((acc5, clips.shape[0]))
 
-            y_true.append(labels)
-
-            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
-
-            corrects += (y_preds == labels).sum().item()
-            totals += y_preds.shape[0]
-
-            y_preds = y_preds.detach().cpu()
-            y_pred.append(y_preds)
-
-    y_true = torch.cat(y_true, dim=0)
-    y_pred = torch.cat(y_pred, dim=0)
-
-    val_accuracy = 100 * corrects / totals
-    val_loss = np.array(val_loss).mean()
+    top1_accuracy = 0
+    top5_accuracy = 0
+    for idx, _ in enumerate(top1):
+        top1_accuracy += top1[idx][0] * top1[idx][1]
+        top5_accuracy += top5[idx][0] * top5[idx][1]
+    
+    avg_loss = np.mean(val_loss)
+    avg_top1_accuracy = top1_accuracy / totals
+    avg_top5_accuracy = top5_accuracy / totals
 
     if epoch is not None:
         # Save metrics with wandb
-        wandb.log({"val_accuracy": val_accuracy, "val_loss": val_loss}, commit=True)
-
-        print('[Epoch {}] Validation Accuracy: {:.2f}%'.format(epoch, val_accuracy))
+        wandb.log({"val_top1_accuracy": avg_top1_accuracy, "val_top5_accuracy": avg_top5_accuracy, "val_loss": avg_loss}, commit=True)
+        print('[Epoch {}] Top1 Validation Accuracy: {:.2f}%'.format(epoch, avg_top1_accuracy))
+        print('[Epoch {}] Top5 Validation Accuracy: {:.2f}%'.format(epoch, avg_top5_accuracy))
     else:
-        wandb.log({"test_accuracy": val_accuracy, "test_loss": val_loss}, commit=True)
+        wandb.log({"test_top1_accuracy": avg_top1_accuracy, "test_top5_accuracy": avg_top5_accuracy, "test_loss": avg_loss}, commit=True)
+        print('Test Top1 Accuracy: {:.2f}%'.format())
 
-        print('Test Accuracy: {:.2f}%'.format(val_accuracy))
-
-    return val_accuracy, val_loss
+    return (avg_top1_accuracy, avg_top5_accuracy), avg_loss
 
 if __name__ == '__main__':
 
