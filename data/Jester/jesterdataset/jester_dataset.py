@@ -5,6 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 from pathlib import Path
 from torchvideotransforms.volume_transforms import ClipToTensor
+from torchvideotransforms.video_transforms import Compose, RandomHorizontalFlip, Resize
 
 class JesterDataset(Dataset):
     class FrameSelectStrategy(Enum):
@@ -121,16 +122,23 @@ class JesterDataset(Dataset):
 
 
 if __name__ == '__main__':
+
+    video_transform = Compose([
+        Resize(size=(112, 112, 3)),
+        ClipToTensor(),
+    ])
+
     train_set = JesterDataset(csv_file='./jester_data/Train.csv',
                               video_dir='./jester_data/20bn-jester-v1/Train',
                               number_of_frames=16, 
-                              video_transform=ClipToTensor())
+                              video_transform=video_transform)
+    
     train_loader = DataLoader(train_set, batch_size=4, shuffle=True, num_workers=4)
     
     frames, label = train_set[0]
     print(frames.shape) # 3, 16, h, w
     print(label)
 
-    # for i_batch, sample_batched in enumerate(train_loader):
-    #     print(sample_batched)
-    #     break
+    for i_batch, sample_batched in enumerate(train_loader):
+        print(sample_batched)
+        break
