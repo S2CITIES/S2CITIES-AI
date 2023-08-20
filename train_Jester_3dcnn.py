@@ -276,17 +276,17 @@ if __name__ == '__main__':
 
     # Load Train/Val/Test Jester splits (20bn-version)
     train_set = JesterDataset(csv_file='data/Jester/jester_data/Train.csv',
-                              video_dir='data/Jester/jester_data/20bn-jester-v1/Train',
+                              video_dir='data/Jester/jester_data/Train',
                               number_of_frames=clip_duration, 
                               video_transform=train_clip_transform)
     
     val_set = JesterDataset(csv_file='data/Jester/jester_data/Validation.csv',
-                              video_dir='data/Jester/jester_data/20bn-jester-v1/Validation',
+                              video_dir='data/Jester/jester_data/Validation',
                               number_of_frames=clip_duration, 
                               video_transform=val_clip_transform)
     
     # test_set = JesterDataset(csv_file='data/Jester/jester_data/Test.csv',
-    #                           video_dir='data/Jester/jester_data/20bn-jester-v1/Test',
+    #                           video_dir='data/Jester/jester_data/Test',
     #                           number_of_frames=clip_duration, 
     #                           video_transform=test_clip_transform)
     
