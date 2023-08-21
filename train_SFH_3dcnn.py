@@ -233,13 +233,13 @@ if __name__ == '__main__':
         ClipToTensor()
     ])
 
-    # Initialize spatial and temporal transforms (validation versions)
+    # Initialize spatial clip transforms (validation versions)
     val_clip_transform = Compose([
         Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
         ClipToTensor()
     ])
 
-    # Initialize spatial and temporal transforms (test versions)
+    # Initialize spatial clip transforms (test versions)
     test_clip_transform = Compose([
         Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
         ClipToTensor()

@@ -58,16 +58,16 @@ class Signal4HelpDataset(Dataset):
             return frames
         else:
             if frame_select_strategy == self.FrameSelectStrategy.FROM_BEGINNING:
-                return frames[list(range(0, number_of_frames*downsampling, downsampling))]
+                return [frames[idx] for idx in list(range(0, number_of_frames*downsampling, downsampling))]
                 # return frames[:number_of_frames]
             elif frame_select_strategy == self.FrameSelectStrategy.FROM_END:
-                return frames[list(range(len(clip)-(number_of_frames * downsampling), len(clip), downsampling))]
+                return [frames[idx] for idx in list(range(len(clip)-(number_of_frames * downsampling), len(clip), downsampling))]
                 # return frames[-number_of_frames:]
             elif frame_select_strategy == self.FrameSelectStrategy.RANDOM:
                 difference = len(frames) - (number_of_frames * downsampling)
                 random_start_index = torch.randint(0, difference, (1,)).item()
                 end_index = random_start_index + (number_of_frames * downsampling)
-                return frames[list(range(random_start_index, end_index, downsampling))]
+                return [frames[idx] for idx in list(range(random_start_index, end_index, downsampling))]
                 # return frames[random_start_index:end_index]
             else:
                 raise ValueError("FrameSelectStrategy not supported.")
