@@ -79,8 +79,6 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
 
             logits = model(videos)
 
-            print(torch.sigmoid(logits))
-
             if output_features == 1:
                 logits = logits.reshape((-1, ))
                 labels = labels.float()
@@ -112,7 +110,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
         print("[Epoch {}] Train Accuracy {:.2f}%".format(epoch, train_accuracy))
 
         # commit = false because I want commit to happen after validation (so that the step is incremented once per epoch)
-        wandb.log({"train_accuracy": train_accuracy, "train_loss": avg_train_loss}, commit=False)
+        wandb.log({"train_clip_accuracy": train_accuracy, "train_loss": avg_train_loss}, commit=False)
 
         # NOTE: test function validates the model when it takes in input the loader for the validation set
         val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, output_features=output_features, device=device, epoch=epoch)
@@ -182,11 +180,11 @@ def test(loader, model, criterion, output_features, device, epoch=None):
 
     if epoch is not None:
         # Save metrics with wandb
-        wandb.log({"val_accuracy": val_accuracy, "val_loss": val_loss}, commit=True)
+        wandb.log({"val_clip_accuracy": val_accuracy, "val_loss": val_loss}, commit=True)
 
         print('[Epoch {}] Validation Accuracy: {:.2f}%'.format(epoch, val_accuracy))
     else:
-        wandb.log({"test_accuracy": val_accuracy, "test_loss": val_loss}, commit=True)
+        wandb.log({"test_clip_accuracy": val_accuracy, "test_loss": val_loss}, commit=True)
 
         print('Test Accuracy: {:.2f}%'.format(val_accuracy))
 
@@ -216,11 +214,9 @@ if __name__ == '__main__':
         "dataset": args.data_path.split("/")[-1],
         "epochs": num_epochs,
         "batch": batch_size,
-        "sample_size": args.sample_size,
-        "sample_duration": args.sample_duration,
-        "train_crop": args.train_crop,
-        "early_stop_patience": args.early_stop_patience,
-        "no_norm": args.no_norm
+        "frame_size": args.sample_size,
+        "clip_duration": args.sample_duration,
+        "early_stop_patience": args.early_stop_patience
         }
     )
 
@@ -284,8 +280,8 @@ if __name__ == '__main__':
                         sample_size=args.sample_size,
                         sample_duration=args.sample_duration,
                         output_features=args.output_features,
-                        finetune=True)  # Fine-tune the classifier (last fully connected layer)
-    
+                        finetune=True,      # Fine-tune the classifier (last fully connected layer)
+                        state_dict=True)    # If only the state_dict was saved
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)

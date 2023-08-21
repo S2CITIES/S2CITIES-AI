@@ -21,12 +21,14 @@ class Signal4HelpDataset(Dataset):
         REPEAT_BEGINNING = 2
 
     def __init__(self, annotation_path, clip_transform=None, number_of_frames=16,
-                 frame_select_strategy=FrameSelectStrategy.RANDOM, frame_padding=FramePadding.REPEAT_END):
+                 frame_select_strategy=FrameSelectStrategy.RANDOM, frame_padding=FramePadding.REPEAT_END,
+                 downsampling=1):
         
         self.clip_transform=clip_transform
         self.number_of_frames=number_of_frames
         self.frame_select_strategy=frame_select_strategy
         self.frame_padding=frame_padding
+        self.downsampling=1
         self.videos = []
 
         with open(annotation_path, 'r') as f:
@@ -38,8 +40,8 @@ class Signal4HelpDataset(Dataset):
             label = int(fields[-1])
             self.videos.append((video_path, label))
 
-    def _add_padding(self, frames, number_of_frames, frame_padding: FramePadding):
-        difference = number_of_frames - len(frames)
+    def _add_padding(self, frames: list, number_of_frames: int, downsampling: int, frame_padding: FramePadding):
+        difference = number_of_frames * downsampling - len(frames)
         if difference > 0:
             if frame_padding == self.FramePadding.REPEAT_BEGINNING:
                 frame_index_to_repeat = 0
@@ -51,19 +53,22 @@ class Signal4HelpDataset(Dataset):
             frames += [frames[frame_index_to_repeat] for _ in range(difference)]
         return frames
 
-    def _select_frames(self, frames: list, frame_select_strategy: FrameSelectStrategy, number_of_frames: int):
-        if len(frames) <= number_of_frames:
+    def _select_frames(self, frames: list, frame_select_strategy: FrameSelectStrategy, number_of_frames: int, downsampling: int):
+        if len(frames) <= number_of_frames * downsampling:
             return frames
         else:
             if frame_select_strategy == self.FrameSelectStrategy.FROM_BEGINNING:
-                return frames[:number_of_frames]
+                return frames[list(range(0, number_of_frames*downsampling, downsampling))]
+                # return frames[:number_of_frames]
             elif frame_select_strategy == self.FrameSelectStrategy.FROM_END:
-                return frames[-number_of_frames:]
+                return frames[list(range(len(clip)-(number_of_frames * downsampling), len(clip), downsampling))]
+                # return frames[-number_of_frames:]
             elif frame_select_strategy == self.FrameSelectStrategy.RANDOM:
-                difference = len(frames) - number_of_frames
+                difference = len(frames) - (number_of_frames * downsampling)
                 random_start_index = torch.randint(0, difference, (1,)).item()
-                end_index = random_start_index + number_of_frames
-                return frames[random_start_index:end_index]
+                end_index = random_start_index + (number_of_frames * downsampling)
+                return frames[list(range(random_start_index, end_index, downsampling))]
+                # return frames[random_start_index:end_index]
             else:
                 raise ValueError("FrameSelectStrategy not supported.")
 
@@ -86,9 +91,9 @@ class Signal4HelpDataset(Dataset):
         if len(clip) == 0:
             raise FileNotFoundError(f"ERROR: Could not find or open video at path {video_path}.")
         clip = self._add_padding(frames=clip, number_of_frames=self.number_of_frames,
-                                        frame_padding=self.frame_padding)
+                                 downsampling=self.downsampling, frame_padding=self.frame_padding)
         clip = self._select_frames(frames=clip, frame_select_strategy=self.frame_select_strategy,
-                                          number_of_frames=self.number_of_frames)
+                                   number_of_frames=self.number_of_frames, downsampling=self.downsampling)
         clip = [Image.fromarray(frame).convert('RGB') for frame in clip]
 
         if self.clip_transform:

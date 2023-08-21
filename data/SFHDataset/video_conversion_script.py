@@ -6,9 +6,9 @@ parser = argparse.ArgumentParser(
     prog = 'Script to generate SignalForHelp dataset pre-processed videos.'
 )
 parser.add_argument('--source_path', default='dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_raw', type=str, help='Path for train/test/val video files.')
-parser.add_argument('--target_width', default=112, type=int, help='Target width for pre-processed train/test/val videos.')
-parser.add_argument('--target_height', default=112, type=int, help='Target height for pre-processed train/test/val videos.')
-parser.add_argument('--target_fps', type=float, default=6.4, help='Target frame rate for train/test/val videos.')
+parser.add_argument('--target_width', default=224, type=int, help='Target width for pre-processed train/test/val videos.')
+parser.add_argument('--target_height', default=224, type=int, help='Target height for pre-processed train/test/val videos.')
+parser.add_argument('--target_fps', type=float, default=25.0, help='Target frame rate for train/test/val videos.')
 parser.add_argument('--step', type=str, default='all', help='Video conversion step.', choices=['ratio', 'resize', 'fps', 'all'])
 
 def convert_ratio(target_ratio, source_video_path, dest_video_path):
@@ -120,8 +120,9 @@ def convert_frame_rate(target_frame_rate, source_video_path, dest_video_path):
             input_video = cv2.VideoCapture(current_video_path)
 
             frame_rate = int(input_video.get(cv2.CAP_PROP_FPS))
-            frame_interval = int(round(frame_rate / target_frame_rate))
-
+            rate_ratio = int(round(frame_rate / target_frame_rate)) 
+            frame_interval = rate_ratio if rate_ratio >= 1 else 1       # Set frame-rate to original one if lower than target
+            
             width = int(input_video.get(cv2.CAP_PROP_FRAME_WIDTH))
             height = int(input_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
