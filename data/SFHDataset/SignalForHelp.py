@@ -28,7 +28,7 @@ class Signal4HelpDataset(Dataset):
         self.number_of_frames=number_of_frames
         self.frame_select_strategy=frame_select_strategy
         self.frame_padding=frame_padding
-        self.downsampling=1
+        self.downsampling=downsampling
         self.videos = []
 
         with open(annotation_path, 'r') as f:
@@ -55,7 +55,7 @@ class Signal4HelpDataset(Dataset):
 
     def _select_frames(self, frames: list, frame_select_strategy: FrameSelectStrategy, number_of_frames: int, downsampling: int):
         if len(frames) <= number_of_frames * downsampling:
-            return frames
+            return [frames[idx] for idx in list(range(0, len(frames), downsampling))]
         else:
             if frame_select_strategy == self.FrameSelectStrategy.FROM_BEGINNING:
                 return [frames[idx] for idx in list(range(0, number_of_frames*downsampling, downsampling))]
