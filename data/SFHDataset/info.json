@@ -180,5 +180,23 @@
             59.48789596557617,
             58.12306594848633
         ]
+    },
+    "SFH_Dataset_S2CITIES_raw_extended_negatives_ratio1_224x224_fps25.0": {
+        "statistics": {
+            "train": {
+                "positives": 1245,
+                "negatives": 2081
+            },
+            "test": {
+                "positives": 168,
+                "negatives": 248
+            },
+            "val": {
+                "positives": 164,
+                "negatives": 252
+            }
+        },
+        "mean": [],
+        "std": []
     }
 }

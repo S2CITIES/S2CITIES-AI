@@ -248,15 +248,18 @@ if __name__ == '__main__':
     # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
                                  clip_transform=train_clip_transform,
-                                 number_of_frames=clip_duration)
+                                 number_of_frames=clip_duration,
+                                 downsampling=args.downsampling)
     
     val_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
                                  clip_transform=val_clip_transform,
-                                 number_of_frames=clip_duration)
+                                 number_of_frames=clip_duration,
+                                 downsampling=args.downsampling)
     
     test_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'test_annotations.txt'), 
                                 clip_transform=test_clip_transform,
-                                number_of_frames=clip_duration)
+                                number_of_frames=clip_duration,
+                                downsampling=args.downsampling)
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
