@@ -1,4 +1,5 @@
 import os
+import json
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
@@ -194,7 +195,7 @@ if __name__ == '__main__':
 
     batch_size=args.batch
     num_epochs=args.epochs
-
+    dataset_name = args.data_path.split("/")[-1]
     # start a new wandb run to track this script
     wandb.init(
         # set the wandb project where this run will be logged
@@ -211,12 +212,13 @@ if __name__ == '__main__':
         "nesterov": args.nesterov,
         "weight_decay": args.wd, 
         "architecture": args.model,
-        "dataset": args.data_path.split("/")[-1],
+        "dataset": dataset_name,
         "epochs": num_epochs,
         "batch": batch_size,
         "frame_size": args.sample_size,
         "clip_duration": args.sample_duration,
-        "early_stop_patience": args.early_stop_patience
+        "early_stop_patience": args.early_stop_patience,
+        "downsampling": args.downsampling
         }
     )
 
@@ -265,6 +267,15 @@ if __name__ == '__main__':
     print('Size of Validation Set: {}'.format(len(val_dataset)))
     print('Size of Test Set: {}'.format(len(test_dataset)))
 
+    with open('data/SFHDataset/info.json', 'r') as json_file:
+        dataset_info = json.load(json_file)
+
+    train_positives = dataset_info[dataset_name]['statistics']['train']['positives']
+    train_negatives = dataset_info[dataset_name]['statistics']['train']['negatives']
+    
+    cross_entropy_weights = torch.tensor([train_negatives/(train_negatives+train_positives), 
+                                          train_positives/(train_negatives+train_positives)]).to(device)
+
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
 
@@ -310,7 +321,7 @@ if __name__ == '__main__':
         # NOTE: nn.BCEWithLogitsLoss already contains the Sigmoid layer inside
         criterion = nn.BCEWithLogitsLoss()
     else:
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.CrossEntropyLoss(weight=cross_entropy_weights)
 
     # Initialize tqdm progress bar for tracking training steps
     pbar = tqdm(total=len(train_dataset))
