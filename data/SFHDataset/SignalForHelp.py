@@ -22,13 +22,14 @@ class Signal4HelpDataset(Dataset):
 
     def __init__(self, annotation_path, clip_transform=None, number_of_frames=16,
                  frame_select_strategy=FrameSelectStrategy.RANDOM, frame_padding=FramePadding.REPEAT_END,
-                 downsampling=1):
+                 downsampling=1, test_on_videos=False):
         
         self.clip_transform=clip_transform
         self.number_of_frames=number_of_frames
         self.frame_select_strategy=frame_select_strategy
         self.frame_padding=frame_padding
         self.downsampling=downsampling
+        self.test_on_videos=test_on_videos
         self.videos = []
 
         with open(annotation_path, 'r') as f:
@@ -90,16 +91,19 @@ class Signal4HelpDataset(Dataset):
         cap.release()
         if len(clip) == 0:
             raise FileNotFoundError(f"ERROR: Could not find or open video at path {video_path}.")
-        clip = self._add_padding(frames=clip, number_of_frames=self.number_of_frames,
+        
+        if not self.test_on_videos:
+            clip = self._add_padding(frames=clip, number_of_frames=self.number_of_frames,
                                  downsampling=self.downsampling, frame_padding=self.frame_padding)
-        clip = self._select_frames(frames=clip, frame_select_strategy=self.frame_select_strategy,
+            clip = self._select_frames(frames=clip, frame_select_strategy=self.frame_select_strategy,
                                    number_of_frames=self.number_of_frames, downsampling=self.downsampling)
-        clip = [Image.fromarray(frame).convert('RGB') for frame in clip]
-
-        if self.clip_transform:
-            clip = self.clip_transform(clip)
-
-        return clip, label
+            clip = [Image.fromarray(frame).convert('RGB') for frame in clip]
+            if self.clip_transform:
+                clip = self.clip_transform(clip)
+            return clip, label
+        else:
+            clip = [Image.fromarray(frame).convert('RGB') for frame in clip]
+            return clip, {'video-id': video_path.split('/')[-1], 'label': label}
 
 if __name__ == '__main__':
 

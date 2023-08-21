@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import torch.nn as nn
+import pandas as pd
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, random_split
 from data.SFHDataset.SignalForHelp import Signal4HelpDataset
@@ -13,8 +14,8 @@ from train_args import parse_args
 from torchvideotransforms.volume_transforms import ClipToTensor
 from torchvideotransforms.video_transforms import Compose, RandomHorizontalFlip, Resize, RandomResizedCrop, RandomRotation
 
-# Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
-import wandb
+## NOTE: This script tests a 3D-CNN model trained on the SFH task, by reporting Video Accuracy.
+## Note that Video Accuracy and Clip Accuracy are two different things!
 
 # Silent warnings about TypedStorage deprecations that appear on the cluster
 import warnings
@@ -22,7 +23,7 @@ warnings.filterwarnings('ignore', category=UserWarning, message='TypedStorage is
 
 args = parse_args()
 
-def compute_video_accuracy(ground_truth, predictions, top_k=3):
+def compute_video_accuracy(ground_truth, predictions):
     # Inspired by evaluation performed in Karpathy et al. CVPR14
     # Other evaluations are also possible
 
@@ -39,12 +40,14 @@ def compute_video_accuracy(ground_truth, predictions, top_k=3):
         pred_idx = predictions['video-id'] == video
         if not pred_idx.any():
             continue
+        # Get prediction scores
         this_pred = predictions.loc[pred_idx].reset_index(drop=True)
-        # Get top K predictions sorted by decreasing score.
-        sort_idx = this_pred['score'].values.argsort()[::-1][:top_k]
+        print(this_pred)
+        sort_idx = this_pred['score'].values.argsort()[::-1][:1]    # Take the label with the highest predicted score
         this_pred = this_pred.loc[sort_idx].reset_index(drop=True)
-        # Get top K labels and compare them against ground truth.
         pred_label = this_pred['label'].tolist()
+        print(pred_label)
+        # Get ground truth label for video with video-id 
         gt_idx = ground_truth['video-id'] == video
         gt_label = ground_truth.loc[gt_idx]['label'].tolist()
         avg_hits_per_video[i] = np.mean([1 if this_label in pred_label else 0
@@ -52,47 +55,64 @@ def compute_video_accuracy(ground_truth, predictions, top_k=3):
         
     return float(avg_hits_per_video.mean())
 
-def test(loader, model, criterion, device, epoch=None):
-    totals = 0
+def test(videos, model, num_frames_per_clip, downsampling_in_clip, clip_transform, pbar):
+    # gt = []
+    # preds = []
     corrects = 0
-    y_pred = []
-    y_true = []
-    val_loss = []
+    totals = 0
 
     with torch.no_grad():
         model.eval()
 
-        for i, data in enumerate(loader):
-            videos, labels = data
-            videos = videos.float()
-            videos = videos.to(device)
+        for i, data in enumerate(videos):
+            video, info = data
+            gt_label = info['label']
+            # gt.append({
+            #     'video-id': info['video-id'],
+            #     'label': info['label']
+            # })
 
-            logits = model(videos)
+            video_logits = []
 
-            labels = labels.to(device)
-            val_loss_batch = criterion(logits, labels)
+            for j in range(0, len(video), num_frames_per_clip):
+                clip = video[j:j+num_frames_per_clip]
+                if len(clip) < num_frames_per_clip:
+                    difference = len(clip) - num_frames_per_clip
+                    clip += [clip[-1] for _ in range(difference)] # Repeat the last frame if the last chunk has size < number_of_frames
+                if clip_transform:
+                    clip = clip_transform(clip)
 
-            val_loss.append(val_loss_batch.item())
+                clip = clip.float()
+                # Add the batch dim to video
+                clip = clip.unsqueeze(dim=0)
+                clip = clip.to(device)
 
-            y_true.append(labels)
+                logits = model(clip)
+                video_logits.append(logits)
 
-            y_preds = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+                # scores = torch.softmax(logits, dim=1).cpu().view(-1)
+                # for label, score in enumerate(scores):
+                #     preds.append({
+                #         'video-id': info['video-id'], 
+                #         'label': label, 
+                #         'score': score.item()
+                #         })
+            
+            video_logits = torch.stack(video_logits, dim=0)
+            video_logits = torch.mean(video_logits, dim=0)
+            video_scores = torch.softmax(video_logits, dim=1)
+            pred_label = torch.argmax(video_scores, dim=1)
 
-            corrects += (y_preds == labels).sum().item()
-            totals += y_preds.shape[0]
-
-            y_preds = y_preds.detach().cpu()
-            y_pred.append(y_preds)
-
-    y_true = torch.cat(y_true, dim=0)
-    y_pred = torch.cat(y_pred, dim=0)
-
-    val_accuracy = 100 * corrects / totals
-    val_loss = np.array(val_loss).mean()
-
-    print('Test Video Accuracy: {:.2f}%'.format(val_accuracy))
-
-    return val_accuracy, val_loss
+            totals += 1
+            corrects += (pred_label.item() == gt_label)*1
+            pbar.update(1)
+    
+    # gt = pd.DataFrame(gt)
+    # preds = pd.DataFrame(preds)
+    # video_accuracy = compute_video_accuracy(ground_truth=gt, predictions=preds)
+    video_accuracy = 100 * (corrects/totals)
+    print(f"Average Video Accuracy on Test Set: {video_accuracy}")
+    return video_accuracy
 
 if __name__ == '__main__':
 
@@ -112,85 +132,25 @@ if __name__ == '__main__':
         ClipToTensor()
     ])  
     
-    test_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'test_annotations.txt'), 
-                                clip_transform=test_clip_transform,
-                                number_of_frames=clip_duration,
-                                downsampling=args.downsampling)
+    test_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'test_annotations.txt'), test_on_videos=True)
+    
     print('Size of Test Set: {}'.format(len(test_dataset)))
-
 
     num_gpus = torch.cuda.device_count()
     print(f"Available GPUs: {num_gpus}")
 
-    # Initialize DataLoaders
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
-
-    # User provided entire path for pre-trained weights
-    base_model_path = args.pretrained_path 
-
-    model = build_model(model_path=base_model_path, 
-                        type=args.model,
-                        num_classes=27, # Number of classes of the original pre-trained model on Jester dataset 
+    model = build_model(model_path='checkpoints/best_model_finetune-mobilenetv2-sfh-wcrossentropy.h5', 
+                        type='mobilenetv2',
+                        num_classes=2, # Number of classes of the original pre-trained model on Jester dataset 
                         gpus=list(range(0, num_gpus)),
-                        sample_size=args.sample_size,
-                        sample_duration=args.sample_duration,
-                        output_features=args.output_features,
-                        finetune=True,      # Fine-tune the classifier (last fully connected layer)
-                        state_dict=True)    # If only the state_dict was saved
-    print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print("Trainable parameters:", trainable_params)
-
-    if args.nesterov:
-        args.dampening = 0.
-    
-    # classifier = model.module.get_submodule('classifier')
-    
-    if args.optimizer == 'SGD':
-        optimizer = torch.optim.SGD(list(model.parameters()), 
-                                                    lr=args.lr, 
-                                                    momentum=args.momentum, 
-                                                    dampening=args.dampening,
-                                                    weight_decay=args.wd,
-                                                    nesterov=args.nesterov)
-    elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=args.wd)
-
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
-
-    if args.output_features == 1:
-        # NOTE: nn.BCEWithLogitsLoss already contains the Sigmoid layer inside
-        criterion = nn.BCEWithLogitsLoss()
-    else:
-        criterion = nn.CrossEntropyLoss(weight=cross_entropy_weights)
+                        sample_size=112,
+                        sample_duration=16,
+                        output_features=2,
+                        finetune=False,      # Fine-tune the classifier (last fully connected layer)
+                        state_dict=True)     # If only the state_dict was saved
 
     # Initialize tqdm progress bar for tracking training steps
-    pbar = tqdm(total=len(train_dataset))
-
-    # Create model saves path if it doesn't exist yet
-    if not os.path.exists(args.model_save_path):
-        os.makedirs(args.model_save_path)
-
-    train(model=model, 
-          optimizer=optimizer,
-          scheduler=scheduler,
-          criterion=criterion, 
-          train_loader=train_dataloader,
-          val_loader=val_dataloader, 
-          num_epochs=num_epochs,
-          output_features=args.output_features, 
-          device=device, 
-          pbar=pbar)
-
-    # Load the best checkpoint obtained until now
-    best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
-    model.load_state_dict(best_checkpoint)
-  
-    test(loader=test_dataloader, 
-         model=model,
-         criterion=criterion,
-         output_features=args.output_features,
-         device=device)
+    pbar = tqdm(total=len(test_dataset))
+    pbar.set_description('Testing on Test Videos')
+    test(videos=test_dataset, model=model, num_frames_per_clip=16, downsampling_in_clip=1, clip_transform=test_clip_transform, pbar=pbar)
     
-    # [optional] finish the wandb run, necessary in notebooks
-    wandb.finish()

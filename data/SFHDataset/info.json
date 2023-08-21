@@ -234,5 +234,23 @@
         },
         "mean": [],
         "std": []
+    },
+    "": {
+        "statistics": {
+            "train": {
+                "positives": 1250,
+                "negatives": 2076
+            },
+            "test": {
+                "positives": 166,
+                "negatives": 250
+            },
+            "val": {
+                "positives": 161,
+                "negatives": 255
+            }
+        },
+        "mean": [],
+        "std": []
     }
 }
