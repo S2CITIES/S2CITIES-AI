@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument('--early_stop_patience', help='Patience for early stopping criteria', type=int, default=5)
     parser.add_argument('--sample_size', default=112, type=int, help='Height and width of inputs')
     parser.add_argument('--sample_duration', default=16, type=int, help='Temporal duration of inputs')
+    parser.add_argument('--downsampling', default=1, type=int, help='Downsampling factor in clip extraction from videos.')
     parser.add_argument('--output_features', help='Number of output features for FC layers or FCNs (1: sigmoid-activated, 2: softmax-activated).', choices=[1, 2], type=int, default=2)
 
     ### SGD algorithm parameters ###
