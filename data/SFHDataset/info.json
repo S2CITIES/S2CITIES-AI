@@ -198,5 +198,41 @@
         },
         "mean": [],
         "std": []
+    },
+    "SFH_test_new_negatives": {
+        "statistics": {
+            "train": {
+                "positives": 505,
+                "negatives": 554
+            },
+            "test": {
+                "positives": 77,
+                "negatives": 56
+            },
+            "val": {
+                "positives": 80,
+                "negatives": 52
+            }
+        },
+        "mean": [],
+        "std": []
+    },
+    "SFH_test_new_negatives_ratio1_224x224_fps12.0": {
+        "statistics": {
+            "train": {
+                "positives": 531,
+                "negatives": 528
+            },
+            "test": {
+                "positives": 66,
+                "negatives": 67
+            },
+            "val": {
+                "positives": 65,
+                "negatives": 67
+            }
+        },
+        "mean": [],
+        "std": []
     }
 }
