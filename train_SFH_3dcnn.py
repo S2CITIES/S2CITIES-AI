@@ -9,9 +9,8 @@ import numpy as np
 import functools
 from tqdm import tqdm
 from train_args import parse_args
-import transforms.spatial_transforms as SPtransforms
-import transforms.temporal_transforms as TPtransforms
-from data.SFHDataset.compute_mean_std import get_SFH_mean_std
+from torchvideotransforms.volume_transforms import ClipToTensor
+from torchvideotransforms.video_transforms import Compose, RandomHorizontalFlip, Resize, RandomResizedCrop, RandomRotation
 
 # Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
 import wandb
@@ -52,21 +51,6 @@ def compute_video_accuracy(ground_truth, predictions, top_k=3):
         
     return float(avg_hits_per_video.mean())
 
-
-# "Collate" function for our dataloaders
-# def collate_fn(batch, transform):
-#     # NOTE (IMPORTANT): Normalize (pytorchvideo.transforms) from PyTorchVideo wants a volume with shape CTHW, 
-#     # which is then internally converted to TCHW, processed and then again converted to CTHW.
-#     # Because our volumes are in the shape TCHW, we convert them to CTHW here, instead of doing it inside the training loop.
-
-#     videos = [transform(video.permute(1, 0, 2, 3)) for video, _ in batch]
-#     labels = [label for _, label in batch]
-
-#     videos = torch.stack(videos)
-#     labels = torch.tensor(labels)
-#     return videos, labels
-
-# TODO: Implement custom scheduler to manual adjust learning rate after N epochs
 def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, output_features, device, pbar=None):
 
     # Set up early stopping criteria
@@ -240,99 +224,43 @@ if __name__ == '__main__':
         }
     )
 
+    frame_size = args.sample_size
+    clip_duration = args.sample_duration
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print("Running on device {}".format(device))
 
-    # Init different scales for random scaling
-    # args.scales = [args.initial_scale]
-    # for i in range(1, args.n_scales):
-    #     args.scales.append(args.scales[-1] * args.scale_step)
-
-    # No erandom scaling - Just original scale
-    args.scales = [1.]
-
-    # Initialize spatial and temporal transforms (training versions)
-    if args.train_crop == 'random':
-        crop_method = SPtransforms.MultiScaleRandomCrop(args.scales, args.sample_size)
-    elif args.train_crop == 'corner':
-        crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size)
-    elif args.train_crop == 'center':
-        crop_method = SPtransforms.MultiScaleCornerCrop(args.scales, args.sample_size, crop_positions=['c'])
-    
-    if not args.no_norm:
-        target_dataset = args.data_path.split('/')[-1]
-        # Compute channel-wise mean and std. on the training set
-        mean, std = get_SFH_mean_std(target_dataset=target_dataset,
-                                    image_size=args.sample_size, 
-                                    norm_value=args.norm_value, 
-                                    force_compute=args.recompute_mean_std)
-    else:
-        mean = [0, 0, 0]
-        std = [1, 1, 1]
-
-    # Log normalization mean and std for future reference
-    wandb.log({"norm_mean": mean, "norm_std": std})
-    
-    print(f"Train mean: {mean}")
-    print(f"Train std.: {std}")
-
-    train_spatial_transform = SPtransforms.Compose([
-        SPtransforms.RandomHorizontalFlip(),
-        # crop_method,
-        SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
+    train_clip_transform = Compose([
+        RandomHorizontalFlip(),
+        RandomRotation(degrees=(-180, 180)),
+        RandomResizedCrop(size=(frame_size, frame_size, 3), scale=(0.4, 1), ratio=(3./4., 4./3.)),
+        ClipToTensor()
     ])
-
-    # TODO: Add variable downsample factor depending on the number of frames in a video
-    # The idea is that a video with an higher frame rate should have an higher downsample factor in order to span
-    # a longer temporal window.
-
-    # Extract a Random Clip from the Input Video
-    train_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (validation versions)
-    val_spatial_transform = SPtransforms.Compose([
-        # SPtransforms.Scale(args.sample_size),
-        # SPtransforms.CenterCrop(args.sample_size),
-        SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
+    val_clip_transform = Compose([
+        Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
+        ClipToTensor()
     ])
-
-    # Evaluate with Central Crops (Clip Accuracy, not Video Accuracy)
-    val_temporal_transform = TPtransforms.TemporalCenterCrop(args.sample_duration, args.downsample)
 
     # Initialize spatial and temporal transforms (test versions)
-    test_spatial_transform = SPtransforms.Compose([
-        # SPtransforms.Scale(args.sample_size),
-        # SPtransforms.CornerCrop(args.sample_size, crop_position='c'), # Central Crop in Test
-        SPtransforms.ToTensor(args.norm_value),
-        SPtransforms.Normalize(mean=mean, std=std)
-    ])
-
-    # Test again with Random Crops on videos from the test set.
-    # NOTE: Pay attention - both in train, test and validation, Clip accuracy is computed, not Video accuracy.
-    # To compute Video accuracy, we need to traverse the entire video while extracting clips and doing inference with our models.
-    # Then, predicted logits should be averaged and the results after the softmax layer should be used to make a prediction 
-    # for the entire video.
-    # TODO: A good idea would be to plot the logits (better class predictions) produced at each step, and see how
-    # they evolve during time. 
-
-    test_temporal_transform = TPtransforms.TemporalRandomCrop(args.sample_duration, args.downsample)
+    test_clip_transform = Compose([
+        Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
+        ClipToTensor()
+    ])  
 
     # Load Train/Val/Test SignalForHelp Datasets
     train_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'train_annotations.txt'), 
-                                 spatial_transform=train_spatial_transform,
-                                 temporal_transform=train_temporal_transform)
+                                 clip_transform=train_clip_transform,
+                                 number_of_frames=clip_duration)
     
     val_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'val_annotations.txt'), 
-                                 spatial_transform=val_spatial_transform,
-                                 temporal_transform=val_temporal_transform)
+                                 clip_transform=val_clip_transform,
+                                 number_of_frames=clip_duration)
     
     test_dataset = Signal4HelpDataset(os.path.join(args.annotation_path, 'test_annotations.txt'), 
-                                spatial_transform=test_spatial_transform,
-                                temporal_transform=test_temporal_transform)
-    
-    # partial_collate_fn = functools.partial(collate_fn, transform=video_transforms)
+                                clip_transform=test_clip_transform,
+                                number_of_frames=clip_duration)
 
     print('Size of Train Set: {}'.format(len(train_dataset)))
     print('Size of Validation Set: {}'.format(len(val_dataset)))
@@ -346,23 +274,17 @@ if __name__ == '__main__':
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=args.num_workers)
 
-    if args.pretrained_path == 'auto':
-        # 'Build' path for pretrained weights with provided information
-        if args.model in ['mobilenet', 'mobilenetv2']:
-            base_model_path='models/pretrained/jester/jester_{model}_1.0x_RGB_16_best.pth'.format(model=args.model)
-        else:
-            base_model_path='models/pretrained/jester/jester_squeezenet_RGB_16_best.pth'
-    else:
-        # User provided entire path for pre-trained weights
-        base_model_path = args.pretrained_path 
+    # User provided entire path for pre-trained weights
+    base_model_path = args.pretrained_path 
 
     model = build_model(model_path=base_model_path, 
-                        type=args.model, 
+                        type=args.model,
+                        num_classes=27, # Number of classes of the original pre-trained model on Jester dataset 
                         gpus=list(range(0, num_gpus)),
                         sample_size=args.sample_size,
                         sample_duration=args.sample_duration,
                         output_features=args.output_features,
-                        finetune=True)
+                        finetune=True)  # Fine-tune the classifier (last fully connected layer)
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)

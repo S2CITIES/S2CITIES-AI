@@ -1,91 +1,34 @@
 import torch
+from enum import Enum
 import numpy as np
 from torch.utils.data import Dataset, DataLoader, random_split
-import torchvision.transforms as transforms
-import transforms.spatial_transforms as SPtransforms
-import transforms.temporal_transforms as TPtransforms
+from torchvideotransforms.volume_transforms import ClipToTensor
+from torchvideotransforms.video_transforms import Compose, RandomHorizontalFlip, Resize, RandomResizedCrop, RandomRotation
 import os
 import cv2
 import mediapipe as mp
 from PIL import Image
 
-def load_video(video_path, temporal_transform=None, spatial_transform=None, sample_duration=16, norm_value=1.0, save_output=False):
-
-        cap = cv2.VideoCapture(video_path)
-
-        clip = []
-        # TODO: Make it faster by only loading the sampled frames and save the total number of frames in the annotation file
-        while cap.isOpened():
-            ret, frame = cap.read()
-
-            if not ret:
-                break
-
-            # print(frame.size)
-            clip.append(frame)
-
-        cap.release()
-        
-        n_frames = len(clip)
-        # Apply Temporal Transform
-        if temporal_transform is not None:
-            # print(f"Clip lenght: {n_frames}")
-            clip = [Image.fromarray(frame) for frame in clip]
-            frame_indices = list(range(1, n_frames+1))
-            frame_indices = temporal_transform(frame_indices)
-
-            print(frame_indices)
-            clip = [clip[i-1] for i in frame_indices]
-        else:
-            # If there are less then sample_duration frames, repeat the last one
-            if n_frames < sample_duration:
-                num_black_frames = sample_duration - n_frames
-                for _ in range(num_black_frames):
-                    clip.append(np.zeros_like(clip[0]))
-            # If there are more than sample_duration, take the ones in the middle
-            else:
-                start_idx = (n_frames-sample_duration) // 2
-                end_idx = start_idx + sample_duration
-                clip = clip[start_idx:end_idx]
-
-            # Convert every frame to PIL Image
-            clip = [Image.fromarray(frame) for frame in clip]
-
-        if spatial_transform is not None:
-            # Apply Spatial Transform
-            spatial_transform.randomize_parameters()
-            clip = [spatial_transform(frame) for frame in clip]
-
-        if save_output: # To "visualize" the effect of temporal and spatial transforms
-            codec = cv2.VideoWriter_fourcc(*"mp4v")  # Video codec (e.g., "mp4v", "XVID")
-            output_file = os.path.join('test', video_path.split('/')[-1])  # Output video file name
-            print(output_file)
-            frame_size = (112, 112)  # Frame size (width, height)
-            fps = sample_duration/2.5
-
-            video_writer = cv2.VideoWriter(output_file, codec, fps, frame_size)
-
-            for frame in clip:
-                np_img = frame.numpy()
-                np_img = np.transpose(np_img, (1, 2, 0))
-                np_img = np_img * norm_value
-                np_img = np_img.astype(np.uint8)
-                video_writer.write(np_img)
-
-            video_writer.release()
-
-        clip = torch.stack(clip, dim=0) # Tensor with shape TCHW
-        clip = clip.permute(1, 0, 2, 3) # Tensor with shape CTHW
-
-        return clip
-
 class Signal4HelpDataset(Dataset):
-    def __init__(self, annotation_path, temporal_transform, spatial_transform):
+
+    class FrameSelectStrategy(Enum):
+        FROM_BEGINNING = 0
+        FROM_END = 1
+        RANDOM = 2
+
+    class FramePadding(Enum):
+        REPEAT_END = 0
+        REPEAT_BEGINNING = 2
+
+    def __init__(self, annotation_path, clip_transform=None, number_of_frames=16,
+                 frame_select_strategy=FrameSelectStrategy.RANDOM, frame_padding=FramePadding.REPEAT_END):
         
-        self.temporal_transform = temporal_transform
-        self.spatial_transform = spatial_transform
+        self.clip_transform=clip_transform
+        self.number_of_frames=number_of_frames
+        self.frame_select_strategy=frame_select_strategy
+        self.frame_padding=frame_padding
         self.videos = []
-        
+
         with open(annotation_path, 'r') as f:
             lines = f.readlines()
         
@@ -95,41 +38,75 @@ class Signal4HelpDataset(Dataset):
             label = int(fields[-1])
             self.videos.append((video_path, label))
 
+    def _add_padding(self, frames, number_of_frames, frame_padding: FramePadding):
+        difference = number_of_frames - len(frames)
+        if difference > 0:
+            if frame_padding == self.FramePadding.REPEAT_BEGINNING:
+                frame_index_to_repeat = 0
+            elif frame_padding == self.FramePadding.REPEAT_END:
+                frame_index_to_repeat = -1
+            else:
+                raise ValueError("Frame Padding Type not supported")
+
+            frames += [frames[frame_index_to_repeat] for _ in range(difference)]
+        return frames
+
+    def _select_frames(self, frames: list, frame_select_strategy: FrameSelectStrategy, number_of_frames: int):
+        if len(frames) <= number_of_frames:
+            return frames
+        else:
+            if frame_select_strategy == self.FrameSelectStrategy.FROM_BEGINNING:
+                return frames[:number_of_frames]
+            elif frame_select_strategy == self.FrameSelectStrategy.FROM_END:
+                return frames[-number_of_frames:]
+            elif frame_select_strategy == self.FrameSelectStrategy.RANDOM:
+                difference = len(frames) - number_of_frames
+                random_start_index = torch.randint(0, difference, (1,)).item()
+                end_index = random_start_index + number_of_frames
+                return frames[random_start_index:end_index]
+            else:
+                raise ValueError("FrameSelectStrategy not supported.")
+
     def __len__(self):
         return len(self.videos)
 
     def __getitem__(self, index):
         video_path, label = self.videos[index]
-        video = load_video(video_path, 
-                           temporal_transform=self.temporal_transform,
-                           spatial_transform=self.spatial_transform,
-                           save_output=False)
-        return video, label
+
+        cap = cv2.VideoCapture(video_path)
+        clip = []
+        # TODO: Make it faster by only loading the sampled frames and save the total number of frames in the annotation file
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            # print(frame.size)
+            clip.append(frame)
+        cap.release()
+        if len(clip) == 0:
+            raise FileNotFoundError(f"ERROR: Could not find or open video at path {video_path}.")
+        clip = self._add_padding(frames=clip, number_of_frames=self.number_of_frames,
+                                        frame_padding=self.frame_padding)
+        clip = self._select_frames(frames=clip, frame_select_strategy=self.frame_select_strategy,
+                                          number_of_frames=self.number_of_frames)
+        clip = [Image.fromarray(frame).convert('RGB') for frame in clip]
+
+        if self.clip_transform:
+            clip = self.clip_transform(clip)
+
+        return clip, label
 
 if __name__ == '__main__':
 
-    spatial_transform = SPtransforms.Compose([
-        SPtransforms.Scale(112),
-        SPtransforms.CenterCrop(112),
-        SPtransforms.ToTensor(1.0),
-        SPtransforms.Normalize(
-                        mean=[
-                            124.02363586425781,
-                            114.20242309570312,
-                            103.32056427001953
-                        ], 
-                        std=[
-                            61.589691162109375,
-                            61.51222610473633,
-                            60.233455657958984
-                        ])
-    ])
+    frame_size = 112
+    clip_duration = 16
 
-    temporal_transform = TPtransforms.TemporalRandomCrop(16, 1)
-
-    # Test load_video 
-    load_video(video_path='../../dataset/SFHDataset/SFH/SFH_Dataset_S2CITIES_simplified_ratio1/1/vid_00053_00006.mp4',
-               temporal_transform=temporal_transform,
-               spatial_transform=spatial_transform,
-               norm_value=1.0,
-               save_output=True)
+    test_clip_transform = Compose([
+        Resize(size=(frame_size, frame_size, 3)), # Resize any frame to shape (112, 112, 3) (H, W, C)
+        ClipToTensor()
+    ])  
+    # Test this script from the repo root directory (python data/SFHDataset/SignalForHelp.py)
+    dataset = Signal4HelpDataset(annotation_path='data/SFHDataset/test_annotations.txt', clip_transform=test_clip_transform,
+                                 number_of_frames=clip_duration)
+    clip, label = dataset[0]
+    print(clip.shape) # Expected [3, 16, 112, 112]

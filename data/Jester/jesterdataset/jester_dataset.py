@@ -19,7 +19,7 @@ class JesterDataset(Dataset):
 
     def __init__(self, csv_file="./jester_data/jester-v1-train.csv", video_dir="./jester_data/20bn-jester-v1", frame_file_ending="jpg", number_of_frames=8,
                  frame_select_strategy=FrameSelectStrategy.RANDOM, frame_padding=FramePadding.REPEAT_END,
-                 video_transform=None):
+                 video_transform=None, split='train'):
         """
         A pytorch dataset to load the 20BN-JESTER dataset or datasets in the same format.
 
@@ -54,13 +54,14 @@ class JesterDataset(Dataset):
         self.frame_padding = frame_padding
         self.video_transform = video_transform
         self.data_description = self._read_csv(csv_file)
+        self.split = split
 
-    def _read_csv(self, path, split='train'):
+    def _read_csv(self, path):
         df = pd.read_csv(path)
         result = []
         for index, row in df.iterrows():
             result.append({
-                'video_id': row['video_id'] if split in ['train', 'val'] else row['id'],
+                'video_id': row['video_id'] if self.split in ['train', 'val'] else row['id'],
                 'label_id': row['label_id'],
                 'frames': row['frames'],
                 'shape': row['shape'],
