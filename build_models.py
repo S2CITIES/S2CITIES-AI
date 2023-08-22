@@ -48,6 +48,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
             for param in list(model.parameters()):
                 param.requires_grad = False
             # Set BatchNorm layers of the feature network to eval mode
+            # NOTE: This will also freeze the running stats of bn layers, not updating them with fine-tuning batches
             set_bn3d_eval_mode(model)
 
             classifier = model.module.get_submodule('classifier')

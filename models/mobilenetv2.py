@@ -9,8 +9,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-
-
 def conv_bn(inp, oup, stride):
     return nn.Sequential(
         nn.Conv3d(inp, oup, kernel_size=3, stride=stride, padding=(1,1,1), bias=False),
