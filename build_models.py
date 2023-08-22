@@ -10,6 +10,14 @@ from models.squeezenet import (
     get_model as get_model_squeezenet
 )
 
+# Recursive function to set BatchNorm layers to evaluation mode
+def set_bn3d_eval_mode(layer):
+    if isinstance(layer, nn.BatchNorm3d):
+        layer.eval()
+    for child_module in layer.children():
+        print(child_module)
+        set_bn3d_eval_mode(child_module)
+
 def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_size=112, sample_duration=16, width_mult=1., output_features=2, finetune=True, state_dict=False):
     # All models pretrained on Jester (27 classes)
     if type == 'mobilenet':
@@ -39,6 +47,8 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
             # Freeze model weights
             for param in list(model.parameters()):
                 param.requires_grad = False
+            # Set BatchNorm layers of the feature network to eval mode
+            set_bn3d_eval_mode(model)
 
             classifier = model.module.get_submodule('classifier')
             print(f"Previous classifier: {classifier}")
@@ -56,7 +66,7 @@ def build_model(model_path, type='mobilenet', gpus=None, num_classes=27, sample_
             else:
                 new_classifier = nn.Sequential(
                     nn.Dropout(p=0.2, inplace=False),
-                    nn.Linear(in_features=model.module.last_channel, out_features=output_features, bias=True)
+                    nn.Linear(in_features=model.module.last_channel, out_features=output_features, bias=True),
                 )
 
             new_classifier.cuda()

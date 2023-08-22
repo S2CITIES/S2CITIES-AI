@@ -2,16 +2,19 @@ import os
 import json
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, random_split
 from data.SFHDataset.SignalForHelp import Signal4HelpDataset
 from build_models import build_model
 import numpy as np
-import functools
 from tqdm import tqdm
 from train_args import parse_args
 from torchvideotransforms.volume_transforms import ClipToTensor
 from torchvideotransforms.video_transforms import Compose, RandomHorizontalFlip, Resize, RandomResizedCrop, RandomRotation
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
 
 # Using wanbd (Weights and Biases, https://wandb.ai/) for run tracking
 import wandb
@@ -296,6 +299,7 @@ if __name__ == '__main__':
                         output_features=args.output_features,
                         finetune=True,      # Fine-tune the classifier (last fully connected layer)
                         state_dict=True)    # If only the state_dict was saved
+    
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print("Trainable parameters:", trainable_params)
