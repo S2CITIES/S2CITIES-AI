@@ -55,7 +55,13 @@ def compute_video_accuracy(ground_truth, predictions, top_k=3):
         
     return float(avg_hits_per_video.mean())
 
-def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, output_features, device, pbar=None):
+def extract_features(net, x):
+    x = net(x)
+    x = F.avg_pool3d(x, x.data.size()[-3:])
+    x = x.view(x.size(0), -1)
+    return x
+
+def train(feature_network, classifier, optimizer, scheduler, criterion, train_loader, val_loader, num_epochs, output_features, device, pbar=None):
 
     # Set up early stopping criteria
     patience = args.early_stop_patience
@@ -66,7 +72,8 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
 
     ############### Training ##################
     for epoch in range(num_epochs):
-        model.train()
+        feature_network.eval()
+        classifier.train()
 
         epoch_loss = []
         corrects = 0
@@ -81,7 +88,8 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             videos = videos.float()
             videos = videos.to(device) # Send inputs to CUDA
 
-            logits = model(videos)
+            feature_vectors = extract_features(feature_network, videos)
+            logits = classifier(feature_vectors)
 
             if output_features == 1:
                 logits = logits.reshape((-1, ))
@@ -117,7 +125,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
         wandb.log({"train_clip_accuracy": train_accuracy, "train_loss": avg_train_loss}, commit=False)
 
         # NOTE: test function validates the model when it takes in input the loader for the validation set
-        val_accuracy, val_loss = test(loader=val_loader, model=model, criterion=criterion, output_features=output_features, device=device, epoch=epoch)
+        val_accuracy, val_loss = test(loader=val_loader, feature_network=feature_network, classifier=classifier, criterion=criterion, output_features=output_features, device=device, epoch=epoch)
         scheduler.step(val_loss)
 
         # Checking early-stopping criteria
@@ -126,7 +134,7 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
             best_accuracy = val_accuracy
             counter = 0 # Reset the counter since there is improvement
             # Save the improved model
-            torch.save(model.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
+            torch.save(classifier.state_dict(),  os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
         else:
             counter += 1 # Increment the counter, since there is no improvement
 
@@ -137,22 +145,25 @@ def train(model, optimizer, scheduler, criterion, train_loader, val_loader, num_
     
     print("--- END Training. Results - Best Val. Loss: {:.2f}, Best Val. Accuracy: {:.2f}".format(best_loss, best_accuracy))
 
-def test(loader, model, criterion, output_features, device, epoch=None):
+def test(loader, feature_network, classifier, criterion, output_features, device, epoch=None):
     totals = 0
     corrects = 0
     y_pred = []
     y_true = []
     val_loss = []
 
+    feature_network.eval()
+    classifier.eval()
+
     with torch.no_grad():
-        model.eval()
 
         for i, data in enumerate(loader):
             videos, labels = data
             videos = videos.float()
             videos = videos.to(device)
 
-            logits = model(videos)
+            feature_vectors = extract_features(feature_network, videos)
+            logits = classifier(feature_vectors)
 
             if output_features == 1:
                 logits = logits.reshape((-1, ))
@@ -297,27 +308,32 @@ if __name__ == '__main__':
                         sample_size=args.sample_size,
                         sample_duration=args.sample_duration,
                         output_features=args.output_features,
-                        finetune=True,      # Fine-tune the classifier (last fully connected layer)
-                        state_dict=True)    # If only the state_dict was saved
+                        finetune=False,         # Fine-tune the classifier (last fully connected layer)
+                        state_dict=True)        # If only the state_dict was saved
     
     print(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print("Trainable parameters:", trainable_params)
+    # trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    # print("Trainable parameters:", trainable_params)
+
+    feature_network = model.module.get_submodule('features')
+    classifier = nn.Sequential(
+        nn.Dropout(p=0.2, inplace=False),
+        nn.Linear(in_features=model.module.last_channel, out_features=args.output_features, bias=True),
+    )
+    classifier.to(device)
 
     if args.nesterov:
         args.dampening = 0.
-    
-    # classifier = model.module.get_submodule('classifier')
-    
+
     if args.optimizer == 'SGD':
-        optimizer = torch.optim.SGD(list(model.parameters()), 
+        optimizer = torch.optim.SGD(list(classifier.parameters()), 
                                                     lr=args.lr, 
                                                     momentum=args.momentum, 
                                                     dampening=args.dampening,
                                                     weight_decay=args.wd,
                                                     nesterov=args.nesterov)
     elif args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(list(model.parameters()), lr=args.lr, weight_decay=args.wd)
+        optimizer = torch.optim.Adam(list(classifier.parameters()), lr=args.lr, weight_decay=args.wd)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode='min', patience=args.lr_patience, factor=0.1)
 
@@ -334,7 +350,8 @@ if __name__ == '__main__':
     if not os.path.exists(args.model_save_path):
         os.makedirs(args.model_save_path)
 
-    train(model=model, 
+    train(feature_network=feature_network,
+          classifier=classifier, 
           optimizer=optimizer,
           scheduler=scheduler,
           criterion=criterion, 
@@ -347,10 +364,11 @@ if __name__ == '__main__':
 
     # Load the best checkpoint obtained until now
     best_checkpoint=torch.load(os.path.join(args.model_save_path, f'best_model_{args.exp}.h5'))
-    model.load_state_dict(best_checkpoint)
+    classifier.load_state_dict(best_checkpoint)
   
     test(loader=test_dataloader, 
-         model=model,
+         feature_network=feature_network,
+         classifier=classifier, 
          criterion=criterion,
          output_features=args.output_features,
          device=device)
