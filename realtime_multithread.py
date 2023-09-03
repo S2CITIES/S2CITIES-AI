@@ -87,6 +87,8 @@ def thread_extract_keypoints():
                     timeseries[-1] = keypoints
             elif results.multi_hand_landmarks and len(results.multi_hand_landmarks) > 1:
                 print("Multiple hands detected. Ignoring.")
+                timeseries = []
+                frames_to_next_prediction = 0
             elif not results.multi_hand_landmarks:
                 # if there are not regognized keypoints, reset the timeseries
                 timeseries = []
