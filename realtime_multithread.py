@@ -145,7 +145,7 @@ def thread_predict(
         final_features,
         ):
 
-    # Load the random forest model
+    # Load the model
     model = Model(
         training_results=training_results,
         model_choice=model_choice,
