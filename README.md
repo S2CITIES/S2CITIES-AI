@@ -7,11 +7,15 @@
 Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 
 - [Installation](#installation)
-- [Usage](#usage)
+- [Usage: MediaPipe + Time-Series Feature Extraction](#usage-mediapipe--time-series-feature-extraction)
   - [Dataset creation pipeline](#dataset-creation-pipeline)
   - [Analyse a dataset](#analyse-a-dataset)
   - [mpkpts pipeline](#mpkpts-pipeline)
   - [Real-time testing](#real-time-testing)
+- [Usage: Fine-tuning a 3D-CNN torch model](#usage-fine-tuning-a-3d-cnn-torch-model)
+  - [Pre-processing data](#pre-processing-data)
+  - [Generating annotations](#generating-annotations)
+  - [Fine-tuning on custom dataset](#fine-tuning-on-custom-dataset)
 - [Resources](#resources)
   - [Mediapipe](#mediapipe)
   - [General computer vision](#general-computer-vision)
@@ -102,7 +106,8 @@ python mpkpts_extract_timeseries_features.py \
 4. To perfrom the train test split use the following command
 
 ```bash
-python mpkpts_split_train_test.py --folder "data/7_timeseries_features_extracted"
+python mpkpts_split_train_test.py \
+--folder "data/7_timeseries_features_extracted"
 ```
 
 optionally, you can specify the `--test_size` parameter to change the size of the test set (default is 0.2).
@@ -110,7 +115,8 @@ optionally, you can specify the `--test_size` parameter to change the size of th
 5. To perform the feature selection use the following command
 
 ```bash
-python mpkpts_feature_selection.py --folder "data/7_timeseries_features_extracted"
+python mpkpts_feature_selection.py \
+--folder "data/7_timeseries_features_extracted"
 ```
 
 optionally, you can specify the `--n_jobs` parameter to change the number of jobs to run in parallel (default is 1).
@@ -120,13 +126,15 @@ After running the feature selection, you have to choose the best features eyebal
 6. To train the model use the following command
 
 ```bash
-python mpkpts_train.py --folder "data/7_timeseries_features_extracted"
+python mpkpts_train.py \
+--folder "data/7_timeseries_features_extracted"
 ```
 
 7. To evaluate the model use the following command
 
 ```bash
-python mpkpts_evaluate.py --folder "data/7_timeseries_features_extracted"
+python mpkpts_evaluate.py \
+--folder "data/7_timeseries_features_extracted"
 ```
 
 ### Real-time testing
