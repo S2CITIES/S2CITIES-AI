@@ -2,22 +2,23 @@
 This class evaluates a generic binary classification model.
 """
 
+import functools
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from mlxtend.plotting import plot_confusion_matrix
 from sklearn.metrics import (
     accuracy_score,
-    roc_auc_score,
     confusion_matrix,
-    roc_curve,
-    precision_recall_curve,
     f1_score,
+    precision_recall_curve,
     precision_score,
     recall_score,
+    roc_auc_score,
+    roc_curve,
 )
 
-import functools
 
 def exportable(func):
     @functools.wraps(func)
@@ -28,11 +29,13 @@ def exportable(func):
         if export is not None and export not in ["save", "show", "both"]:
             raise ValueError("Invalid export option")
         if export in ["save", "both"]:
-            plt.savefig(f"{filename}.pdf", bbox_inches='tight')
+            plt.savefig(f"{filename}.pdf", bbox_inches="tight")
         if export in ["show", "both"]:
             plt.show()
         return result
+
     return wrapper
+
 
 def exportable_dataframe(func):
     @functools.wraps(func)
@@ -51,14 +54,19 @@ def exportable_dataframe(func):
             latex_filename = f"{filename}.tex"
             with open(latex_filename, "w") as f:
                 # .hide(axis="index") to hide the index after .style
-                f.write(result.set_index("Model").style.highlight_max(axis=0, props="textbf:--rwrap;").to_latex(hrules=True))
+                f.write(
+                    result.set_index("Model")
+                    .style.highlight_max(axis=0, props="textbf:--rwrap;")
+                    .to_latex(hrules=True)
+                )
         if export in ["print", "all"]:
             print(result)
         return result
+
     return wrapper
 
-class ModelEvaluator:
 
+class ModelEvaluator:
     def __init__(self, y_true, y_proba_dict, threshold=0.5):
         """
         Initializes the ModelEvaluator class.
@@ -105,14 +113,16 @@ class ModelEvaluator:
             self.metrics_df = pd.concat(
                 [
                     self.metrics_df,
-                    pd.DataFrame({
-                        "Model": [classifier_name],
-                        "Accuracy": [accuracy],
-                        "AUC": [auc],
-                        "Precision": [precision],
-                        "Recall": [recall],
-                        "F1 score": [f1],
-                        })
+                    pd.DataFrame(
+                        {
+                            "Model": [classifier_name],
+                            "Accuracy": [accuracy],
+                            "AUC": [auc],
+                            "Precision": [precision],
+                            "Recall": [recall],
+                            "F1 score": [f1],
+                        }
+                    ),
                 ],
                 ignore_index=True,
             )
@@ -158,7 +168,6 @@ class ModelEvaluator:
         ax.set_title("ROC Curve")
         ax.legend(loc="lower right")
 
-
     def plot_confusion_matrix(self, export, filename):
         """
         Plots the confusion matrix for each model.
@@ -187,10 +196,10 @@ class ModelEvaluator:
             if export is not None and export not in ["save", "show", "both"]:
                 raise ValueError("Invalid export option")
             if export in ["save", "both"]:
-                plt.savefig(f"{filename}_{classifier_name}.pdf", bbox_inches='tight')
+                plt.savefig(f"{filename}_{classifier_name}.pdf", bbox_inches="tight")
             if export in ["show", "both"]:
                 plt.show()
-    
+
     @exportable
     def plot_precision_recall_curve(self):
         """
@@ -200,13 +209,11 @@ class ModelEvaluator:
             export (str): Export option. Can be "save", "show", or "both".
             filename (str): Filename for exported file.
         """
-        
+
         fig, ax = plt.subplots(figsize=(10, 10))
         for classifier_name, y_proba in self.y_proba_dict.items():
             # Calculate precision-recall curve
-            precision, recall, thresholds = precision_recall_curve(
-                self.y_true, y_proba
-            )
+            precision, recall, thresholds = precision_recall_curve(self.y_true, y_proba)
 
             # Plot precision-recall curve
             ax.plot(
@@ -217,15 +224,17 @@ class ModelEvaluator:
 
         # Compute the zero skill model line
         # It will depend on the fraction of observations belonging to the positive class
-        zero_skill = len(self.y_true[self.y_true==1]) / len(self.y_true)
+        zero_skill = len(self.y_true[self.y_true == 1]) / len(self.y_true)
 
         # Compute the perfect model line
         perfect_precision = np.ones_like(self.y_true)
         perfect_recall = np.linspace(0, 1, num=len(perfect_precision))
 
         # Plot zero skill and perfect model lines
-        plt.plot([0, 1], [zero_skill, zero_skill], 'b--', label='Zero skill')
-        plt.plot(perfect_recall, perfect_precision, 'g--', linewidth=2, label='Perfect model')
+        plt.plot([0, 1], [zero_skill, zero_skill], "b--", label="Zero skill")
+        plt.plot(
+            perfect_recall, perfect_precision, "g--", linewidth=2, label="Perfect model"
+        )
 
         ax.set_xlabel("Recall")
         ax.set_ylabel("Precision")
