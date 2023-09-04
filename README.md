@@ -137,6 +137,14 @@ python mpkpts_evaluate.py \
 --folder "data/7_timeseries_features_extracted"
 ```
 
+8. To get the prediction time use the following command
+
+```bash
+python mpkpts_get_prediction_time.py \
+--folder "data/7_timeseries_features_extracted" \
+--training_results "data/7_timeseries_features_extracted/training_results.pkl"
+```
+
 ### Real-time testing
 
 To test the model in real-time, run the following command
