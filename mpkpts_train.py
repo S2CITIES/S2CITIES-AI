@@ -141,6 +141,118 @@ training_results['LR']['y_proba_test'] = grid_search.best_estimator_.predict_pro
 training_results['LR']['y_proba_train'] = grid_search.best_estimator_.predict_proba(X_train)
 training_results['LR']['config'] = grid_search.best_estimator_.get_params()
 training_results['LR']['model'] = grid_search
+# -----------------------------------------------------------------------------
+
+print("----------------------------------------")
+print("KNN")
+
+param_grid = {
+    "n_neighbors": [1, 3, 5, 7, 9],
+    "weights": ["uniform", "distance"],
+    "p": [1, 2],
+}
+knn = KNeighborsClassifier()
+
+grid_search = build_grid_search(knn, param_grid)
+grid_search.fit(X_train, y_train)
+
+print("Best parameters KNN:", grid_search.best_params_)
+
+training_results["KNN"] = {}
+training_results["KNN"]["y_proba_test"] = grid_search.best_estimator_.predict_proba(
+    X_test
+)
+training_results["KNN"]["y_proba_train"] = grid_search.best_estimator_.predict_proba(
+    X_train
+)
+training_results["KNN"]["config"] = grid_search.best_estimator_.get_params()
+training_results["KNN"]["model"] = grid_search
+
+# -----------------------------------------------------------------------------
+
+print("----------------------------------------")
+print("MLPClassifier")
+
+param_grid = {
+    "hidden_layer_sizes": [(100,), (100, 100), (100, 100, 100)],
+    "activation": ["relu"],
+    "solver": ["adam"],
+    "alpha": [0.0001],
+    "batch_size": ["auto"],
+    "learning_rate": ["constant"],
+    "learning_rate_init": [0.001],
+    "max_iter": [200],
+    "random_state": [constants.SEED],
+}
+mlp = MLPClassifier()
+
+grid_search = build_grid_search(mlp, param_grid)
+grid_search.fit(X_train, y_train)
+
+print("Best parameters MLP:", grid_search.best_params_)
+
+training_results["MLP"] = {}
+training_results["MLP"]["y_proba_test"] = grid_search.best_estimator_.predict_proba(
+    X_test
+)
+training_results["MLP"]["y_proba_train"] = grid_search.best_estimator_.predict_proba(
+    X_train
+)
+training_results["MLP"]["config"] = grid_search.best_estimator_.get_params()
+training_results["MLP"]["model"] = grid_search
+
+# -----------------------------------------------------------------------------
+
+print("----------------------------------------")
+print("AdaBoostClassifier")
+
+param_grid = {
+    "n_estimators": [50, 100, 150],
+    "learning_rate": [0.01, 0.1, 1],
+    "random_state": [constants.SEED],
+}
+ada = AdaBoostClassifier()
+
+grid_search = build_grid_search(ada, param_grid)
+grid_search.fit(X_train, y_train)
+
+print("Best parameters Ada:", grid_search.best_params_)
+
+training_results["Ada"] = {}
+training_results["Ada"]["y_proba_test"] = grid_search.best_estimator_.predict_proba(
+    X_test
+)
+training_results["Ada"]["y_proba_train"] = grid_search.best_estimator_.predict_proba(
+    X_train
+)
+training_results["Ada"]["config"] = grid_search.best_estimator_.get_params()
+training_results["Ada"]["model"] = grid_search
+
+# -----------------------------------------------------------------------------
+
+print("----------------------------------------")
+print("GaussianNB")
+
+param_grid = {
+    "var_smoothing": [1e-09],
+}
+
+gnb = GaussianNB()
+
+grid_search = build_grid_search(gnb, param_grid)
+grid_search.fit(X_train, y_train)
+
+print("Best parameters GNB:", grid_search.best_params_)
+
+training_results["GNB"] = {}
+training_results["GNB"]["y_proba_test"] = grid_search.best_estimator_.predict_proba(
+    X_test
+)
+training_results["GNB"]["y_proba_train"] = grid_search.best_estimator_.predict_proba(
+    X_train
+)
+training_results["GNB"]["config"] = grid_search.best_estimator_.get_params()
+training_results["GNB"]["model"] = grid_search
 
 # -----------------------------------------------------------------------------
 
