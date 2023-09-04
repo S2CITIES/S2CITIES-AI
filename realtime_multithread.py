@@ -21,6 +21,7 @@ import mediapipe as mp
 import numpy as np
 
 from models.model_mpkpts import Model
+from s2citiesAppSdk import import_zone_config, send_signal_for_help
 
 # Set up the feature extractor
 # feature_extractor = FeatureExtractor()
@@ -32,7 +33,7 @@ from models.model_mpkpts import Model
 # - e che sia continua (ma ok)
 def thread_extract_keypoints():
     # Set up the global variables
-    global timeseries
+    global timeseries, video_for_alert, alerts_sent, frame_rate, seconds_for_alert
 
     # Set up the video capture from the webcam
     cap = cv2.VideoCapture(0)
@@ -46,12 +47,11 @@ def thread_extract_keypoints():
     window = 2.5  # in seconds
     prev = 0  # in seconds
     frames_to_next_prediction = 0  # in frames
-    frame_rate = 12  # in frames per second
 
     while True:
         # Read a frame from the video capture
         ret, frame = cap.read()
-
+        
         # Implement logit to limit the frame rate to frame_rate
         time_elapsed = time.time() - prev
         if not time_elapsed > 1.0 / frame_rate:
@@ -63,6 +63,11 @@ def thread_extract_keypoints():
 
         # Convert the frame to RGB for Mediapipe
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Add frame to the queue to send in case of alert
+        if len(video_for_alert) > frame_rate*seconds_for_alert:
+            video_for_alert.pop(0)
+        video_for_alert.append(frame_rgb)
 
         # Detect the hand landmarks using Mediapipe
         with mp_hands.Hands(
@@ -144,6 +149,7 @@ def thread_extract_keypoints():
 def thread_predict(
     stop_event,
     predict_event,
+    alert_event,
     training_results,
     model_choice,
     threshold,
@@ -151,6 +157,10 @@ def thread_predict(
     scaler,
     final_features,
 ):
+    
+    results_queue =[0]*3
+    ignore_predictions = 0
+
     # Load the model
     model = Model(
         training_results=training_results,
@@ -170,11 +180,80 @@ def thread_predict(
 
         print(f"Predicted output: {output} [{proba[:,1]}]")
 
+        # Alert if 2 out of 3 results are positive, then ignore the next 10 predictions
+        results_queue.pop(0)
+        results_queue.append(output)
+        if len(results_queue) == 3 and results_queue.count(True) >= 2 and ignore_predictions == 0:
+            alert_event.set()
+            ignore_predictions = 10
+        if ignore_predictions > 0:
+            ignore_predictions -= 1
+
         # Reset the predict event
         predict_event.clear()
 
 
+def thread_alert(stop_event, alert_event):
+
+    global zone_config, frame_rate, alerts_sent
+
+    while True:
+        alert_event.wait()
+
+        # sleep for 2 seconds to include the 2 seconds after the signal in the video sent
+        time.sleep(2)
+
+        start_time = time.time()
+
+        if stop_event.is_set():
+            break
+
+        print("Sending alert..........")
+
+        # Create a new Signal For Help Alert
+        video_path = save_video(video_for_alert, frame_rate, alerts_sent)
+
+        new_created_alert = send_signal_for_help(zone_config, video_path)
+        #new_created_alert = True
+
+        end_time = time.time()
+
+        if new_created_alert != None:
+            print(f"Alert sent successfully!..........\nTotal alerting time: {end_time-start_time}")
+            alerts_sent += 1
+        # Reset the alert event
+        alert_event.clear()
+
+
+def save_video(video, fps, n_alert):
+    print("Saving video..")
+    input = np.stack(video)
+    print(f"Shape {input.shape}")
+
+    #input = np.transpose(input, (1,2,3,0)) # Permuting to Tx(HxWxC)
+
+    #input = np.uint8(input)
+    video_path = f"C:\\Users\\Dario\\Downloads\\alert_{n_alert}.mp4"
+
+    writer = cv2.VideoWriter(filename=video_path,
+                                fourcc=cv2.VideoWriter_fourcc(*'mp4v'), fps=fps,
+                                frameSize=(int(input.shape[2]), int(input.shape[1])), isColor=True)
+
+    if writer.isOpened:
+        for i in range(len(input)):
+            writer.write(input[i])
+
+        writer.release()
+    else:
+        print("Error opening the file!")
+    
+    return video_path
+
+
 if __name__ == "__main__":
+    # Import zone configuration data
+    zone_config = import_zone_config("s2citiesAppSdk/s2cities-testzone-config.json")
+
     # Argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -212,12 +291,21 @@ if __name__ == "__main__":
 
     # Set up the timeseries
     timeseries = []
+    video_for_alert = []
+    alerts_sent = 0
+    frame_rate = 12  # in frames per second
+    seconds_for_alert = 6  # seconds of video to send when alerting
+    frame_h = 360
+    frame_w = 640
 
     # Create the stop event
     stop_event = threading.Event()
 
     # Create the predict event
     predict_event = threading.Event()
+
+    # Create the alert event
+    alert_event = threading.Event()
 
     # Start the predict thread
     predict_process = threading.Thread(
@@ -226,6 +314,7 @@ if __name__ == "__main__":
         args=(
             stop_event,
             predict_event,
+            alert_event,
             args.training_results,
             args.model_choice,
             args.threshold,
@@ -236,5 +325,16 @@ if __name__ == "__main__":
     )
     predict_process.start()
 
+    # Start the alert thread
+    alert_process = threading.Thread(
+        name='alert', 
+        target=thread_alert, 
+        args=(stop_event, alert_event))
+    alert_process.start()
+
     # Start the extract keypoints thread which is the main thread
     thread_extract_keypoints()
+
+    # End threads
+    predict_process.join()
+    alert_process.join()
