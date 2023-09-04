@@ -1,3 +1,6 @@
+# EASY TEST FOR APP CONNECTION
+# NO REAL TIME TESTING - RANDOM GENERATION OF PREDICTIONS
+
 import json
 import os
 import random
