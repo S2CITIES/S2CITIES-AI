@@ -41,5 +41,3 @@ evaluator.plot_precision_recall_curve(
 evaluator.plot_confusion_matrix(
     export="save", filename=f"./report/{constants.MODEL_NAME}/confusion_matrix"
 )
-
-# TODO compute prediction time (with confidence interval)
