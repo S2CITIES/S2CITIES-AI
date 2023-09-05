@@ -10,6 +10,7 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 - [Usage: MediaPipe + Time-Series Feature Extraction](#usage-mediapipe--time-series-feature-extraction)
   - [Dataset creation pipeline](#dataset-creation-pipeline)
   - [Analyse a dataset](#analyse-a-dataset)
+  - [Analyse the timeseries features](#analyse-the-timeseries-features)
   - [mpkpts pipeline](#mpkpts-pipeline)
   - [Real-time testing](#real-time-testing)
 - [Usage: Fine-tuning a 3D-CNN torch model](#usage-fine-tuning-a-3d-cnn-torch-model)
@@ -66,7 +67,21 @@ Now `data/4_videos_labeled` should contain the labeled videos, under the `1` and
 To analyse a dataset use the following command
 
 ```bash
-python analyse_dataset.py --dataset_path "/Users/teo/Library/CloudStorage/OneDrive-PolitecnicodiMilano/ASP/S2Cities/S2C - Machine Learning/Dataset/S2Cities_Dataset_Collection"
+python analyse_dataset.py \
+--dataset_path "/Users/teo/My Drive (s2cities.project@gmail.com)/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" \
+--save_dir "report/dataset_analysis"
+```
+
+### Analyse the timeseries features
+
+To analyse the timeseries features use the following command
+
+```bash
+python analyse_timeseries.py \
+--folder data/6_features_extracted \
+--pos_index 1 \
+--neg_index 1 \
+--save_dir "report/timeseries_analysis"
 ```
 
 ### mpkpts pipeline
