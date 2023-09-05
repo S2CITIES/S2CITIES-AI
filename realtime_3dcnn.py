@@ -12,20 +12,23 @@ See also:
 https://stackoverflow.com/questions/19790570/using-a-global-variable-with-a-thread
 """
 
+import json
+import os
 import threading
 import time
+
 import cv2
-import mediapipe as mp
+#import mediapipe as mp
 import numpy as np
 import torch
 import torch.nn.functional as F
-import torchvision.transforms as transforms
-from build_models import build_model
+from PIL import Image
+
 import transforms.spatial_transforms as SPtransforms
 import transforms.temporal_transforms as TPtransforms
-from PIL import Image
-import os
-import json
+#import torchvision.transforms as transforms
+from build_models import build_model
+
 
 def crop_frame(frame, height, width, aspect_ratio, target_ratio):
 
