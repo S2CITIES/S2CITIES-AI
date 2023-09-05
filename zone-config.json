@@ -1,0 +1,18 @@
+{
+    "api": {
+        "base_url": "https://main.d20hzfirsyysby.amplifyapp.com/",
+        "prefix": "api/",
+        "endpoints": {
+            "create_signal_for_help": "alerts/signalforhelp",
+            "generate_video_signed_url": "alerts/video/s3signedurl"
+        }
+    },
+    "data":
+        {
+            "zone_id": "64f739bd33203259460cb108",
+            "name": "Politecnico di Torino",
+            "address": "Corso Duca degli Abruzzi 24, 10129 Torino TO",
+            "latitude": "45.062387",
+            "longitude": "7.662380"
+        }
+}
