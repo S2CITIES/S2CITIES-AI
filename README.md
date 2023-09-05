@@ -177,6 +177,7 @@ python realtime_multithread.py \
 ## Usage: Fine-tuning a 3D-CNN torch model
 
 ### Pre-processing data
+
 A script is provided to pre-process train/test and validation data. Pre-processing helps in drastically speeding up the training process. Indeed, pre-processed videos will be saved in a memory location and retrieved while building training batches, so that the same pre-processing pipeline can be avoided while building batches accross all the training epochs.
 
 Here, pre-processing means cropping videos to obtain videos with 1:1 aspect ratio and with selected target frame sizes.
@@ -193,6 +194,7 @@ python data/SFHDataset/video_conversion_script.py \
 Depending on the size of your dataset stored in location `--source_path`, this may require a while.
 
 ### Generating annotations
+
 After pre-processing your data, you can generate annotations files by simply running:
 
 ```bash
@@ -205,6 +207,7 @@ This script will update the file `info.json` and write (**over-write**) the file
 Statistics will be saved on file `info.json` for future reference. This file will also contain other useful information, such as the train set *mean* and *standard deviation*. 
 
 ### Fine-tuning on custom dataset
+
 Now you have all the ingredients that you need to start training/fine-tuning a 3D-CNN model. 
 To start your fine-tuning procedure, run:
 
