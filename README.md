@@ -7,12 +7,12 @@
 Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 
 - [Installation](#installation)
-- [Usage: MediaPipe + Time-Series Feature Extraction](#usage-mediapipe--time-series-feature-extraction)
-  - [Dataset creation pipeline](#dataset-creation-pipeline)
+- [Usage: Dataset creation pipeline](#usage-dataset-creation-pipeline)
   - [Analyse a dataset](#analyse-a-dataset)
-  - [Analyse the timeseries features](#analyse-the-timeseries-features)
+- [Usage: MediaPipe + Time-Series Feature Extraction](#usage-mediapipe--time-series-feature-extraction)
   - [mpkpts pipeline](#mpkpts-pipeline)
   - [Real-time testing](#real-time-testing)
+  - [Analyse the timeseries features](#analyse-the-timeseries-features)
 - [Usage: Fine-tuning a 3D-CNN torch model](#usage-fine-tuning-a-3d-cnn-torch-model)
   - [Pre-processing data](#pre-processing-data)
   - [Generating annotations](#generating-annotations)
@@ -27,9 +27,7 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
 1. Clone this repository with `git clone https://github.com/S2CITIES/S2CITIES-AI`
 2. Install the dependencies with `pip install -r requirements.txt`
 
-## Usage: MediaPipe + Time-Series Feature Extraction
-
-### Dataset creation pipeline
+## Usage: Dataset creation pipeline
 
 1. Run the following to move, rename and split the videos, making sure to set the `starting_idx` parameter to the starting index to use (i.e. the index of the last video + 1).
 ```bash
@@ -72,17 +70,7 @@ python analyse_dataset.py \
 --save_dir "report/dataset_analysis"
 ```
 
-### Analyse the timeseries features
-
-To analyse the timeseries features use the following command
-
-```bash
-python analyse_timeseries.py \
---folder data/6_features_extracted \
---pos_index 1 \
---neg_index 1 \
---save_dir "report/timeseries_analysis"
-```
+## Usage: MediaPipe + Time-Series Feature Extraction
 
 ### mpkpts pipeline
 
@@ -172,6 +160,18 @@ python realtime_multithread.py \
 --final_features "data/7_timeseries_features_extracted/final_features.pkl" \
 --model_choice RF \
 --threshold 0.5
+```
+
+### Analyse the timeseries features
+
+To analyse the timeseries features use the following command
+
+```bash
+python analyse_timeseries.py \
+--folder data/6_features_extracted \
+--pos_index 1 \
+--neg_index 1 \
+--save_dir "report/timeseries_analysis"
 ```
 
 ## Usage: Fine-tuning a 3D-CNN torch model
