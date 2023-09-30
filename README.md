@@ -1,10 +1,20 @@
 <!-- omit from toc -->
-# S2CITIES-AI
+# S2CITIES: Toward Smart and Safe Cities: Exploit- ing Surveillance Videos for Real-time Detection of “Signal for Help”
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
 
-Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
+Welcome the S2CITIES Artificial Intelligence project repository! 🚀
+
+This project aims at developing a real-time AI system for the detection of the "Signal for Help" gesture in surveillance videos.
+
+Give us a star to show your support for the project ⭐
+
+Alta Scuola Politecnica (more [here](https://www.asp-poli.it/)) is the **joint honors program** of Italy's best technical universities, Politecnico di Milano ([18th world-wide, QS Rankings](https://www.topuniversities.com/university-rankings/university-subject-rankings/2023/engineering-technology?&page=1)) and Politecnico di Torino ([45th world-wide, QS Rankings](https://www.topuniversities.com/university-rankings/university-subject-rankings/2023/engineering-technology?&page=1)). 
+Each year, 90 students from Politecnico di Milano and 60 from Politecnico di Torino are selected from a highly competitive pool and those who succeed receive free tuition for their MSc in exchange for ~1.5 years working as **student consultants** with a partner company for an industrial project.
+
+This project was carried out alogside a research group at Politecnico di Torino (Prof. [Sarah Azimi](https://www.linkedin.com/in/sarah-azimi-539a3a7a/) and Prof. [Vincenzo Randazzo](https://www.linkedin.com/in/vincenzo-randazzo-19963189/)), backed up by [Getapper](https://www.getapper.com/) software company.
+
 
 - [Installation](#installation)
 - [Usage: Dataset creation pipeline](#usage-dataset-creation-pipeline)
@@ -19,7 +29,6 @@ Video-based Recognition of the "The Canadian Women's Foundation" Signal for Help
   - [Fine-tuning on custom dataset](#fine-tuning-on-custom-dataset)
 - [Resources](#resources)
   - [Mediapipe](#mediapipe)
-  - [General computer vision](#general-computer-vision)
 - [Authors](#authors)
 
 ## Installation
@@ -239,12 +248,6 @@ Alternatively, you can simply run a `python train_SFH_3dcnn.py -h|--help`.
 - https://developers.google.com/mediapipe/solutions/vision/hand_landmarker
 - https://developers.google.com/mediapipe/solutions/vision/hand_landmarker/python#image
 - https://colab.research.google.com/github/googlesamples/mediapipe/blob/main/examples/hand_landmarker/python/hand_landmarker.ipynb#scrollTo=_JVO3rvPD4RN
-
-### General computer vision
-
-- [Advanced Computer Vision with Python - Full Course](https://www.youtube.com/watch?v=01sAkU_NvOY)
-- [CS231n Winter 2016: Lecture 14: Videos and Unsupervised Learning](https://www.youtube.com/watch?v=ekyBklxwQMU)
-- [OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose) (too hard)
 
 ## Authors
 
