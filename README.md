@@ -28,7 +28,6 @@ This project was carried out alogside a research group at Politecnico di Torino 
   - [Generating annotations](#generating-annotations)
   - [Fine-tuning on custom dataset](#fine-tuning-on-custom-dataset)
 - [Resources 📚](#resources-)
-  - [Mediapipe](#mediapipe)
 - [Authors 🖋](#authors-)
 
 ## Installation
@@ -241,8 +240,6 @@ You also may want to have a look at the script `train_args.py` to know all the p
 Alternatively, you can simply run a `python train_SFH_3dcnn.py -h|--help`.
 
 ## Resources 📚
-
-### Mediapipe
 
 - https://mediapipe-studio.webapps.google.com/demo/hand_landmarker
 - https://developers.google.com/mediapipe/solutions/vision/hand_landmarker
