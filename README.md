@@ -1,5 +1,5 @@
 <!-- omit from toc -->
-# S2CITIES: Toward Smart and Safe Cities: Exploit- ing Surveillance Videos for Real-time Detection of “Signal for Help”
+# S2CITIES: Toward Smart and Safe Cities: Exploit- ing Surveillance Videos for Real-time Detection of “Signal for Help” ✋✊
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
@@ -17,26 +17,26 @@ This project was carried out alogside a research group at Politecnico di Torino 
 
 
 - [Installation](#installation)
-- [Usage: Dataset creation pipeline](#usage-dataset-creation-pipeline)
+- [Usage: Dataset creation pipeline 💡](#usage-dataset-creation-pipeline-)
   - [Analyse a dataset](#analyse-a-dataset)
-- [Usage: MediaPipe + Time-Series Feature Extraction](#usage-mediapipe--time-series-feature-extraction)
+- [Usage: MediaPipe + Time-Series Feature Extraction 💡](#usage-mediapipe--time-series-feature-extraction-)
   - [mpkpts pipeline](#mpkpts-pipeline)
   - [Real-time testing](#real-time-testing)
   - [Analyse the timeseries features](#analyse-the-timeseries-features)
-- [Usage: Fine-tuning a 3D-CNN torch model](#usage-fine-tuning-a-3d-cnn-torch-model)
+- [Usage: Fine-tuning a 3D-CNN torch model 💡](#usage-fine-tuning-a-3d-cnn-torch-model-)
   - [Pre-processing data](#pre-processing-data)
   - [Generating annotations](#generating-annotations)
   - [Fine-tuning on custom dataset](#fine-tuning-on-custom-dataset)
-- [Resources](#resources)
+- [Resources 📚](#resources-)
   - [Mediapipe](#mediapipe)
-- [Authors](#authors)
+- [Authors 🖋](#authors-)
 
 ## Installation
 
 1. Clone this repository with `git clone https://github.com/S2CITIES/S2CITIES-AI`
 2. Install the dependencies with `pip install -r requirements.txt`
 
-## Usage: Dataset creation pipeline
+## Usage: Dataset creation pipeline 💡
 
 1. Run the following to move, rename and split the videos, making sure to set the `starting_idx` parameter to the starting index to use (i.e. the index of the last video + 1).
 ```bash
@@ -79,7 +79,7 @@ python analyse_dataset.py \
 --save_dir "report/dataset_analysis"
 ```
 
-## Usage: MediaPipe + Time-Series Feature Extraction
+## Usage: MediaPipe + Time-Series Feature Extraction 💡
 
 ### mpkpts pipeline
 
@@ -183,7 +183,7 @@ python analyse_timeseries.py \
 --save_dir "report/timeseries_analysis"
 ```
 
-## Usage: Fine-tuning a 3D-CNN torch model
+## Usage: Fine-tuning a 3D-CNN torch model 💡
 
 ### Pre-processing data
 
@@ -240,7 +240,7 @@ You can specify the path to your pre-trained weights with `--pretrained_path`. \
 You also may want to have a look at the script `train_args.py` to know all the possible parameters that you can specify.
 Alternatively, you can simply run a `python train_SFH_3dcnn.py -h|--help`.
 
-## Resources
+## Resources 📚
 
 ### Mediapipe
 
@@ -249,7 +249,7 @@ Alternatively, you can simply run a `python train_SFH_3dcnn.py -h|--help`.
 - https://developers.google.com/mediapipe/solutions/vision/hand_landmarker/python#image
 - https://colab.research.google.com/github/googlesamples/mediapipe/blob/main/examples/hand_landmarker/python/hand_landmarker.ipynb#scrollTo=_JVO3rvPD4RN
 
-## Authors
+## Authors 🖋
 
 - Teo Bucci ([@teobucci](https://github.com/teobucci))
 - Dario Cavalli ([@Cavalli98](https://github.com/Cavalli98))
