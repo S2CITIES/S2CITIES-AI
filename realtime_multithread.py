@@ -47,6 +47,20 @@ def thread_extract_keypoints():
         # Read a frame from the video capture
         ret, frame = cap.read()
 
+        if not ret:
+            # Trigger the stop event that will stop the predict thread
+            stop_event.set()
+
+            # Perform the last prediction so that the thread can stop
+            predict_event.set()
+
+            # Perform the last alert so that the thread can stop
+            alert_event.set()
+
+            # Release the video capture
+            cap.release()
+            break
+
         # Implement logit to limit the frame rate to params.frame_rate
         time_elapsed = time.time() - prev
         if not time_elapsed > 1.0 / params.frame_rate:
