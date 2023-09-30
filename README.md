@@ -74,7 +74,7 @@ To analyse a dataset use the following command
 
 ```bash
 python analyse_dataset.py \
---dataset_path "/Users/teo/My Drive (s2cities.project@gmail.com)/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" \
+--dataset_path "SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" \
 --save_dir "report/dataset_analysis"
 ```
 
@@ -94,7 +94,7 @@ Remember that if the dataset has been modified or moved, for example on a mounte
 
 ```bash
 python dataset_creation_subsample_videos.py \
---input "/Users/teo/My Drive (s2cities.project@gmail.com)/DRIVE S2CITIES/Artificial Intelligence/SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" \
+--input "SFH_Dataset_S2CITIES/SFH_Dataset_S2CITIES_raw_extended_negatives" \
 --output "data/5_videos_labeled_subsampled"
 ```
 
