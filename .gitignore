@@ -175,3 +175,4 @@ data/7_timeseries_features_extracted/X_train.pkl
 data/7_timeseries_features_extracted/y.pkl
 data/7_timeseries_features_extracted/y_test.pkl
 data/7_timeseries_features_extracted/y_train.pkl
+.pdm-python
